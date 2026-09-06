@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Town - Mini FPS 3D</title>
+  <title>Bosque Invernal - Mini FPS 3D</title>
 
   <!--
     Three.js cargado por CDN mediante Import Map.
@@ -126,7 +126,7 @@
 
     #bossStatus {
       top: 358px;
-      color: #ff8f8f;
+      color: #8fe9ff;
       font-weight: 700;
       display: none;
     }
@@ -390,7 +390,7 @@
 
   <div id="overlay">
     <div id="panel">
-      <h1 id="overlayTitle">TOWN · Mini FPS 3D</h1>
+      <h1 id="overlayTitle">BOSQUE INVERNAL · Mini FPS 3D</h1>
       <p id="overlayMessage">Haz clic o toca la pantalla para jugar</p>
 
       <div class="controlsHelp">
@@ -409,10 +409,11 @@
         <div><span class="key">Torretas</span> — Apuntan a tu posición</div>
         <div><span class="key">Cada 5 s</span> — Lanzan un proyectil</div>
         <div><span class="key">Ronda 3+</span> — Recoge el chaleco y sus mejoras</div>
-        <div><span class="key">Jefe final</span> — Tras alcanzar +125% de dificultad</div>
+        <div><span class="key">Ronda 7</span> — Oso polar gigante · rayos de hielo ralentizadores</div>
+        <div><span class="key">Mundo 2</span> — Bosque nevado · osos polares más rápidos</div>
       </div>
 
-      <a id="backToMenu" href="../../main.index.html">← Volver al menú principal</a>
+      <a id="backToMenu" href="main.index.html">← Volver al menú principal</a>
     </div>
   </div>
 
@@ -434,11 +435,13 @@
       crouchHeight: 1.05,
       crouchSpeedMultiplier: 0.45,
       crouchTransitionSpeed: 12.0,
+      bossSlowMultiplier: 0.45,
+      bossSlowDurationSeconds: 3.0,
       jumpSpeed: 8.5,
       gravity: 24.0,
-      enemyRadius: 0.55,
-      enemySpeedMin: 1.2,
-      enemySpeedMax: 2.0,
+      enemyRadius: 0.78,
+      enemySpeedMin: 1.75,
+      enemySpeedMax: 2.75,
       enemySpawnSeconds: 3.0,
       initialEnemies: 4,
       maxEnemies: 14,
@@ -493,8 +496,10 @@
       // Jefe final.
       bossScale: 3.0,
       bossMovementMultiplier: 1.5,
-      bossMaxHealth: 24,
-      bossShotSeconds: 2.4,
+      bossMaxHealth: 30,
+      bossShotSeconds: 2.15,
+      bossIceRaySpeed: 25.0,
+      bossIceRayRadius: 0.24,
       bossScore: 2500,
       finalResetMs: 4200,
       roundTransitionMs: 2200
@@ -528,8 +533,8 @@
     // ESCENA, CÁMARA Y RENDERER
     // =========================================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x9fb3c8);
-    scene.fog = new THREE.Fog(0x9fb3c8, 45, 105);
+    scene.background = new THREE.Color(0xdcecf4);
+    scene.fog = new THREE.Fog(0xdcecf4, 34, 92);
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -591,10 +596,10 @@
     // =========================================================
     // ILUMINACIÓN
     // =========================================================
-    const ambientLight = new THREE.HemisphereLight(0xe9f3ff, 0x39422b, 2.0);
+    const ambientLight = new THREE.HemisphereLight(0xf7fdff, 0x8fa7b0, 2.25);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+    const sun = new THREE.DirectionalLight(0xf7fbff, 2.6);
     sun.position.set(25, 45, 15);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -607,13 +612,16 @@
     // =========================================================
     // MATERIALES
     // =========================================================
-    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0x30343b });
-    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0x666a70 });
-    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x6b432a });
-    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x397a3c });
-    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x7a6a51 });
-    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xc62828 });
-    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xe53935 });
+    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0xe7f1f4 });
+    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0xc8d9df });
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x5a3b28 });
+    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x1f5b46 });
+    const snowMaterial = new THREE.MeshLambertMaterial({ color: 0xf5fbff });
+    const iceMaterial = new THREE.MeshLambertMaterial({ color: 0xa8d8e8 });
+    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0xb7d5df });
+    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xf4f7f4 });
+    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const enemyDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x1c2428 });
 
     // Materiales de los obstáculos armados.
     const turretBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x3b434b });
@@ -626,9 +634,11 @@
 
     const armorMaterial = new THREE.MeshLambertMaterial({ color: 0x1fc7a8, emissive: 0x063b34 });
     const armorUpgradeMaterial = new THREE.MeshLambertMaterial({ color: 0x73e8ff, emissive: 0x0a4150 });
-    const bossBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x53106e, emissive: 0x16051e });
-    const bossHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x9b1b5e, emissive: 0x2d061d });
-    const bossSwordMaterial = new THREE.MeshLambertMaterial({ color: 0xb8d8e8, emissive: 0x182a33 });
+    const bossBodyMaterial = new THREE.MeshLambertMaterial({ color: 0xf5fbff, emissive: 0x15232b });
+    const bossHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x1a2c35 });
+    const bossDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x17252d, emissive: 0x050a0d });
+    const bossIceMaterial = new THREE.MeshLambertMaterial({ color: 0x8fe9ff, emissive: 0x17677c });
+    const bossIceRayMaterial = new THREE.MeshLambertMaterial({ color: 0x68dcff, emissive: 0x167d9f });
 
     // =========================================================
     // SUELO
@@ -641,15 +651,16 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Franjas simples para dar sensación de calles, sin texturas externas.
-    const roadLineMaterial = new THREE.MeshLambertMaterial({ color: 0xd0b64c });
-    for (let z = -40; z <= 40; z += 10) {
-      const line = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 0.015, 4.0),
-        roadLineMaterial
+    // Sendero helado central, construido sin texturas externas.
+    const trailMaterial = new THREE.MeshLambertMaterial({ color: 0xcadce3 });
+    for (let z = -42; z <= 42; z += 7) {
+      const patch = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2 + Math.random() * 1.8, 0.018, 4.4),
+        trailMaterial
       );
-      line.position.set(0, 0.012, z);
-      scene.add(line);
+      patch.position.set((Math.random() - 0.5) * 2.2, 0.012, z);
+      patch.rotation.y = (Math.random() - 0.5) * 0.22;
+      scene.add(patch);
     }
 
     // =========================================================
@@ -892,132 +903,180 @@
       scene.add(mesh);
     }
 
-    function createCity() {
-      // Banquetas decorativas perimetrales.
-      addSidewalk(0, -47, 92, 5);
-      addSidewalk(0, 47, 92, 5);
-      addSidewalk(-47, 0, 5, 92);
-      addSidewalk(47, 0, 5, 92);
+    function addSnowPine(x, z, scale = 1) {
+      const trunkRadius = 0.28 * scale;
+      const trunkHeight = 2.1 * scale;
 
-      // Edificios en los bordes norte y sur.
-      for (let x = -40; x <= 40; x += 11.5) {
-        const width = randomRange(7.2, 9.5);
-        const depth = randomRange(6.0, 8.0);
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.18, trunkHeight, 9),
+        trunkMaterial
+      );
+      trunk.position.set(x, trunkHeight / 2, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      trunk.userData.blockShot = true;
+      scene.add(trunk);
 
-        addBuilding(
-          x + randomRange(-0.9, 0.9),
-          -43.5,
-          width,
-          depth,
-          randomRange(10, 25)
-        );
-
-        addBuilding(
-          x + randomRange(-0.9, 0.9),
-          43.5,
-          width,
-          depth,
-          randomRange(9, 23)
-        );
-      }
-
-      // Edificios en los bordes este y oeste.
-      for (let z = -30; z <= 30; z += 12) {
-        const width = randomRange(6.0, 7.5);
-        const depth = randomRange(7.0, 9.5);
-
-        addBuilding(
-          -43.5,
-          z + randomRange(-1, 1),
-          width,
-          depth,
-          randomRange(11, 24)
-        );
-
-        addBuilding(
-          43.5,
-          z + randomRange(-1, 1),
-          width,
-          depth,
-          randomRange(11, 24)
-        );
-      }
-
-      // Bloques interiores: dejan corredores amplios en el centro.
-      const innerBlocks = [
-        [-24, -21],
-        [24, -21],
-        [-24, 21],
-        [24, 21],
-        [-26, 0],
-        [26, 0]
+      const foliageMeshes = [];
+      const snowMeshes = [];
+      const layers = [
+        { y: 2.15, radius: 1.35, height: 2.25 },
+        { y: 3.05, radius: 1.08, height: 2.00 },
+        { y: 3.88, radius: 0.78, height: 1.62 }
       ];
 
-      for (const [x, z] of innerBlocks) {
-        addBuilding(
-          x,
-          z,
-          randomRange(6.5, 9.0),
-          randomRange(6.5, 9.0),
-          randomRange(7.5, 15)
+      for (const layer of layers) {
+        const foliage = new THREE.Mesh(
+          new THREE.ConeGeometry(layer.radius * scale, layer.height * scale, 10),
+          leafMaterial
         );
+        foliage.position.set(x, layer.y * scale, z);
+        foliage.castShadow = true;
+        foliage.receiveShadow = true;
+        foliage.userData.blockShot = true;
+        scene.add(foliage);
+        foliageMeshes.push(foliage);
+
+        const cap = new THREE.Mesh(
+          new THREE.ConeGeometry(layer.radius * 0.83 * scale, layer.height * 0.34 * scale, 10),
+          snowMaterial
+        );
+        cap.position.set(x, (layer.y + layer.height * 0.28) * scale, z);
+        cap.castShadow = true;
+        cap.userData.blockShot = true;
+        scene.add(cap);
+        snowMeshes.push(cap);
       }
 
-      // Coberturas / barricadas.
-      const covers = [
-        [-9, -8, 3.2, 1.4],
-        [8, -12, 2.8, 1.3],
-        [-13, 10, 3.4, 1.4],
-        [12, 9, 3.0, 1.4],
-        [0, -22, 4.0, 1.2],
-        [0, 22, 4.0, 1.2],
-        [-17, 0, 1.4, 3.8],
-        [17, 0, 1.4, 3.8],
-        [7, 4, 2.7, 1.3],
-        [-7, 3, 2.7, 1.3]
+      addCircleCollider(x, z, 0.60 * scale);
+      shotBlockers.push(trunk, ...foliageMeshes, ...snowMeshes);
+    }
+
+    function addIceRock(x, z, scale = 1) {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.95 * scale, 0),
+        iceMaterial
+      );
+      rock.scale.set(1.25, 0.72, 1.0);
+      rock.position.set(x, 0.64 * scale, z);
+      rock.rotation.set(Math.random() * 0.35, Math.random() * Math.PI, Math.random() * 0.18);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      rock.userData.blockShot = true;
+      scene.add(rock);
+      addCircleCollider(x, z, 0.92 * scale);
+      shotBlockers.push(rock);
+    }
+
+    function addSnowBank(x, z, width = 3.0, depth = 1.4, height = 1.15) {
+      const bank = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        snowMaterial
+      );
+      bank.position.set(x, height / 2, z);
+      bank.rotation.y = (Math.random() - 0.5) * 0.22;
+      bank.castShadow = true;
+      bank.receiveShadow = true;
+      bank.userData.blockShot = true;
+      scene.add(bank);
+      addBoxCollider(x, z, width, depth, 0.08);
+      shotBlockers.push(bank);
+    }
+
+    function createWinterForest() {
+      // Barreras naturales de nieve en los límites para reforzar el ambiente.
+      const edgeBanks = [
+        [0, -47, 86, 2.8], [0, 47, 86, 2.8],
+        [-47, 0, 2.8, 86], [47, 0, 2.8, 86]
       ];
-
-      for (const [x, z, width, depth] of covers) {
-        addCover(x, z, width, depth, randomRange(1.15, 1.55));
+      for (const [x, z, w, d] of edgeBanks) {
+        const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.7, d), snowMaterial);
+        edge.position.set(x, 0.35, z);
+        edge.receiveShadow = true;
+        scene.add(edge);
       }
 
-      // Obstáculos armados. Estas torretas apuntan a la posición actual
-      // del jugador y lanzan un proyectil real cada cinco segundos.
+      // Coberturas de nieve y hielo, dejando corredores de combate.
+      const snowBanks = [
+        [-10, -9, 4.2, 1.5], [10, -11, 3.5, 1.4],
+        [-14, 10, 3.8, 1.5], [13, 10, 4.0, 1.4],
+        [0, -23, 4.5, 1.4], [0, 23, 4.5, 1.4],
+        [-20, 1, 1.5, 4.0], [20, -1, 1.5, 4.0]
+      ];
+      for (const [x, z, w, d] of snowBanks) {
+        addSnowBank(x, z, w, d, randomRange(1.0, 1.45));
+      }
+
+      const rockPositions = [
+        [-27, -13], [-30, 18], [29, -17], [27, 17],
+        [-8, 27], [10, -29], [-31, 1], [32, 4]
+      ];
+      for (const [x, z] of rockPositions) {
+        if (!circleIntersectsWorld(x, z, 1.2)) addIceRock(x, z, randomRange(0.85, 1.35));
+      }
+
+      // Las mismas torretas de la lógica original, reubicadas entre el bosque.
       const turretPositions = [
-        [-15, -16],
-        [15, -17],
-        [-16, 16],
-        [16, 17],
-        [0, -32]
+        [-17, -18], [17, -19], [-19, 17], [19, 18], [0, -34]
       ];
-
       for (const [x, z] of turretPositions) {
-        if (!circleIntersectsWorld(x, z, 1.3)) {
-          addTurret(x, z);
-        }
+        if (!circleIntersectsWorld(x, z, 1.3)) addTurret(x, z);
       }
 
-      // Árboles procedurales. Se rechazan posiciones que choquen con
-      // otros objetos o con la zona inicial del jugador.
+      // Bosque muy denso: muchos pinos procedurales sin bloquear el punto inicial.
       let createdTrees = 0;
       let attempts = 0;
-
-      while (createdTrees < 20 && attempts < 250) {
+      while (createdTrees < 58 && attempts < 900) {
         attempts++;
+        const x = randomRange(-42, 42);
+        const z = randomRange(-42, 42);
+        const scale = randomRange(0.82, 1.42);
 
-        const x = randomRange(-36, 36);
-        const z = randomRange(-36, 36);
-        const scale = randomRange(0.85, 1.15);
+        if (Math.hypot(x, z - 8) < 8) continue;
+        if (Math.hypot(x, z) < 5.5) continue;
+        if (circleIntersectsWorld(x, z, 1.10 * scale)) continue;
 
-        if (Math.hypot(x, z - 8) < 7) continue;
-        if (circleIntersectsWorld(x, z, 1.45 * scale)) continue;
-
-        addTree(x, z, scale);
+        addSnowPine(x, z, scale);
         createdTrees++;
       }
     }
 
-    createCity();
+    createWinterForest();
+
+    // Nieve ambiental: partículas simples que caen continuamente.
+    const snowflakeCount = 420;
+    const snowPositions = new Float32Array(snowflakeCount * 3);
+    for (let i = 0; i < snowflakeCount; i++) {
+      snowPositions[i * 3] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+      snowPositions[i * 3 + 1] = randomRange(1.5, 24);
+      snowPositions[i * 3 + 2] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+    }
+    const snowGeometry = new THREE.BufferGeometry();
+    snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+    const snowPointsMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false
+    });
+    const snowfall = new THREE.Points(snowGeometry, snowPointsMaterial);
+    scene.add(snowfall);
+
+    function updateSnowfall(delta) {
+      const positions = snowGeometry.attributes.position.array;
+      for (let i = 0; i < snowflakeCount; i++) {
+        const index = i * 3;
+        positions[index + 1] -= delta * (2.2 + (i % 7) * 0.12);
+        positions[index] += Math.sin(elapsedTime * 0.7 + i) * delta * 0.18;
+        if (positions[index + 1] < 0.15) {
+          positions[index] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+          positions[index + 1] = randomRange(16, 25);
+          positions[index + 2] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+        }
+      }
+      snowGeometry.attributes.position.needsUpdate = true;
+    }
 
     // =========================================================
     // RONDAS, CHALECO Y ESCALADO DE DIFICULTAD
@@ -1026,16 +1085,23 @@
     let armorLevel = 0;
     let armorHitsRemaining = 0;
 
-    // Sprint global del jugador: 6 s de uso y recarga total en 2.5 s.
+    // Sprint y ralentización por rayos del jefe.
     let sprintEnergy = CONFIG.sprintMaxSeconds;
+    let sprintHeld = false;
     let sprintExhausted = false;
     let crouchActive = false;
     let currentPlayerHeight = CONFIG.playerHeight;
+    let slowRemaining = 0;
 
     function updateSprintHUD() {
       const pct = THREE.MathUtils.clamp(sprintEnergy / CONFIG.sprintMaxSeconds, 0, 1);
       sprintFillElement.style.transform = `scaleX(${pct})`;
-      if (crouchActive) {
+      if (slowRemaining > 0) {
+        const crouchLabel = crouchActive ? ' · AGACHADO' : '';
+        sprintTextElement.textContent = `❄ RALENTIZADO: ${slowRemaining.toFixed(1)} s${crouchLabel} · Sprint ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s`;
+        sprintStatusElement.style.color = '#78dcff';
+        sprintFillElement.style.background = '#65dfff';
+      } else if (crouchActive) {
         sprintTextElement.textContent = `AGACHADO · Velocidad ×${CONFIG.crouchSpeedMultiplier.toFixed(2)} · Sprint ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s`;
         sprintStatusElement.style.color = '#d8f7ff';
         sprintFillElement.style.background = '#a9d6df';
@@ -1050,11 +1116,18 @@
       }
     }
 
+    function applyBossSlow() {
+      slowRemaining = CONFIG.bossSlowDurationSeconds;
+      updateSprintHUD();
+    }
+
     function resetSprintState() {
       sprintEnergy = CONFIG.sprintMaxSeconds;
+      sprintHeld = false;
       sprintExhausted = false;
       crouchActive = false;
       currentPlayerHeight = CONFIG.playerHeight;
+      slowRemaining = 0;
       updateSprintHUD();
     }
 
@@ -1102,7 +1175,7 @@
         return;
       }
       bossStatusElement.style.display = 'block';
-      bossStatusElement.textContent = `JEFE FINAL · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
+      bossStatusElement.textContent = `🐻‍❄️ OSO POLAR GIGANTE · Vida ${finalBoss.health}/${finalBoss.maxHealth} · Rayos: -55% velocidad / 3 s`;
     }
 
     function updateRoundHUD() {
@@ -1111,7 +1184,7 @@
       const projectileSpeed = CONFIG.turretProjectileSpeed * multiplier;
       const spawnInterval = getEnemySpawnInterval();
 
-      roundStatusElement.textContent = bossActive ? 'Ronda: JEFE FINAL' : `Ronda: ${currentRound}`;
+      roundStatusElement.textContent = bossActive ? 'Ronda: 7 · JEFE FINAL' : `Ronda: ${currentRound}`;
       difficultyStatusElement.textContent =
         `Dificultad: +${Math.round(bonus * 100)}% (×${multiplier.toFixed(2)}) · Spawn: ${spawnInterval.toFixed(2)} s`;
       turretStatusElement.textContent =
@@ -1304,25 +1377,28 @@
         projectilePath.set(projectilePreviousPosition, mesh.position);
         projectilePath.closestPointToPoint(camera.position, true, closestPointOnProjectilePath);
 
+        const projectileRadius = projectile.radius || CONFIG.turretProjectileRadius;
         const hitPlayer = closestPointOnProjectilePath.distanceTo(camera.position) <
-          CONFIG.playerRadius + CONFIG.turretProjectileRadius;
+          CONFIG.playerRadius + projectileRadius;
 
         if (hitPlayer) {
           removeTurretProjectile(i);
-          if (!absorbProjectileWithArmor()) {
+          if (projectile.effect === 'slow') {
+            applyBossSlow();
+          } else if (!absorbProjectileWithArmor()) {
             endGame('Una torreta te alcanzó.');
             return;
           }
           continue;
         }
 
-        // Edificios, árboles, coberturas y otras torretas pueden detener
+        // Pinos, rocas, bancos de nieve y otras torretas pueden detener
         // físicamente el proyectil.
         if (
           circleIntersectsWorld(
             mesh.position.x,
             mesh.position.z,
-            CONFIG.turretProjectileRadius
+            projectileRadius
           ) ||
           projectile.life <= 0
         ) {
@@ -1523,8 +1599,12 @@
     // =========================================================
     // ENEMIGOS
     // =========================================================
-    const enemyBodyGeometry = new THREE.CylinderGeometry(0.50, 0.50, 1.25, 12);
-    const enemyHeadGeometry = new THREE.SphereGeometry(0.42, 12, 10);
+    // En Mundo 2 los enemigos se construyen como osos polares estilizados.
+    const enemyBodyGeometry = new THREE.SphereGeometry(0.72, 14, 10);
+    const enemyHeadGeometry = new THREE.SphereGeometry(0.46, 12, 10);
+    const enemySnoutGeometry = new THREE.SphereGeometry(0.24, 10, 8);
+    const enemyEarGeometry = new THREE.SphereGeometry(0.14, 9, 7);
+    const enemyLegGeometry = new THREE.CylinderGeometry(0.16, 0.19, 0.62, 9);
 
     const enemies = [];
     const enemyHitMeshes = [];
@@ -1588,21 +1668,57 @@
       group.position.set(spawnX, 0, spawnZ);
 
       const body = new THREE.Mesh(enemyBodyGeometry, enemyMaterial);
-      body.position.y = 0.70;
+      body.scale.set(1.38, 0.90, 1.72);
+      body.position.set(0, 0.92, 0);
       body.castShadow = true;
       body.receiveShadow = true;
       group.add(body);
 
       const head = new THREE.Mesh(enemyHeadGeometry, enemyHeadMaterial);
-      head.position.y = 1.55;
+      head.position.set(0, 1.28, 0.92);
       head.castShadow = true;
       group.add(head);
+
+      const snout = new THREE.Mesh(enemySnoutGeometry, enemyHeadMaterial);
+      snout.scale.set(0.92, 0.72, 1.20);
+      snout.position.set(0, 1.18, 1.28);
+      snout.castShadow = true;
+      group.add(snout);
+
+      const nose = new THREE.Mesh(
+        new THREE.SphereGeometry(0.105, 9, 7),
+        enemyDarkMaterial
+      );
+      nose.scale.set(1.0, 0.72, 0.72);
+      nose.position.set(0, 1.20, 1.52);
+      nose.castShadow = true;
+      group.add(nose);
+
+      const leftEar = new THREE.Mesh(enemyEarGeometry, enemyHeadMaterial);
+      leftEar.position.set(-0.30, 1.63, 0.88);
+      const rightEar = leftEar.clone();
+      rightEar.position.x = 0.30;
+      leftEar.castShadow = rightEar.castShadow = true;
+      group.add(leftEar, rightEar);
+
+      const legs = [];
+      const legPositions = [
+        [-0.42, 0.38, 0.48], [0.42, 0.38, 0.48],
+        [-0.42, 0.38, -0.52], [0.42, 0.38, -0.52]
+      ];
+      for (const [lx, ly, lz] of legPositions) {
+        const leg = new THREE.Mesh(enemyLegGeometry, enemyMaterial);
+        leg.position.set(lx, ly, lz);
+        leg.castShadow = true;
+        group.add(leg);
+        legs.push(leg);
+      }
 
       const enemy = {
         group,
         body,
         head,
-        hitMeshes: [body, head],
+        hitMeshes: [body, head, snout, nose, leftEar, rightEar, ...legs],
         speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier(),
         radius: CONFIG.enemyRadius,
         health: 1,
@@ -1611,10 +1727,11 @@
         bobOffset: Math.random() * Math.PI * 2
       };
 
-      body.userData.enemyRef = enemy;
-      head.userData.enemyRef = enemy;
+      for (const mesh of enemy.hitMeshes) {
+        mesh.userData.enemyRef = enemy;
+      }
 
-      enemyHitMeshes.push(body, head);
+      enemyHitMeshes.push(...enemy.hitMeshes);
       enemies.push(enemy);
       scene.add(group);
       updateEnemyCount();
@@ -1930,8 +2047,8 @@
       if (enemy.isBoss) {
         updateBossHUD();
         if (enemy.health > 0) {
-          enemy.body?.material?.emissive?.setHex(0x5a165f);
-          setTimeout(() => enemy.body?.material?.emissive?.setHex(0x16051e), 90);
+          enemy.body?.material?.emissive?.setHex(0x2a7891);
+          setTimeout(() => enemy.body?.material?.emissive?.setHex(0x15232b), 90);
           return;
         }
         defeatFinalBoss();
@@ -1953,7 +2070,7 @@
       raycaster.setFromCamera(centerScreen, camera);
 
       // Los obstáculos se incluyen para evitar disparar o atacar a través
-      // de edificios, árboles, barricadas y torretas.
+      // de pinos, rocas, bancos de nieve y torretas.
       const targets = [...enemyHitMeshes, ...shotBlockers];
       const intersections = raycaster.intersectObjects(targets, false);
       return intersections.length > 0 ? intersections[0] : null;
@@ -2187,79 +2304,123 @@
 
       const scale = CONFIG.bossScale;
       const group = new THREE.Group();
-      group.position.set(0, 0, -28);
+      group.position.set(0, 0, -30);
 
+      // Oso polar gigante construido únicamente con primitivas.
       const body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72 * scale, 0.92 * scale, 1.9 * scale, 14),
+        new THREE.SphereGeometry(0.86 * scale, 18, 14),
         bossBodyMaterial.clone()
       );
-      body.position.y = 0.95 * scale;
+      body.scale.set(1.16, 0.88, 1.42);
+      body.position.set(0, 0.88 * scale, 0);
       body.castShadow = true;
       group.add(body);
 
-      const shoulder = new THREE.Mesh(
-        new THREE.BoxGeometry(1.9 * scale, 0.36 * scale, 0.68 * scale),
+      const chest = new THREE.Mesh(
+        new THREE.SphereGeometry(0.58 * scale, 16, 12),
         bossBodyMaterial.clone()
       );
-      shoulder.position.y = 1.78 * scale;
-      shoulder.castShadow = true;
-      group.add(shoulder);
+      chest.scale.set(1.05, 1.1, 0.92);
+      chest.position.set(0, 1.18 * scale, 0.88 * scale);
+      chest.castShadow = true;
+      group.add(chest);
 
-      // Cabeza-torreta móvil independiente del cuerpo.
+      // Cabeza móvil: sigue al jugador y funciona como emisor de rayos de hielo.
       const headPivot = new THREE.Group();
-      headPivot.position.y = 2.18 * scale;
+      headPivot.position.set(0, 1.58 * scale, 1.18 * scale);
       group.add(headPivot);
 
       const head = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.55 * scale, 0.70 * scale, 0.55 * scale, 14),
+        new THREE.SphereGeometry(0.53 * scale, 16, 12),
         bossHeadMaterial.clone()
       );
-      head.rotation.x = Math.PI / 2;
       head.castShadow = true;
       headPivot.add(head);
 
-      const barrel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10 * scale, 0.14 * scale, 1.45 * scale, 10),
-        turretBarrelMaterial
+      const snout = new THREE.Mesh(
+        new THREE.SphereGeometry(0.30 * scale, 14, 10),
+        bossHeadMaterial.clone()
       );
-      barrel.rotation.x = Math.PI / 2;
-      barrel.position.z = 0.82 * scale;
-      barrel.castShadow = true;
-      headPivot.add(barrel);
+      snout.scale.set(1.0, 0.72, 1.18);
+      snout.position.set(0, -0.08 * scale, 0.43 * scale);
+      snout.castShadow = true;
+      headPivot.add(snout);
+
+      const nose = new THREE.Mesh(
+        new THREE.SphereGeometry(0.105 * scale, 10, 8),
+        bossDarkMaterial
+      );
+      nose.position.set(0, -0.05 * scale, 0.72 * scale);
+      headPivot.add(nose);
+
+      const earGeometry = new THREE.SphereGeometry(0.16 * scale, 10, 8);
+      const leftEar = new THREE.Mesh(earGeometry, bossHeadMaterial.clone());
+      leftEar.position.set(-0.39 * scale, 0.34 * scale, 0.02 * scale);
+      const rightEar = leftEar.clone();
+      rightEar.position.x = 0.39 * scale;
+      headPivot.add(leftEar, rightEar);
+
+      const eyeGeometry = new THREE.SphereGeometry(0.055 * scale, 8, 6);
+      const leftEye = new THREE.Mesh(eyeGeometry, bossIceMaterial);
+      leftEye.position.set(-0.20 * scale, 0.08 * scale, 0.48 * scale);
+      const rightEye = leftEye.clone();
+      rightEye.position.x = 0.20 * scale;
+      headPivot.add(leftEye, rightEye);
+
+      // Cristal frontal que concentra el rayo.
+      const iceEmitter = new THREE.Mesh(
+        new THREE.ConeGeometry(0.13 * scale, 0.48 * scale, 8),
+        bossIceMaterial
+      );
+      iceEmitter.rotation.x = Math.PI / 2;
+      iceEmitter.position.set(0, 0.28 * scale, 0.55 * scale);
+      headPivot.add(iceEmitter);
 
       const muzzle = new THREE.Object3D();
-      muzzle.position.set(0, 0, 1.58 * scale);
+      muzzle.position.set(0, 0.23 * scale, 0.92 * scale);
       headPivot.add(muzzle);
 
-      // Espada decorativa gigante fijada al costado derecho.
-      const sword = new THREE.Group();
-      sword.position.set(1.25 * scale, 1.15 * scale, 0);
-      sword.rotation.z = -0.34;
-      const grip = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.11 * scale, 0.11 * scale, 0.78 * scale, 10),
-        turretBarrelMaterial
-      );
-      grip.position.y = -0.25 * scale;
-      sword.add(grip);
-      const blade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22 * scale, 2.05 * scale, 0.10 * scale),
-        bossSwordMaterial
-      );
-      blade.position.y = 1.12 * scale;
-      blade.castShadow = true;
-      sword.add(blade);
-      group.add(sword);
+      const legs = [];
+      const legPositions = [
+        [-0.57, 0.42, 0.72], [0.57, 0.42, 0.72],
+        [-0.57, 0.42, -0.75], [0.57, 0.42, -0.75]
+      ];
+      for (const [lx, ly, lz] of legPositions) {
+        const leg = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.23 * scale, 0.29 * scale, 0.82 * scale, 11),
+          bossBodyMaterial.clone()
+        );
+        leg.position.set(lx * scale, ly * scale, lz * scale);
+        leg.castShadow = true;
+        group.add(leg);
+        legs.push(leg);
+      }
+
+      // Garras de hielo decorativas para remarcar que es el jefe del bosque.
+      const clawGroup = new THREE.Group();
+      for (let i = -1; i <= 1; i++) {
+        const claw = new THREE.Mesh(
+          new THREE.ConeGeometry(0.07 * scale, 0.42 * scale, 7),
+          bossIceMaterial
+        );
+        claw.rotation.x = Math.PI / 2;
+        claw.position.set(i * 0.18 * scale, 0, 0);
+        clawGroup.add(claw);
+      }
+      clawGroup.position.set(0.62 * scale, 0.40 * scale, 1.07 * scale);
+      group.add(clawGroup);
 
       const boss = {
-        group, body, head, barrel, headPivot, muzzle, sword,
-        hitMeshes: [body, shoulder, head, barrel],
-        radius: CONFIG.enemyRadius * scale,
+        group, body, chest, head, headPivot, muzzle, iceEmitter, legs,
+        hitMeshes: [body, chest, head, snout, nose, leftEar, rightEar, leftEye, rightEye, iceEmitter, ...legs],
+        radius: CONFIG.enemyRadius * scale * 1.12,
         speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier,
         health: CONFIG.bossMaxHealth,
         maxHealth: CONFIG.bossMaxHealth,
         isBoss: true,
-        bossShotTimer: 1.2,
-        bobOffset: 0
+        bossShotTimer: 1.0,
+        bobOffset: 0,
+        stepTime: 0
       };
 
       for (const mesh of boss.hitMeshes) {
@@ -2279,25 +2440,40 @@
       boss.muzzle.getWorldPosition(turretMuzzlePosition);
       turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
 
-      const projectile = new THREE.Mesh(turretProjectileGeometry, turretProjectileMaterial);
-      projectile.scale.setScalar(1.45);
-      projectile.position.copy(turretMuzzlePosition);
-      projectile.castShadow = true;
-      scene.add(projectile);
+      // Rayo de hielo: núcleo + anillo para que se diferencie de las balas rojas.
+      const ray = new THREE.Group();
+      const core = new THREE.Mesh(
+        new THREE.SphereGeometry(CONFIG.bossIceRayRadius, 12, 9),
+        bossIceRayMaterial
+      );
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(CONFIG.bossIceRayRadius * 1.65, 10, 8),
+        new THREE.MeshLambertMaterial({ color: 0xb9f5ff, emissive: 0x1a738b, transparent: true, opacity: 0.48 })
+      );
+      ray.add(core, halo);
+      ray.position.copy(turretMuzzlePosition);
+      scene.add(ray);
 
       turretProjectiles.push({
-        mesh: projectile,
-        velocity: turretDirection.clone().multiplyScalar(
-          CONFIG.turretProjectileSpeed * getRoundMultiplier()
-        ),
-        life: CONFIG.turretProjectileMaxLife
+        mesh: ray,
+        velocity: turretDirection.clone().multiplyScalar(CONFIG.bossIceRaySpeed),
+        life: CONFIG.turretProjectileMaxLife,
+        radius: CONFIG.bossIceRayRadius,
+        effect: 'slow'
       });
+
+      boss.iceEmitter.scale.setScalar(1.55);
+      setTimeout(() => {
+        if (boss.iceEmitter) boss.iceEmitter.scale.setScalar(1);
+      }, 100);
     }
 
     function updateFinalBoss(delta) {
       if (!bossActive || !finalBoss || gameOver) return;
       finalBoss.headPivot.lookAt(camera.position);
-      finalBoss.sword.rotation.y += delta * 0.55;
+      finalBoss.stepTime += delta;
+      finalBoss.group.position.y = Math.sin(finalBoss.stepTime * 4.2) * 0.08;
+      finalBoss.iceEmitter.rotation.z += delta * 2.8;
       finalBoss.bossShotTimer -= delta;
       if (finalBoss.bossShotTimer <= 0) {
         fireBossTurret(finalBoss);
@@ -2373,6 +2549,7 @@
 
       roundTransition = true;
       gameOver = true;
+      sprintHeld = false;
       setSniperZoom(false);
       clearTurretProjectiles();
       clearPlayerProjectiles();
@@ -2388,7 +2565,7 @@
       showOverlay(
         `¡RONDA ${completedRound} SUPERADA!`,
         finalNormalCompleted
-          ? `Llegaste al máximo de +125% de dificultad.${armorText} El JEFE FINAL está por aparecer.`
+          ? `Completaste las 6 rondas normales.${armorText} En la ronda 7 aparecerá el OSO POLAR GIGANTE.`
           : `Derrotaste ${defeatedEnemies}/${CONFIG.enemiesToWin} enemigos. Puntaje total: ${score}. ` +
             `La ronda ${nextRound} tendrá +${Math.round(nextBonus * 100)}% de dificultad.${armorText}`
       );
@@ -2401,7 +2578,7 @@
           startFinalBossRound();
           showOverlay(
             'JEFE FINAL',
-            `Movimiento al 150%, tamaño ×${CONFIG.bossScale.toFixed(0)}, cabeza-torreta móvil, espada gigante y ${CONFIG.bossMaxHealth} puntos de vida. Haz clic para luchar.`
+            `Ronda 7: oso polar gigante ×${CONFIG.bossScale.toFixed(0)}, movimiento al 150%, ${CONFIG.bossMaxHealth} puntos de vida y rayos de hielo que reducen tu velocidad durante 3 segundos. Haz clic para luchar.`
           );
         } else {
           startNextRound();
@@ -2518,9 +2695,11 @@
 
       const isMoving = moveVector.lengthSq() > 0;
       crouchActive = keys.ControlLeft || keys.ControlRight || mobileCrouchHeld;
-      const sprintHeld = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld;
-      let sprintActive = sprintHeld && !crouchActive && isMoving && sprintEnergy > 0 && !sprintExhausted;
+      sprintHeld = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld;
 
+      // Sprint y agachado son excluyentes: Ctrl cancela el sprint.
+      // El sprint consume hasta 6 segundos y se regenera totalmente en 2.5 s.
+      let sprintActive = sprintHeld && !crouchActive && isMoving && sprintEnergy > 0 && !sprintExhausted;
       if (sprintActive) {
         sprintEnergy = Math.max(0, sprintEnergy - delta);
         if (sprintEnergy <= 0) {
@@ -2537,10 +2716,13 @@
         }
       }
 
+      slowRemaining = Math.max(0, slowRemaining - delta);
+      const slowFactor = slowRemaining > 0 ? CONFIG.bossSlowMultiplier : 1;
+      const sprintFactor = sprintActive ? CONFIG.sprintMultiplier : 1;
+      const crouchFactor = crouchActive ? CONFIG.crouchSpeedMultiplier : 1;
+
       if (isMoving) {
-        const sprintFactor = sprintActive ? CONFIG.sprintMultiplier : 1;
-        const crouchFactor = crouchActive ? CONFIG.crouchSpeedMultiplier : 1;
-        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * delta);
+        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * slowFactor * delta);
         movePlayerWithCollision(moveVector.x, moveVector.z);
       }
 
@@ -2843,6 +3025,7 @@
       const delta = Math.min((currentTime - previousTime) / 1000, 0.05);
       previousTime = currentTime;
       elapsedTime += delta;
+      updateSnowfall(delta);
 
       if (isGameplayActive() && !gameOver) {
         updatePlayer(delta);

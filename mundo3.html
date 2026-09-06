@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Town - Mini FPS 3D</title>
+  <title>Medio Oeste - Duelo de Forajidos - Mini FPS 3D</title>
 
   <!--
     Three.js cargado por CDN mediante Import Map.
@@ -390,7 +390,7 @@
 
   <div id="overlay">
     <div id="panel">
-      <h1 id="overlayTitle">TOWN · Mini FPS 3D</h1>
+      <h1 id="overlayTitle">MEDIO OESTE · Mini FPS 3D</h1>
       <p id="overlayMessage">Haz clic o toca la pantalla para jugar</p>
 
       <div class="controlsHelp">
@@ -409,10 +409,12 @@
         <div><span class="key">Torretas</span> — Apuntan a tu posición</div>
         <div><span class="key">Cada 5 s</span> — Lanzan un proyectil</div>
         <div><span class="key">Ronda 3+</span> — Recoge el chaleco y sus mejoras</div>
-        <div><span class="key">Jefe final</span> — Tras alcanzar +125% de dificultad</div>
+        <div><span class="key">R</span> — Recargar armas con cargador/cilindro</div>
+        <div><span class="key">Ronda 10</span> — Jefe vaquero gigante montado a caballo</div>
+        <div><span class="key">Mundo 3</span> — Pueblo western cálido · cactus y forajidos armados</div>
       </div>
 
-      <a id="backToMenu" href="../../main.index.html">← Volver al menú principal</a>
+      <a id="backToMenu" href="main.index.html">← Volver al menú principal</a>
     </div>
   </div>
 
@@ -436,9 +438,9 @@
       crouchTransitionSpeed: 12.0,
       jumpSpeed: 8.5,
       gravity: 24.0,
-      enemyRadius: 0.55,
-      enemySpeedMin: 1.2,
-      enemySpeedMax: 2.0,
+      enemyRadius: 0.78,
+      enemySpeedMin: 1.45,
+      enemySpeedMax: 2.35,
       enemySpawnSeconds: 3.0,
       initialEnemies: 4,
       maxEnemies: 14,
@@ -462,6 +464,20 @@
       machineGunDistance: 85,
       machineGunProjectileSpeed: 72.0,
 
+      // Revólver del jugador: 6 en el cilindro, 36 balas totales.
+      revolverTotalAmmo: 36,
+      revolverCylinderSize: 6,
+      revolverCooldownMs: 360,
+      revolverReloadSeconds: 1.75,
+      revolverDistance: 92,
+      revolverProjectileSpeed: 68.0,
+
+      // Los forajidos apuntan y disparan un revólver cada 5 segundos.
+      enemyRevolverShotSeconds: 5.0,
+      enemyRevolverProjectileSpeed: 23.0,
+      enemyRevolverRange: 48,
+      enemyFireAnimationSeconds: 0.42,
+
       swordCooldownMs: 430,
       swordRange: 5.5,
       pointsPerEnemy: 100,
@@ -481,7 +497,8 @@
       // Progresión lineal: +25 puntos porcentuales por ronda hasta +125%.
       difficultyStep: 0.25,
       maxDifficultyBonus: 1.25,
-      finalNormalRound: 6,
+      finalNormalRound: 9,
+      bossRound: 10,
 
       // Chaleco antibalas: nivel 1 = 3 impactos; cada nivel suma 2; máximo 3.
       armorStartRound: 3,
@@ -493,8 +510,11 @@
       // Jefe final.
       bossScale: 3.0,
       bossMovementMultiplier: 1.5,
-      bossMaxHealth: 24,
-      bossShotSeconds: 2.4,
+      bossMaxHealth: 36,
+      bossShotSeconds: 2.65,
+      bossShotgunPellets: 7,
+      bossShotgunSpread: 0.095,
+      bossShotgunProjectileSpeed: 31.0,
       bossScore: 2500,
       finalResetMs: 4200,
       roundTransitionMs: 2200
@@ -528,8 +548,8 @@
     // ESCENA, CÁMARA Y RENDERER
     // =========================================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x9fb3c8);
-    scene.fog = new THREE.Fog(0x9fb3c8, 45, 105);
+    scene.background = new THREE.Color(0xe8b36b);
+    scene.fog = new THREE.Fog(0xd9a45f, 42, 108);
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -591,11 +611,11 @@
     // =========================================================
     // ILUMINACIÓN
     // =========================================================
-    const ambientLight = new THREE.HemisphereLight(0xe9f3ff, 0x39422b, 2.0);
+    const ambientLight = new THREE.HemisphereLight(0xffe4b0, 0x7a5630, 2.35);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xffffff, 2.4);
-    sun.position.set(25, 45, 15);
+    const sun = new THREE.DirectionalLight(0xffd08a, 3.0);
+    sun.position.set(-30, 48, 18);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -60;
@@ -607,13 +627,16 @@
     // =========================================================
     // MATERIALES
     // =========================================================
-    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0x30343b });
-    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0x666a70 });
-    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x6b432a });
-    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x397a3c });
-    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x7a6a51 });
-    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xc62828 });
-    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xe53935 });
+    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0xc98a48 });
+    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0xa96732 });
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x6b3d20 });
+    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x477b2c });
+    const snowMaterial = new THREE.MeshLambertMaterial({ color: 0xd89a56 });
+    const iceMaterial = new THREE.MeshLambertMaterial({ color: 0xb8753d });
+    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x8a542b });
+    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0x7f2f20 });
+    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xd59a6f });
+    const enemyDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x2b1a12 });
 
     // Materiales de los obstáculos armados.
     const turretBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x3b434b });
@@ -629,6 +652,13 @@
     const bossBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x53106e, emissive: 0x16051e });
     const bossHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x9b1b5e, emissive: 0x2d061d });
     const bossSwordMaterial = new THREE.MeshLambertMaterial({ color: 0xb8d8e8, emissive: 0x182a33 });
+    const enemyGunMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x25201c });
+    const enemyGunGripMaterial = new THREE.MeshLambertMaterial({ color: 0x6b3b21 });
+    const enemyMuzzleFlashMaterial = new THREE.MeshBasicMaterial({ color: 0xffd35c });
+    const horseBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x6d3f25 });
+    const horseManeMaterial = new THREE.MeshLambertMaterial({ color: 0x2a1a12 });
+    const shotgunMaterial = new THREE.MeshLambertMaterial({ color: 0x282522 });
+    const shotgunWoodMaterial = new THREE.MeshLambertMaterial({ color: 0x7c4829 });
 
     // =========================================================
     // SUELO
@@ -640,16 +670,21 @@
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
+    // Calle principal del pueblo: dos franjas de tierra apisonada y huellas secas.
+    const trailMaterial = new THREE.MeshLambertMaterial({ color: 0xa96837 });
+    const street = new THREE.Mesh(
+      new THREE.BoxGeometry(10.5, 0.025, 92),
+      trailMaterial
+    );
+    street.position.set(0, 0.012, 0);
+    street.receiveShadow = true;
+    scene.add(street);
 
-    // Franjas simples para dar sensación de calles, sin texturas externas.
-    const roadLineMaterial = new THREE.MeshLambertMaterial({ color: 0xd0b64c });
-    for (let z = -40; z <= 40; z += 10) {
-      const line = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 0.015, 4.0),
-        roadLineMaterial
-      );
-      line.position.set(0, 0.012, z);
-      scene.add(line);
+    const wheelTrackMaterial = new THREE.MeshLambertMaterial({ color: 0x8e542e });
+    for (const x of [-2.7, 2.7]) {
+      const track = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.014, 88), wheelTrackMaterial);
+      track.position.set(x, 0.028, 0);
+      scene.add(track);
     }
 
     // =========================================================
@@ -892,132 +927,350 @@
       scene.add(mesh);
     }
 
-    function createCity() {
-      // Banquetas decorativas perimetrales.
-      addSidewalk(0, -47, 92, 5);
-      addSidewalk(0, 47, 92, 5);
-      addSidewalk(-47, 0, 5, 92);
-      addSidewalk(47, 0, 5, 92);
+    function addWoodenHouse(x, z, width = 7, depth = 6, height = 4.8, rotation = 0) {
+      const house = new THREE.Group();
+      house.position.set(x, 0, z);
+      house.rotation.y = rotation;
 
-      // Edificios en los bordes norte y sur.
-      for (let x = -40; x <= 40; x += 11.5) {
-        const width = randomRange(7.2, 9.5);
-        const depth = randomRange(6.0, 8.0);
+      const woodColors = [0x9b5b32, 0x7c4327, 0xb06c3c, 0x85502f];
+      const wallMat = new THREE.MeshLambertMaterial({ color: randomItem(woodColors) });
+      const roofMat = new THREE.MeshLambertMaterial({ color: 0x4f3023 });
+      const trimMat = new THREE.MeshLambertMaterial({ color: 0xd0a66e });
+      const darkMat = new THREE.MeshLambertMaterial({ color: 0x2d211b });
 
-        addBuilding(
-          x + randomRange(-0.9, 0.9),
-          -43.5,
-          width,
-          depth,
-          randomRange(10, 25)
-        );
+      const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), wallMat);
+      body.position.y = height / 2;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      body.userData.blockShot = true;
+      house.add(body);
 
-        addBuilding(
-          x + randomRange(-0.9, 0.9),
-          43.5,
-          width,
-          depth,
-          randomRange(9, 23)
-        );
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(width * 1.12, 0.42, depth * 1.12), roofMat);
+      roof.position.y = height + 0.22;
+      roof.castShadow = true;
+      roof.userData.blockShot = true;
+      house.add(roof);
+
+      // Porche frontal hacia el centro de la calle local (+Z del grupo).
+      const porch = new THREE.Mesh(new THREE.BoxGeometry(width * 0.9, 0.22, 1.35), trimMat);
+      porch.position.set(0, 0.34, depth / 2 + 0.55);
+      porch.castShadow = true;
+      porch.userData.blockShot = true;
+      house.add(porch);
+
+      const awning = new THREE.Mesh(new THREE.BoxGeometry(width * 0.95, 0.18, 1.2), roofMat);
+      awning.position.set(0, 2.75, depth / 2 + 0.48);
+      awning.rotation.x = -0.12;
+      awning.castShadow = true;
+      awning.userData.blockShot = true;
+      house.add(awning);
+
+      const door = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.25, 0.16), darkMat);
+      door.position.set(0, 1.32, depth / 2 + 0.09);
+      house.add(door);
+
+      for (const wx of [-width * 0.27, width * 0.27]) {
+        const windowMesh = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.05, 0.12), new THREE.MeshLambertMaterial({ color: 0x6f9aa5 }));
+        windowMesh.position.set(wx, 2.5, depth / 2 + 0.10);
+        house.add(windowMesh);
       }
 
-      // Edificios en los bordes este y oeste.
-      for (let z = -30; z <= 30; z += 12) {
-        const width = randomRange(6.0, 7.5);
-        const depth = randomRange(7.0, 9.5);
+      scene.add(house);
 
-        addBuilding(
-          -43.5,
-          z + randomRange(-1, 1),
-          width,
-          depth,
-          randomRange(11, 24)
-        );
+      // Casas quedan alineadas a 0 o PI en este mapa, así que la caja global conserva medidas.
+      addBoxCollider(x, z, width, depth, 0.12);
+      shotBlockers.push(body, roof, porch, awning);
+    }
 
-        addBuilding(
-          43.5,
-          z + randomRange(-1, 1),
-          width,
-          depth,
-          randomRange(11, 24)
-        );
+    function addCactus(x, z, scale = 1) {
+      const cactusMaterial = new THREE.MeshLambertMaterial({ color: 0x3e7c3d });
+      const darkCactusMaterial = new THREE.MeshLambertMaterial({ color: 0x315f31 });
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+
+      const trunkHeight = 3.2 * scale;
+      const trunkRadius = 0.34 * scale;
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.08, trunkHeight, 10),
+        cactusMaterial
+      );
+      trunk.position.y = trunkHeight / 2;
+      trunk.castShadow = true;
+      trunk.userData.blockShot = true;
+      group.add(trunk);
+
+      const top = new THREE.Mesh(new THREE.SphereGeometry(trunkRadius, 10, 8), cactusMaterial);
+      top.position.y = trunkHeight;
+      top.scale.y = 0.7;
+      top.castShadow = true;
+      top.userData.blockShot = true;
+      group.add(top);
+
+      for (const side of [-1, 1]) {
+        const armH = 1.35 * scale;
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.20 * scale, 0.23 * scale, armH, 9), darkCactusMaterial);
+        arm.position.set(side * 0.62 * scale, 1.65 * scale, 0);
+        arm.castShadow = true;
+        arm.userData.blockShot = true;
+        group.add(arm);
+
+        const connector = new THREE.Mesh(new THREE.CylinderGeometry(0.19 * scale, 0.21 * scale, 0.8 * scale, 9), cactusMaterial);
+        connector.rotation.z = Math.PI / 2;
+        connector.position.set(side * 0.32 * scale, 1.25 * scale, 0);
+        connector.castShadow = true;
+        connector.userData.blockShot = true;
+        group.add(connector);
+        shotBlockers.push(arm, connector);
       }
 
-      // Bloques interiores: dejan corredores amplios en el centro.
-      const innerBlocks = [
-        [-24, -21],
-        [24, -21],
-        [-24, 21],
-        [24, 21],
-        [-26, 0],
-        [26, 0]
-      ];
+      scene.add(group);
+      addCircleCollider(x, z, 0.58 * scale);
+      shotBlockers.push(trunk, top);
+    }
 
-      for (const [x, z] of innerBlocks) {
-        addBuilding(
-          x,
-          z,
-          randomRange(6.5, 9.0),
-          randomRange(6.5, 9.0),
-          randomRange(7.5, 15)
-        );
+    function addWoodenCrate(x, z, width = 2.2, depth = 1.4, height = 1.45) {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), coverMaterial);
+      box.position.set(x, height / 2, z);
+      box.castShadow = true;
+      box.receiveShadow = true;
+      box.userData.blockShot = true;
+      scene.add(box);
+
+      const bandsMat = new THREE.MeshLambertMaterial({ color: 0x4c2d1b });
+      for (const y of [height * 0.18, height * 0.82]) {
+        const band = new THREE.Mesh(new THREE.BoxGeometry(width * 1.02, 0.12, depth * 1.03), bandsMat);
+        band.position.set(x, y, z);
+        band.userData.blockShot = true;
+        scene.add(band);
+        shotBlockers.push(band);
       }
 
-      // Coberturas / barricadas.
-      const covers = [
-        [-9, -8, 3.2, 1.4],
-        [8, -12, 2.8, 1.3],
-        [-13, 10, 3.4, 1.4],
-        [12, 9, 3.0, 1.4],
-        [0, -22, 4.0, 1.2],
-        [0, 22, 4.0, 1.2],
-        [-17, 0, 1.4, 3.8],
-        [17, 0, 1.4, 3.8],
-        [7, 4, 2.7, 1.3],
-        [-7, 3, 2.7, 1.3]
-      ];
+      addBoxCollider(x, z, width, depth, 0.06);
+      shotBlockers.push(box);
+    }
 
-      for (const [x, z, width, depth] of covers) {
-        addCover(x, z, width, depth, randomRange(1.15, 1.55));
+    function addDesertRock(x, z, scale = 1) {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.9 * scale, 0),
+        new THREE.MeshLambertMaterial({ color: randomItem([0x93613f, 0xa56c45, 0x80543a]) })
+      );
+      rock.position.set(x, 0.72 * scale, z);
+      rock.scale.set(1.3, 0.8, 1.0);
+      rock.rotation.set(randomRange(-0.2,0.2), randomRange(0,Math.PI), randomRange(-0.15,0.15));
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      rock.userData.blockShot = true;
+      scene.add(rock);
+      addCircleCollider(x, z, 0.82 * scale);
+      shotBlockers.push(rock);
+    }
+
+    // =========================================================
+    // AMBIENTACIÓN WESTERN EXTRA
+    // =========================================================
+    const tumbleweeds = [];
+    const lanternLights = [];
+
+    function addFenceSegment(x, z, length = 5.5, rotation = 0) {
+      const fence = new THREE.Group();
+      fence.position.set(x, 0, z);
+      fence.rotation.y = rotation;
+      const wood = new THREE.MeshLambertMaterial({ color: 0x704326 });
+
+      for (const px of [-length / 2, length / 2]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.25, 0.18), wood);
+        post.position.set(px, 0.62, 0);
+        post.castShadow = true;
+        fence.add(post);
       }
-
-      // Obstáculos armados. Estas torretas apuntan a la posición actual
-      // del jugador y lanzan un proyectil real cada cinco segundos.
-      const turretPositions = [
-        [-15, -16],
-        [15, -17],
-        [-16, 16],
-        [16, 17],
-        [0, -32]
-      ];
-
-      for (const [x, z] of turretPositions) {
-        if (!circleIntersectsWorld(x, z, 1.3)) {
-          addTurret(x, z);
-        }
+      for (const y of [0.45, 0.9]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(length, 0.13, 0.14), wood);
+        rail.position.y = y;
+        rail.castShadow = true;
+        fence.add(rail);
       }
+      scene.add(fence);
+    }
 
-      // Árboles procedurales. Se rechazan posiciones que choquen con
-      // otros objetos o con la zona inicial del jugador.
-      let createdTrees = 0;
-      let attempts = 0;
+    function addLanternPost(x, z) {
+      const postMat = new THREE.MeshLambertMaterial({ color: 0x3c2b20 });
+      const glassMat = new THREE.MeshLambertMaterial({ color: 0xffc95c, emissive: 0x7d3f05, emissiveIntensity: 1.3 });
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 3.3, 8), postMat);
+      post.position.set(x, 1.65, z);
+      post.castShadow = true;
+      scene.add(post);
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.34), glassMat);
+      lamp.position.set(x, 3.0, z);
+      scene.add(lamp);
+      const light = new THREE.PointLight(0xffb347, 1.35, 10, 2.0);
+      light.position.set(x, 3.0, z);
+      scene.add(light);
+      lanternLights.push({ light, offset: Math.random() * Math.PI * 2 });
+    }
 
-      while (createdTrees < 20 && attempts < 250) {
-        attempts++;
+    function addWaterTower(x, z) {
+      const wood = new THREE.MeshLambertMaterial({ color: 0x6f472c });
+      const metal = new THREE.MeshLambertMaterial({ color: 0x6a6357 });
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 5.0, 0.22), wood);
+        leg.position.set(sx * 1.15, 2.5, sz * 1.15);
+        leg.rotation.z = -sx * 0.06;
+        leg.castShadow = true;
+        group.add(leg);
+      }
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 2.6, 16), metal);
+      tank.position.y = 6.0;
+      tank.castShadow = true;
+      tank.userData.blockShot = true;
+      group.add(tank);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.25, 0.9, 16), new THREE.MeshLambertMaterial({ color: 0x4b4136 }));
+      roof.position.y = 7.75;
+      roof.castShadow = true;
+      group.add(roof);
+      scene.add(group);
+      addCircleCollider(x, z, 1.45);
+      shotBlockers.push(tank);
+    }
 
-        const x = randomRange(-36, 36);
-        const z = randomRange(-36, 36);
-        const scale = randomRange(0.85, 1.15);
+    function addHayBale(x, z, rotation = 0) {
+      const bale = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.62, 0.62, 1.35, 12),
+        new THREE.MeshLambertMaterial({ color: 0xc79543 })
+      );
+      bale.rotation.z = Math.PI / 2;
+      bale.rotation.y = rotation;
+      bale.position.set(x, 0.64, z);
+      bale.castShadow = true;
+      bale.receiveShadow = true;
+      bale.userData.blockShot = true;
+      scene.add(bale);
+      addCircleCollider(x, z, 0.72);
+      shotBlockers.push(bale);
+    }
 
-        if (Math.hypot(x, z - 8) < 7) continue;
-        if (circleIntersectsWorld(x, z, 1.45 * scale)) continue;
+    function addTumbleweed(x, z, speed = 1.6) {
+      const weed = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.48, 1),
+        new THREE.MeshLambertMaterial({ color: 0x7d572e, wireframe: true })
+      );
+      weed.position.set(x, 0.52, z);
+      scene.add(weed);
+      tumbleweeds.push({ mesh: weed, speed, phase: Math.random() * Math.PI * 2 });
+    }
 
-        addTree(x, z, scale);
-        createdTrees++;
+    function createWesternAmbience() {
+      addWaterTower(-39, -34);
+      for (const z of [-34, -20, -6, 10, 24, 36]) {
+        addLanternPost(-6.8, z);
+        addLanternPost(6.8, z + 2);
+      }
+      for (const [x,z,r] of [
+        [-34,-27,0],[34,-27,0],[-34,25,0],[34,25,0],
+        [-27,42,Math.PI/2],[27,42,Math.PI/2],[-27,-43,Math.PI/2],[27,-43,Math.PI/2]
+      ]) addFenceSegment(x,z,7,r);
+      for (const [x,z,r] of [[-8,32,0],[8,-33,1.1],[-24,8,.4],[25,-8,-.5]]) addHayBale(x,z,r);
+      for (let i = 0; i < 7; i++) addTumbleweed(randomRange(-38, 38), randomRange(-40, 40), randomRange(1.0, 2.2));
+    }
+
+    function updateWesternAmbience(delta, elapsed) {
+      for (const weed of tumbleweeds) {
+        weed.mesh.position.x += weed.speed * delta;
+        weed.mesh.position.z += Math.sin(elapsed * 0.7 + weed.phase) * delta * 0.55;
+        weed.mesh.rotation.z -= weed.speed * delta * 1.8;
+        weed.mesh.rotation.x += delta * 0.65;
+        if (weed.mesh.position.x > CONFIG.mapHalfSize + 2) weed.mesh.position.x = -CONFIG.mapHalfSize - 2;
+      }
+      for (const item of lanternLights) {
+        item.light.intensity = 1.15 + Math.sin(elapsed * 7.0 + item.offset) * 0.18;
       }
     }
 
-    createCity();
+    function createWesternTown() {
+      // Edificios de madera a ambos lados de la calle principal.
+      const houses = [
+        [-12, -30, 7.5, 6.4, 5.0, Math.PI], [12, -29, 8.5, 6.2, 5.4, Math.PI],
+        [-13, -15, 8.2, 6.6, 4.8, Math.PI], [13, -13, 7.2, 6.0, 5.2, Math.PI],
+        [-13, 3, 9.0, 6.5, 5.8, 0], [13, 5, 8.0, 6.0, 4.9, 0],
+        [-12, 20, 7.0, 6.0, 5.0, 0], [13, 23, 9.0, 6.8, 5.6, 0],
+        [-28, 32, 8.5, 7.0, 5.2, 0], [29, 31, 7.5, 6.4, 4.8, 0]
+      ];
+      for (const h of houses) addWoodenHouse(...h);
+
+      // Barricadas/cajas en calles laterales y plazas.
+      const crates = [
+        [-4.2, -19, 2.4, 1.4], [4.5, -20, 2.0, 1.3],
+        [-5.0, -4, 2.5, 1.4], [5.1, -2, 2.3, 1.4],
+        [-4.5, 13, 2.1, 1.5], [4.6, 15, 2.5, 1.4],
+        [-22, -6, 2.7, 1.4], [23, 10, 2.6, 1.5]
+      ];
+      for (const [x,z,w,d] of crates) addWoodenCrate(x,z,w,d,randomRange(1.2,1.55));
+
+      // Torretas escondidas entre las estructuras del pueblo.
+      const turretPositions = [
+        [-20, -23], [20, -22], [-22, 18], [22, 19], [0, 34]
+      ];
+      for (const [x,z] of turretPositions) {
+        if (!circleIntersectsWorld(x,z,1.3)) addTurret(x,z);
+      }
+
+      // Rocas y cactus en las afueras. Se evita la zona inicial del jugador.
+      const rockPositions = [[-34,-10],[34,-7],[-31,14],[32,17],[-20,38],[21,-39]];
+      for (const [x,z] of rockPositions) {
+        if (!circleIntersectsWorld(x,z,1.2)) addDesertRock(x,z,randomRange(0.8,1.35));
+      }
+
+      let cactusCount = 0;
+      let attempts = 0;
+      while (cactusCount < 42 && attempts < 750) {
+        attempts++;
+        const x = randomRange(-43,43);
+        const z = randomRange(-43,43);
+        const scale = randomRange(0.78,1.35);
+        if (Math.abs(x) < 8.5 && Math.abs(z) < 38) continue; // mantener despejada la calle principal
+        if (Math.hypot(x, z - 8) < 7.5) continue;
+        if (circleIntersectsWorld(x,z,0.72*scale)) continue;
+        addCactus(x,z,scale);
+        cactusCount++;
+      }
+    }
+
+    createWesternTown();
+    createWesternAmbience();
+
+    // Polvo cálido suspendido en el aire, sin texturas externas.
+    const dustCount = 320;
+    const dustPositions = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+      dustPositions[i * 3 + 1] = randomRange(0.25, 8.5);
+      dustPositions[i * 3 + 2] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+    }
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const dustPointsMaterial = new THREE.PointsMaterial({
+      color: 0xe8c18d,
+      size: 0.10,
+      transparent: true,
+      opacity: 0.42,
+      depthWrite: false
+    });
+    const dustCloud = new THREE.Points(dustGeometry, dustPointsMaterial);
+    scene.add(dustCloud);
+
+    function updateDust(delta) {
+      const positions = dustGeometry.attributes.position.array;
+      for (let i = 0; i < dustCount; i++) {
+        const index = i * 3;
+        positions[index] += delta * (0.24 + (i % 5) * 0.035);
+        positions[index + 1] += Math.sin(elapsedTime * 0.35 + i) * delta * 0.035;
+        if (positions[index] > CONFIG.mapHalfSize) positions[index] = -CONFIG.mapHalfSize;
+        if (positions[index + 1] < 0.12) positions[index + 1] = 0.3;
+        if (positions[index + 1] > 9) positions[index + 1] = 0.4;
+      }
+      dustGeometry.attributes.position.needsUpdate = true;
+    }
 
     // =========================================================
     // RONDAS, CHALECO Y ESCALADO DE DIFICULTAD
@@ -1102,7 +1355,7 @@
         return;
       }
       bossStatusElement.style.display = 'block';
-      bossStatusElement.textContent = `JEFE FINAL · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
+      bossStatusElement.textContent = `VAQUERO A CABALLO · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
     }
 
     function updateRoundHUD() {
@@ -1111,11 +1364,11 @@
       const projectileSpeed = CONFIG.turretProjectileSpeed * multiplier;
       const spawnInterval = getEnemySpawnInterval();
 
-      roundStatusElement.textContent = bossActive ? 'Ronda: JEFE FINAL' : `Ronda: ${currentRound}`;
+      roundStatusElement.textContent = bossActive ? `Ronda: ${CONFIG.bossRound} · JEFE FINAL` : `Ronda: ${currentRound}`;
       difficultyStatusElement.textContent =
         `Dificultad: +${Math.round(bonus * 100)}% (×${multiplier.toFixed(2)}) · Spawn: ${spawnInterval.toFixed(2)} s`;
       turretStatusElement.textContent =
-        `Torretas: cada ${CONFIG.turretShotSeconds.toFixed(0)} s · bala ${projectileSpeed.toFixed(1)} u/s`;
+        `Torretas: cada ${CONFIG.turretShotSeconds.toFixed(0)} s · Vaqueros: revólver cada ${CONFIG.enemyRevolverShotSeconds.toFixed(0)} s · bala torreta ${projectileSpeed.toFixed(1)} u/s`;
       updateArmorHUD();
       updateBossHUD();
     }
@@ -1310,13 +1563,13 @@
         if (hitPlayer) {
           removeTurretProjectile(i);
           if (!absorbProjectileWithArmor()) {
-            endGame('Una torreta te alcanzó.');
+            endGame(projectile.reason || 'Una torreta te alcanzó.');
             return;
           }
           continue;
         }
 
-        // Edificios, árboles, coberturas y otras torretas pueden detener
+        // Pinos, rocas, bancos de nieve y otras torretas pueden detener
         // físicamente el proyectil.
         if (
           circleIntersectsWorld(
@@ -1331,11 +1584,46 @@
       }
     }
 
+    function spawnHostileProjectile(origin, direction, speed, {
+      scale = 1,
+      material = turretProjectileMaterial,
+      reason = 'Un disparo enemigo te alcanzó.'
+    } = {}) {
+      const projectile = new THREE.Mesh(turretProjectileGeometry, material);
+      projectile.scale.setScalar(scale);
+      projectile.position.copy(origin);
+      projectile.castShadow = true;
+      scene.add(projectile);
+      turretProjectiles.push({
+        mesh: projectile,
+        velocity: direction.clone().normalize().multiplyScalar(speed),
+        life: CONFIG.turretProjectileMaxLife,
+        reason
+      });
+    }
+
+    function fireEnemyRevolver(enemy) {
+      if (!enemy?.revolverMuzzle || gameOver || bossActive) return;
+      enemy.revolverMuzzle.getWorldPosition(turretMuzzlePosition);
+      turretTarget.copy(camera.position);
+      turretTarget.y -= 0.12;
+      turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
+      spawnHostileProjectile(
+        turretMuzzlePosition,
+        turretDirection,
+        CONFIG.enemyRevolverProjectileSpeed * getRoundMultiplier(),
+        { scale: 0.58, reason: 'Un forajido te alcanzó con su revólver.' }
+      );
+      enemy.fireAnimRemaining = CONFIG.enemyFireAnimationSeconds;
+      enemy.muzzleFlash.visible = true;
+      enemy.shotTimer += CONFIG.enemyRevolverShotSeconds;
+    }
+
     // =========================================================
     // ARMAS EN PRIMERA PERSONA
     // =========================================================
-    // El jugador dispone de cuatro armas: pistola, francotirador,
-    // espada y metralleta. La tecla 3 recorre las cuatro armas.
+    // El jugador dispone de cinco armas: pistola, francotirador,
+    // espada, metralleta y revólver. La tecla 3 recorre las cinco armas.
     const weaponGroup = new THREE.Group(); // Pistola
     camera.add(weaponGroup);
 
@@ -1520,11 +1808,61 @@
     machineGunMuzzle.position.set(0.34, -0.25, -2.08);
     machineGunGroup.add(machineGunMuzzle);
 
+    // -------------------------
+    // 5) Revólver
+    // -------------------------
+    const revolverGroup = new THREE.Group();
+    camera.add(revolverGroup);
+    revolverGroup.visible = false;
+
+    const revolverMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x303236 });
+    const revolverGripMaterial = new THREE.MeshLambertMaterial({ color: 0x754324 });
+    const revolverCylinderMaterial = new THREE.MeshLambertMaterial({ color: 0x4b4e52 });
+
+    const revolverFrame = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.20, 0.56), revolverMetalMaterial),
+      revolverMetalMaterial
+    );
+    revolverFrame.position.set(0.36, -0.27, -0.70);
+    revolverGroup.add(revolverFrame);
+
+    const revolverBarrel = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.66, 12), revolverMetalMaterial),
+      revolverMetalMaterial
+    );
+    revolverBarrel.rotation.x = Math.PI / 2;
+    revolverBarrel.position.set(0.36, -0.22, -1.18);
+    revolverGroup.add(revolverBarrel);
+
+    const revolverCylinder = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.24, 12), revolverCylinderMaterial),
+      revolverCylinderMaterial
+    );
+    revolverCylinder.rotation.z = Math.PI / 2;
+    revolverCylinder.position.set(0.36, -0.25, -0.82);
+    revolverGroup.add(revolverCylinder);
+
+    const revolverGrip = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.34, 0.22), revolverGripMaterial),
+      revolverGripMaterial
+    );
+    revolverGrip.position.set(0.36, -0.43, -0.58);
+    revolverGrip.rotation.x = -0.25;
+    revolverGroup.add(revolverGrip);
+
+    const revolverMuzzle = new THREE.Object3D();
+    revolverMuzzle.position.set(0.36, -0.22, -1.58);
+    revolverGroup.add(revolverMuzzle);
+
     // =========================================================
     // ENEMIGOS
     // =========================================================
-    const enemyBodyGeometry = new THREE.CylinderGeometry(0.50, 0.50, 1.25, 12);
-    const enemyHeadGeometry = new THREE.SphereGeometry(0.42, 12, 10);
+    // En Mundo 3 los enemigos son forajidos western estilizados construidos con primitivas.
+    const enemyBodyGeometry = new THREE.CylinderGeometry(0.42, 0.50, 1.05, 10);
+    const enemyHeadGeometry = new THREE.SphereGeometry(0.34, 12, 10);
+    const enemyHatBrimGeometry = new THREE.CylinderGeometry(0.52, 0.52, 0.08, 14);
+    const enemyHatTopGeometry = new THREE.CylinderGeometry(0.29, 0.34, 0.32, 12);
+    const enemyLegGeometry = new THREE.CylinderGeometry(0.14, 0.16, 0.72, 9);
 
     const enemies = [];
     const enemyHitMeshes = [];
@@ -1588,33 +1926,106 @@
       group.position.set(spawnX, 0, spawnZ);
 
       const body = new THREE.Mesh(enemyBodyGeometry, enemyMaterial);
-      body.position.y = 0.70;
+      body.position.set(0, 1.02, 0);
       body.castShadow = true;
       body.receiveShadow = true;
       group.add(body);
 
       const head = new THREE.Mesh(enemyHeadGeometry, enemyHeadMaterial);
-      head.position.y = 1.55;
+      head.position.set(0, 1.78, 0.04);
       head.castShadow = true;
       group.add(head);
+
+      // Sombrero western de ala ancha.
+      const hatBrim = new THREE.Mesh(enemyHatBrimGeometry, enemyDarkMaterial);
+      hatBrim.position.set(0, 2.05, 0.02);
+      hatBrim.castShadow = true;
+      group.add(hatBrim);
+
+      const hatTop = new THREE.Mesh(enemyHatTopGeometry, enemyDarkMaterial);
+      hatTop.position.set(0, 2.23, 0.02);
+      hatTop.castShadow = true;
+      group.add(hatTop);
+
+      const bandana = new THREE.Mesh(
+        new THREE.BoxGeometry(0.58, 0.18, 0.42),
+        new THREE.MeshLambertMaterial({ color: 0x3d1714 })
+      );
+      bandana.position.set(0, 1.59, 0.10);
+      bandana.castShadow = true;
+      group.add(bandana);
+
+      const legs = [];
+      for (const lx of [-0.22, 0.22]) {
+        const leg = new THREE.Mesh(enemyLegGeometry, enemyDarkMaterial);
+        leg.position.set(lx, 0.40, 0);
+        leg.castShadow = true;
+        group.add(leg);
+        legs.push(leg);
+      }
+
+      // Brazo derecho y revólver: el arma apunta junto con el cuerpo del forajido.
+      const gunArmPivot = new THREE.Group();
+      gunArmPivot.position.set(-0.47, 1.36, 0.08);
+      group.add(gunArmPivot);
+
+      const gunArm = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.11, 0.62, 8), enemyHeadMaterial);
+      gunArm.rotation.x = Math.PI / 2;
+      gunArm.position.z = 0.28;
+      gunArm.castShadow = true;
+      gunArmPivot.add(gunArm);
+
+      const revolver = new THREE.Group();
+      revolver.position.set(0, -0.02, 0.55);
+      gunArmPivot.add(revolver);
+      const revolverBody = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.13, 0.34), enemyGunMetalMaterial);
+      revolverBody.position.z = 0.11;
+      revolverBody.castShadow = true;
+      revolver.add(revolverBody);
+      const revolverCylinderMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.16, 10), enemyGunMetalMaterial);
+      revolverCylinderMesh.rotation.z = Math.PI / 2;
+      revolverCylinderMesh.position.z = 0.03;
+      revolver.add(revolverCylinderMesh);
+      const revolverGripMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.22, 0.12), enemyGunGripMaterial);
+      revolverGripMesh.position.set(0, -0.13, -0.04);
+      revolverGripMesh.rotation.x = -0.28;
+      revolver.add(revolverGripMesh);
+      const revolverBarrelMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.027, 0.34, 8), enemyGunMetalMaterial);
+      revolverBarrelMesh.rotation.x = Math.PI / 2;
+      revolverBarrelMesh.position.z = 0.35;
+      revolver.add(revolverBarrelMesh);
+      const enemyRevolverMuzzle = new THREE.Object3D();
+      enemyRevolverMuzzle.position.set(0, 0, 0.56);
+      revolver.add(enemyRevolverMuzzle);
+      const muzzleFlash = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), enemyMuzzleFlashMaterial);
+      muzzleFlash.position.z = 0.60;
+      muzzleFlash.scale.set(1, 1, 1.8);
+      muzzleFlash.visible = false;
+      revolver.add(muzzleFlash);
 
       const enemy = {
         group,
         body,
         head,
-        hitMeshes: [body, head],
+        hitMeshes: [body, head, hatBrim, hatTop, bandana, ...legs],
         speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier(),
         radius: CONFIG.enemyRadius,
         health: 1,
         maxHealth: 1,
         isBoss: false,
-        bobOffset: Math.random() * Math.PI * 2
+        bobOffset: Math.random() * Math.PI * 2,
+        gunArmPivot,
+        revolverMuzzle: enemyRevolverMuzzle,
+        muzzleFlash,
+        shotTimer: randomRange(1.4, CONFIG.enemyRevolverShotSeconds),
+        fireAnimRemaining: 0
       };
 
-      body.userData.enemyRef = enemy;
-      head.userData.enemyRef = enemy;
+      for (const mesh of enemy.hitMeshes) {
+        mesh.userData.enemyRef = enemy;
+      }
 
-      enemyHitMeshes.push(body, head);
+      enemyHitMeshes.push(...enemy.hitMeshes);
       enemies.push(enemy);
       scene.add(group);
       updateEnemyCount();
@@ -1685,6 +2096,25 @@
         // Pequeño movimiento vertical para hacerlo más visible.
         if (!enemy.isBoss) {
           enemy.group.position.y = Math.sin(elapsedTime * 3 + enemy.bobOffset) * 0.045;
+
+          // Cada forajido levanta el revólver, dispara y sufre retroceso cada 5 s.
+          enemy.shotTimer -= delta;
+          if (enemy.shotTimer <= 0 && distance <= CONFIG.enemyRevolverRange) {
+            fireEnemyRevolver(enemy);
+          }
+          if (enemy.fireAnimRemaining > 0) {
+            enemy.fireAnimRemaining = Math.max(0, enemy.fireAnimRemaining - delta);
+            const progress = 1 - enemy.fireAnimRemaining / CONFIG.enemyFireAnimationSeconds;
+            const aim = Math.sin(Math.min(1, progress * 1.6) * Math.PI / 2);
+            const recoil = Math.sin(progress * Math.PI * 2) * Math.exp(-progress * 4.2);
+            enemy.gunArmPivot.rotation.x = -0.34 * aim + recoil * 0.22;
+            enemy.gunArmPivot.position.z = 0.08 - Math.max(0, recoil) * 0.10;
+            enemy.muzzleFlash.visible = enemy.fireAnimRemaining > CONFIG.enemyFireAnimationSeconds - 0.075;
+          } else {
+            enemy.gunArmPivot.rotation.x *= 0.78;
+            enemy.gunArmPivot.position.z += (0.08 - enemy.gunArmPivot.position.z) * Math.min(1, delta * 12);
+            enemy.muzzleFlash.visible = false;
+          }
         }
 
         // Contacto enemigo-jugador = Game Over.
@@ -1706,12 +2136,13 @@
     const raycaster = new THREE.Raycaster();
     const centerScreen = new THREE.Vector2(0, 0);
 
-    const WEAPON_ORDER = ['pistol', 'sniper', 'sword', 'machinegun'];
+    const WEAPON_ORDER = ['pistol', 'sniper', 'sword', 'machinegun', 'revolver'];
     const WEAPON_LABELS = {
       pistol: 'Pistola',
       sniper: 'Francotirador',
       sword: 'Espada',
-      machinegun: 'Metralleta'
+      machinegun: 'Metralleta',
+      revolver: 'Revólver'
     };
 
     let activeWeapon = 'pistol';
@@ -1734,6 +2165,14 @@
     let machineGunReserveAmmo = CONFIG.machineGunTotalAmmo - CONFIG.machineGunMagazineSize;
     let machineGunReloading = false;
     let machineGunReloadRemaining = 0;
+
+    let revolverCylinderAmmo = CONFIG.revolverCylinderSize;
+    let revolverReserveAmmo = CONFIG.revolverTotalAmmo - CONFIG.revolverCylinderSize;
+    let revolverReloading = false;
+    let revolverReloadRemaining = 0;
+    let revolverKickRemaining = 0;
+    const revolverKickDuration = 0.18;
+
     let primaryButtonHeld = false;
 
     // Balas visuales del jugador. El Raycaster decide el impacto exacto;
@@ -1759,6 +2198,11 @@
       emissive: 0xff5a00,
       emissiveIntensity: 1.45
     });
+    const revolverProjectileMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffe2a6,
+      emissive: 0xff8b1f,
+      emissiveIntensity: 1.55
+    });
     const playerShotOrigin = new THREE.Vector3();
     const playerShotDirection = new THREE.Vector3();
 
@@ -1780,7 +2224,9 @@
           ? ` · Alcance: ${CONFIG.swordRange.toFixed(1)} m`
           : activeWeapon === 'machinegun'
             ? ' · Mantén clic: automático'
-            : '';
+            : activeWeapon === 'revolver'
+              ? ' · 6 tiros por cilindro'
+              : '';
 
       weaponStatusElement.textContent =
         `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}`;
@@ -1800,6 +2246,10 @@
         const state = machineGunReloading ? ' · RECARGANDO' : '';
         ammoStatusElement.textContent =
           `Metralleta: ${machineGunMagazineAmmo} / ${CONFIG.machineGunMagazineSize} · Reserva: ${machineGunReserveAmmo}${state}`;
+      } else if (activeWeapon === 'revolver') {
+        const state = revolverReloading ? ' · RECARGANDO CILINDRO' : '';
+        ammoStatusElement.textContent =
+          `Revólver: ${revolverCylinderAmmo} / ${CONFIG.revolverCylinderSize} · Reserva: ${revolverReserveAmmo}${state}`;
       } else if (activeWeapon === 'sword') {
         ammoStatusElement.textContent = 'Espada: sin munición';
       } else {
@@ -1821,6 +2271,16 @@
       machineGunGroup.position.set(0, 0, 0);
       machineGunGroup.rotation.set(0, 0, 0);
       machineGunMagazine.position.set(0.34, -0.48, -0.78);
+
+      revolverCylinderAmmo = CONFIG.revolverCylinderSize;
+      revolverReserveAmmo = CONFIG.revolverTotalAmmo - CONFIG.revolverCylinderSize;
+      revolverReloading = false;
+      revolverReloadRemaining = 0;
+      revolverKickRemaining = 0;
+      revolverGroup.position.set(0, 0, 0);
+      revolverGroup.rotation.set(0, 0, 0);
+      revolverCylinder.rotation.z = Math.PI / 2;
+
       primaryButtonHeld = false;
       updateAmmoHUD();
     }
@@ -1850,6 +2310,7 @@
       sniperGroup.visible = name === 'sniper';
       swordGroup.visible = name === 'sword';
       machineGunGroup.visible = name === 'machinegun';
+      revolverGroup.visible = name === 'revolver';
       lastShotTime = 0;
       updateWeaponStatus();
     }
@@ -1953,7 +2414,7 @@
       raycaster.setFromCamera(centerScreen, camera);
 
       // Los obstáculos se incluyen para evitar disparar o atacar a través
-      // de edificios, árboles, barricadas y torretas.
+      // de pinos, rocas, bancos de nieve y torretas.
       const targets = [...enemyHitMeshes, ...shotBlockers];
       const intersections = raycaster.intersectObjects(targets, false);
       return intersections.length > 0 ? intersections[0] : null;
@@ -2064,6 +2525,42 @@
       }
     }
 
+    function startRevolverReload() {
+      if (revolverReloading) return;
+      if (revolverCylinderAmmo >= CONFIG.revolverCylinderSize) return;
+      if (revolverReserveAmmo <= 0) return;
+      revolverReloading = true;
+      revolverReloadRemaining = CONFIG.revolverReloadSeconds;
+      updateAmmoHUD();
+    }
+
+    function shootRevolver() {
+      if (revolverReloading) return;
+      if (revolverCylinderAmmo <= 0) {
+        startRevolverReload();
+        return;
+      }
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.revolverCooldownMs) return;
+      lastShotTime = now;
+      revolverCylinderAmmo -= 1;
+      revolverKickRemaining = revolverKickDuration;
+      revolverCylinder.rotation.z += Math.PI / 3;
+      flashFirearm(revolverMetalMaterial, 0x303236);
+
+      const hit = getFirstWeaponIntersection(CONFIG.revolverDistance);
+      createPlayerProjectile({
+        muzzle: revolverMuzzle,
+        maxDistance: hit ? hit.distance : CONFIG.revolverDistance,
+        speed: CONFIG.revolverProjectileSpeed,
+        material: revolverProjectileMaterial,
+        scale: 0.95
+      });
+      if (hit?.object?.userData?.enemyRef) registerEnemyDefeat(hit.object.userData.enemyRef);
+      updateAmmoHUD();
+      if (revolverCylinderAmmo <= 0) startRevolverReload();
+    }
+
     function reloadCurrentWeapon() {
       if (!isGameplayActive() || gameOver) return;
       if (activeWeapon === 'sniper') {
@@ -2072,6 +2569,8 @@
         }
       } else if (activeWeapon === 'machinegun') {
         startMachineGunReload();
+      } else if (activeWeapon === 'revolver') {
+        startRevolverReload();
       }
     }
 
@@ -2132,6 +2631,36 @@
           updateAmmoHUD();
         }
       }
+
+      if (revolverReloading) {
+        revolverReloadRemaining = Math.max(0, revolverReloadRemaining - delta);
+        const progress = 1 - revolverReloadRemaining / CONFIG.revolverReloadSeconds;
+        const dip = Math.sin(progress * Math.PI);
+        revolverGroup.position.y = -0.30 * dip;
+        revolverGroup.rotation.z = 0.34 * dip;
+        revolverCylinder.rotation.y = progress * Math.PI * 4;
+        if (revolverReloadRemaining <= 0) {
+          const needed = CONFIG.revolverCylinderSize - revolverCylinderAmmo;
+          const loaded = Math.min(needed, revolverReserveAmmo);
+          revolverCylinderAmmo += loaded;
+          revolverReserveAmmo -= loaded;
+          revolverReloading = false;
+          revolverGroup.position.set(0, 0, 0);
+          revolverGroup.rotation.set(0, 0, 0);
+          revolverCylinder.rotation.y = 0;
+          updateAmmoHUD();
+        }
+      } else if (revolverKickRemaining > 0) {
+        revolverKickRemaining = Math.max(0, revolverKickRemaining - delta);
+        const progress = 1 - revolverKickRemaining / revolverKickDuration;
+        const kick = Math.sin(progress * Math.PI);
+        revolverGroup.rotation.x = -0.28 * kick;
+        revolverGroup.position.z = 0.10 * kick;
+        if (revolverKickRemaining <= 0) {
+          revolverGroup.rotation.x = 0;
+          revolverGroup.position.z = 0;
+        }
+      }
     }
 
     function attackWithSword() {
@@ -2175,6 +2704,8 @@
         attackWithSword();
       } else if (activeWeapon === 'machinegun') {
         shootMachineGun();
+      } else if (activeWeapon === 'revolver') {
+        shootRevolver();
       } else {
         shootPistol();
       }
@@ -2185,80 +2716,102 @@
       clearArmorPickups();
       bossActive = true;
 
-      const scale = CONFIG.bossScale;
       const group = new THREE.Group();
-      group.position.set(0, 0, -28);
+      group.position.set(0, 0, -30);
 
-      const body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72 * scale, 0.92 * scale, 1.9 * scale, 14),
-        bossBodyMaterial.clone()
-      );
-      body.position.y = 0.95 * scale;
+      // -------------------------
+      // Caballo gigante
+      // -------------------------
+      const horse = new THREE.Group();
+      group.add(horse);
+      const horseBody = new THREE.Mesh(new THREE.SphereGeometry(1.45, 16, 12), horseBodyMaterial);
+      horseBody.scale.set(1.65, 0.95, 2.15);
+      horseBody.position.y = 2.0;
+      horseBody.castShadow = true;
+      horse.add(horseBody);
+
+      const horseNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.70, 1.65, 12), horseBodyMaterial);
+      horseNeck.position.set(0, 2.78, 1.55);
+      horseNeck.rotation.x = -0.42;
+      horseNeck.castShadow = true;
+      horse.add(horseNeck);
+
+      const horseHead = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.85, 1.35), horseBodyMaterial);
+      horseHead.position.set(0, 3.45, 2.22);
+      horseHead.rotation.x = -0.12;
+      horseHead.castShadow = true;
+      horse.add(horseHead);
+
+      const mane = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.55, 1.35), horseManeMaterial);
+      mane.position.set(0, 3.05, 1.30);
+      mane.rotation.x = -0.38;
+      horse.add(mane);
+
+      const horseLegs = [];
+      for (const x of [-0.78, 0.78]) for (const z of [-1.05, 1.05]) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.24, 1.85, 10), horseBodyMaterial);
+        leg.position.set(x, 0.85, z);
+        leg.castShadow = true;
+        horse.add(leg);
+        horseLegs.push(leg);
+      }
+
+      // -------------------------
+      // Vaquero gigante montado
+      // -------------------------
+      const rider = new THREE.Group();
+      rider.position.y = 3.05;
+      group.add(rider);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.92, 2.0, 14), bossBodyMaterial.clone());
+      body.position.y = 1.05;
       body.castShadow = true;
-      group.add(body);
-
-      const shoulder = new THREE.Mesh(
-        new THREE.BoxGeometry(1.9 * scale, 0.36 * scale, 0.68 * scale),
-        bossBodyMaterial.clone()
-      );
-      shoulder.position.y = 1.78 * scale;
-      shoulder.castShadow = true;
-      group.add(shoulder);
-
-      // Cabeza-torreta móvil independiente del cuerpo.
-      const headPivot = new THREE.Group();
-      headPivot.position.y = 2.18 * scale;
-      group.add(headPivot);
-
-      const head = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.55 * scale, 0.70 * scale, 0.55 * scale, 14),
-        bossHeadMaterial.clone()
-      );
-      head.rotation.x = Math.PI / 2;
+      rider.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 12), enemyHeadMaterial.clone());
+      head.position.y = 2.42;
       head.castShadow = true;
-      headPivot.add(head);
+      rider.add(head);
+      const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.12, 16), enemyDarkMaterial.clone());
+      hatBrim.position.y = 2.91;
+      rider.add(hatBrim);
+      const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.70, 0.65, 14), enemyDarkMaterial.clone());
+      hatTop.position.y = 3.23;
+      rider.add(hatTop);
 
-      const barrel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10 * scale, 0.14 * scale, 1.45 * scale, 10),
-        turretBarrelMaterial
-      );
-      barrel.rotation.x = Math.PI / 2;
-      barrel.position.z = 0.82 * scale;
-      barrel.castShadow = true;
-      headPivot.add(barrel);
-
-      const muzzle = new THREE.Object3D();
-      muzzle.position.set(0, 0, 1.58 * scale);
-      headPivot.add(muzzle);
-
-      // Espada decorativa gigante fijada al costado derecho.
-      const sword = new THREE.Group();
-      sword.position.set(1.25 * scale, 1.15 * scale, 0);
-      sword.rotation.z = -0.34;
-      const grip = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.11 * scale, 0.11 * scale, 0.78 * scale, 10),
-        turretBarrelMaterial
-      );
-      grip.position.y = -0.25 * scale;
-      sword.add(grip);
-      const blade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22 * scale, 2.05 * scale, 0.10 * scale),
-        bossSwordMaterial
-      );
-      blade.position.y = 1.12 * scale;
-      blade.castShadow = true;
-      sword.add(blade);
-      group.add(sword);
+      // Escopeta visible y funcional: gira hacia el jugador y dispara perdigones.
+      const shotgunPivot = new THREE.Group();
+      shotgunPivot.position.set(-0.72, 1.62, 0.32);
+      rider.add(shotgunPivot);
+      const shotgunStock = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.38, 1.25), shotgunWoodMaterial);
+      shotgunStock.position.z = 0.40;
+      shotgunStock.castShadow = true;
+      shotgunPivot.add(shotgunStock);
+      const shotgunBarrelA = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 1.95, 10), shotgunMaterial);
+      shotgunBarrelA.rotation.x = Math.PI / 2;
+      shotgunBarrelA.position.set(-0.10, 0.10, 1.50);
+      shotgunPivot.add(shotgunBarrelA);
+      const shotgunBarrelB = shotgunBarrelA.clone();
+      shotgunBarrelB.position.x = 0.10;
+      shotgunPivot.add(shotgunBarrelB);
+      const shotgunMuzzle = new THREE.Object3D();
+      shotgunMuzzle.position.set(0, 0.10, 2.53);
+      shotgunPivot.add(shotgunMuzzle);
+      const shotgunFlash = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), enemyMuzzleFlashMaterial);
+      shotgunFlash.position.set(0, 0.10, 2.64);
+      shotgunFlash.scale.set(1.2, 1.2, 2.0);
+      shotgunFlash.visible = false;
+      shotgunPivot.add(shotgunFlash);
 
       const boss = {
-        group, body, head, barrel, headPivot, muzzle, sword,
-        hitMeshes: [body, shoulder, head, barrel],
-        radius: CONFIG.enemyRadius * scale,
+        group, body, head, horseBody, horseHead, horseLegs,
+        shotgunPivot, shotgunMuzzle, shotgunFlash,
+        hitMeshes: [body, head, hatBrim, hatTop, horseBody, horseHead, shotgunStock, shotgunBarrelA, shotgunBarrelB],
+        radius: 2.35,
         speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier,
         health: CONFIG.bossMaxHealth,
         maxHealth: CONFIG.bossMaxHealth,
         isBoss: true,
-        bossShotTimer: 1.2,
+        bossShotTimer: 1.6,
+        shotgunRecoil: 0,
         bobOffset: 0
       };
 
@@ -2273,36 +2826,51 @@
       updateRoundHUD();
     }
 
-    function fireBossTurret(boss) {
-      if (!boss?.muzzle) return;
+    function fireBossShotgun(boss) {
+      if (!boss?.shotgunMuzzle) return;
+      boss.shotgunMuzzle.getWorldPosition(turretMuzzlePosition);
       turretTarget.copy(camera.position);
-      boss.muzzle.getWorldPosition(turretMuzzlePosition);
-      turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
-
-      const projectile = new THREE.Mesh(turretProjectileGeometry, turretProjectileMaterial);
-      projectile.scale.setScalar(1.45);
-      projectile.position.copy(turretMuzzlePosition);
-      projectile.castShadow = true;
-      scene.add(projectile);
-
-      turretProjectiles.push({
-        mesh: projectile,
-        velocity: turretDirection.clone().multiplyScalar(
-          CONFIG.turretProjectileSpeed * getRoundMultiplier()
-        ),
-        life: CONFIG.turretProjectileMaxLife
-      });
+      const baseDir = turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize().clone();
+      for (let i = 0; i < CONFIG.bossShotgunPellets; i++) {
+        const dir = baseDir.clone();
+        dir.x += randomRange(-CONFIG.bossShotgunSpread, CONFIG.bossShotgunSpread);
+        dir.y += randomRange(-CONFIG.bossShotgunSpread * 0.55, CONFIG.bossShotgunSpread * 0.55);
+        dir.z += randomRange(-CONFIG.bossShotgunSpread, CONFIG.bossShotgunSpread);
+        dir.normalize();
+        spawnHostileProjectile(
+          turretMuzzlePosition,
+          dir,
+          CONFIG.bossShotgunProjectileSpeed,
+          { scale: 0.72, reason: 'La escopeta del jefe te alcanzó.' }
+        );
+      }
+      boss.shotgunFlash.visible = true;
+      boss.shotgunRecoil = 0.26;
     }
 
     function updateFinalBoss(delta) {
       if (!bossActive || !finalBoss || gameOver) return;
-      finalBoss.headPivot.lookAt(camera.position);
-      finalBoss.sword.rotation.y += delta * 0.55;
+      finalBoss.shotgunPivot.lookAt(camera.position);
       finalBoss.bossShotTimer -= delta;
       if (finalBoss.bossShotTimer <= 0) {
-        fireBossTurret(finalBoss);
+        fireBossShotgun(finalBoss);
         finalBoss.bossShotTimer += CONFIG.bossShotSeconds;
       }
+      if (finalBoss.shotgunRecoil > 0) {
+        finalBoss.shotgunRecoil = Math.max(0, finalBoss.shotgunRecoil - delta);
+        const k = Math.sin((finalBoss.shotgunRecoil / 0.26) * Math.PI);
+        finalBoss.shotgunPivot.position.z = -0.24 * k;
+        finalBoss.shotgunFlash.visible = finalBoss.shotgunRecoil > 0.18;
+      } else {
+        finalBoss.shotgunPivot.position.z = 0;
+        finalBoss.shotgunFlash.visible = false;
+      }
+      // Galope simple del caballo.
+      const gait = Math.sin(elapsedTime * 8.0) * 0.42;
+      finalBoss.horseLegs.forEach((leg, i) => {
+        leg.rotation.x = (i % 2 === 0 ? gait : -gait);
+      });
+      finalBoss.group.position.y = Math.abs(Math.sin(elapsedTime * 4.0)) * 0.08;
     }
 
     function clearFinalBoss() {
@@ -2334,7 +2902,7 @@
 
       showOverlay(
         '¡MUNDO COMPLETADO!',
-        `Derrotaste al jefe final. Puntaje final: ${score}. El mundo se reiniciará desde ronda 1, puntaje 0 y sin mejoras.`
+        `Derrotaste al vaquero gigante y su caballo en la ronda ${CONFIG.bossRound}. Puntaje final: ${score}. El mundo se reiniciará desde ronda 1, puntaje 0 y sin mejoras.`
       );
       if (controls.isLocked) controls.unlock();
 
@@ -2346,7 +2914,7 @@
     }
 
     function startFinalBossRound() {
-      currentRound = CONFIG.finalNormalRound + 1;
+      currentRound = CONFIG.bossRound;
       clearEnemies();
       clearTurretProjectiles();
       clearPlayerProjectiles();
@@ -2388,7 +2956,7 @@
       showOverlay(
         `¡RONDA ${completedRound} SUPERADA!`,
         finalNormalCompleted
-          ? `Llegaste al máximo de +125% de dificultad.${armorText} El JEFE FINAL está por aparecer.`
+          ? `Superaste las 9 rondas normales al máximo de +125% de dificultad.${armorText} La ronda 10 será el JEFE FINAL.`
           : `Derrotaste ${defeatedEnemies}/${CONFIG.enemiesToWin} enemigos. Puntaje total: ${score}. ` +
             `La ronda ${nextRound} tendrá +${Math.round(nextBonus * 100)}% de dificultad.${armorText}`
       );
@@ -2400,8 +2968,8 @@
         if (finalNormalCompleted) {
           startFinalBossRound();
           showOverlay(
-            'JEFE FINAL',
-            `Movimiento al 150%, tamaño ×${CONFIG.bossScale.toFixed(0)}, cabeza-torreta móvil, espada gigante y ${CONFIG.bossMaxHealth} puntos de vida. Haz clic para luchar.`
+            `RONDA ${CONFIG.bossRound} · JEFE FINAL`,
+            `Un vaquero gigante montado a caballo entra al pueblo. Movimiento al 150%, ${CONFIG.bossMaxHealth} puntos de vida y una escopeta funcional de perdigones. Haz clic para luchar.`
           );
         } else {
           startNextRound();
@@ -2780,7 +3348,7 @@
         }
       }
 
-      // La tecla 3 alterna Pistola -> Francotirador -> Espada -> Metralleta.
+      // La tecla 3 alterna Pistola -> Francotirador -> Espada -> Metralleta -> Revólver.
       if (event.code === 'Digit3' && !event.repeat) {
         event.preventDefault();
         cycleWeapon();
@@ -2843,6 +3411,8 @@
       const delta = Math.min((currentTime - previousTime) / 1000, 0.05);
       previousTime = currentTime;
       elapsedTime += delta;
+      updateDust(delta);
+      updateWesternAmbience(delta, elapsedTime);
 
       if (isGameplayActive() && !gameOver) {
         updatePlayer(delta);
