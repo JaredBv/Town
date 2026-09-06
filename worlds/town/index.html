@@ -324,30 +324,33 @@
       box-shadow: inset 0 0 28px rgba(255,255,255,.05);
     }
     #moveStick { left: 22px; bottom: 26px; }
-    #lookStick { right: 22px; bottom: 26px; }
     .touch-knob {
       position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; border-radius: 50%;
       transform: translate(-50%,-50%); background: rgba(255,255,255,.30); border: 2px solid rgba(255,255,255,.60);
       pointer-events: none;
     }
     .touch-stick-label { position: absolute; width: 100%; bottom: -22px; text-align: center; color: #fff; font: 700 10px Arial; text-shadow: 0 1px 4px #000; }
-    #touchActions { position: absolute; right: 168px; bottom: 20px; display: grid; grid-template-columns: repeat(3, 58px); gap: 9px; pointer-events: auto; }
+    #touchActions { position: absolute; right: 20px; bottom: 22px; display: grid; grid-template-columns: repeat(3, 58px); gap: 9px; pointer-events: auto; }
     .touch-btn {
       width: 58px; height: 58px; border: 1px solid rgba(255,255,255,.35); border-radius: 16px; color: #fff;
       background: rgba(6,11,18,.60); font: 800 10px Arial; text-transform: uppercase; touch-action: none;
       backdrop-filter: blur(4px); box-shadow: 0 4px 18px rgba(0,0,0,.24);
     }
     .touch-btn:active, .touch-btn.active { background: rgba(255,190,70,.72); color: #131313; transform: scale(.95); }
-    #fireTouch { width: 72px; height: 72px; border-radius: 50%; font-size: 12px; grid-row: span 2; align-self: end; }
+    #fireTouch { position:relative; width: 82px; height: 82px; border-radius: 50%; font-size: 11px; grid-row: span 2; align-self: end; overflow: visible; }
+    #fireTouch .fire-label { position:relative; z-index:2; pointer-events:none; }
+    #fireTouch .fire-aim-dot { position:absolute; left:50%; top:50%; width:22px; height:22px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid rgba(255,255,255,.72); background:rgba(255,255,255,.16); pointer-events:none; transition:transform .04s linear; }
+    #fireTouch.aiming { box-shadow:0 0 0 4px rgba(255,190,70,.18), 0 4px 18px rgba(0,0,0,.28); }
+    #mobileLookHint { position:absolute; left:50%; bottom:16px; transform:translateX(-50%); padding:7px 11px; border-radius:999px; background:rgba(0,0,0,.32); color:rgba(255,255,255,.78); font:700 10px Arial; letter-spacing:.05em; pointer-events:none; white-space:nowrap; }
     #pauseTouch { position:absolute; top:16px; right:16px; width:48px; height:48px; pointer-events:auto; border-radius:50%; }
     #mobilePlatformBadge { position:absolute; top:16px; right:76px; padding:7px 10px; border-radius:8px; color:#fff; background:rgba(0,0,0,.42); font:700 11px Arial; }
     @media (max-width: 800px) {
       #hud > div:not(#crosshair):not(#scopeOverlay) { transform: scale(.82); transform-origin: top left; }
-      #touchActions { right: 156px; grid-template-columns: repeat(3, 52px); gap: 7px; }
+      #touchActions { right: 12px; bottom:14px; grid-template-columns: repeat(3, 52px); gap: 7px; }
       .touch-btn { width:52px; height:52px; border-radius:14px; font-size:9px; }
-      #fireTouch { width:66px; height:66px; }
+      #fireTouch { width:74px; height:74px; }
       .touch-stick { width:116px; height:116px; }
-      #moveStick { left:14px; bottom:18px; } #lookStick { right:14px; bottom:18px; }
+      #moveStick { left:14px; bottom:18px; }
       .touch-knob { width:50px; height:50px; }
     }
 
@@ -374,11 +377,11 @@
 
   <div id="mobileControls" aria-label="Controles táctiles Android">
     <div id="mobilePlatformBadge">ANDROID · CONTROLES TÁCTILES</div>
+    <div id="mobileLookHint">DESLIZA EN LA PANTALLA PARA MIRAR · ARRASTRA 🔥 PARA APUNTAR DISPARANDO</div>
     <button id="pauseTouch" class="touch-btn" type="button" aria-label="Pausa">Ⅱ</button>
     <div id="moveStick" class="touch-stick" aria-label="Joystick de movimiento"><div class="touch-knob"></div><span class="touch-stick-label">MOVER</span></div>
-    <div id="lookStick" class="touch-stick" aria-label="Joystick para mirar"><div class="touch-knob"></div><span class="touch-stick-label">MIRAR</span></div>
     <div id="touchActions">
-      <button id="fireTouch" class="touch-btn" type="button">Disparar</button>
+      <button id="fireTouch" class="touch-btn" type="button" aria-label="Disparar y apuntar"><span class="fire-label">Disparar</span><span class="fire-aim-dot"></span></button>
       <button id="jumpTouch" class="touch-btn" type="button">Saltar</button>
       <button id="weaponTouch" class="touch-btn" type="button">Arma</button>
       <button id="sprintTouch" class="touch-btn" type="button">Sprint</button>
@@ -562,11 +565,9 @@
     let mobilePaused = mobileMode;
     let mobileMoveX = 0;
     let mobileMoveY = 0;
-    let mobileLookX = 0;
-    let mobileLookY = 0;
     let mobileSprintHeld = false;
     let mobileCrouchHeld = false;
-    const mobileLookSpeed = 2.45;
+    const mobileLookSensitivity = 0.00315;
     const mobileLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
     document.body.classList.toggle('mobile-mode', mobileMode);
@@ -577,14 +578,18 @@
         : controls.isLocked;
     }
 
-    function updateMobileLook(delta) {
+    function rotateMobileView(deltaX, deltaY, sensitivityScale = 1) {
       if (!mobileMode || !isGameplayActive()) return;
-      if (Math.abs(mobileLookX) < 0.02 && Math.abs(mobileLookY) < 0.02) return;
       mobileLookEuler.setFromQuaternion(camera.quaternion);
-      const lookFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
-      mobileLookEuler.y -= mobileLookX * mobileLookSpeed * lookFactor * delta;
-      mobileLookEuler.x += mobileLookY * mobileLookSpeed * lookFactor * delta;
-      mobileLookEuler.x = THREE.MathUtils.clamp(mobileLookEuler.x, -Math.PI / 2 + 0.10, Math.PI / 2 - 0.10);
+      const zoomFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
+      const sensitivity = mobileLookSensitivity * zoomFactor * sensitivityScale;
+      mobileLookEuler.y -= deltaX * sensitivity;
+      mobileLookEuler.x -= deltaY * sensitivity;
+      mobileLookEuler.x = THREE.MathUtils.clamp(
+        mobileLookEuler.x,
+        -Math.PI / 2 + 0.10,
+        Math.PI / 2 - 0.10
+      );
       camera.quaternion.setFromEuler(mobileLookEuler);
     }
 
@@ -2500,9 +2505,6 @@
         forwardInput += mobileMoveY;
         rightInput += mobileMoveX;
       }
-
-      updateMobileLook(delta);
-
       camera.getWorldDirection(forwardVector);
       forwardVector.y = 0;
 
@@ -2693,12 +2695,109 @@
       button.addEventListener('lostpointercapture', () => { button.classList.remove('active'); onEnd(); });
     }
 
+    function setupFullScreenTouchLook() {
+      if (!mobileMode) return;
+      let lookPointerId = null;
+      let lastX = 0;
+      let lastY = 0;
+
+      renderer.domElement.addEventListener('pointerdown', (event) => {
+        if (event.pointerType !== 'touch' || !isGameplayActive() || lookPointerId !== null) return;
+        event.preventDefault();
+        lookPointerId = event.pointerId;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        renderer.domElement.setPointerCapture(lookPointerId);
+      }, { passive: false });
+
+      renderer.domElement.addEventListener('pointermove', (event) => {
+        if (event.pointerId !== lookPointerId) return;
+        event.preventDefault();
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        rotateMobileView(dx, dy, 1.0);
+      }, { passive: false });
+
+      const endLook = (event) => {
+        if (event.pointerId !== lookPointerId) return;
+        event.preventDefault();
+        lookPointerId = null;
+      };
+      renderer.domElement.addEventListener('pointerup', endLook, { passive: false });
+      renderer.domElement.addEventListener('pointercancel', endLook, { passive: false });
+      renderer.domElement.addEventListener('lostpointercapture', () => { lookPointerId = null; });
+    }
+
+    function bindFireAimButton() {
+      const button = document.getElementById('fireTouch');
+      const aimDot = button.querySelector('.fire-aim-dot');
+      let pointerId = null;
+      let lastX = 0;
+      let lastY = 0;
+      let originX = 0;
+      let originY = 0;
+
+      const updateAimDot = (event) => {
+        const rect = button.getBoundingClientRect();
+        const max = Math.min(rect.width, rect.height) * 0.23;
+        let dx = event.clientX - originX;
+        let dy = event.clientY - originY;
+        const len = Math.hypot(dx, dy);
+        if (len > max) {
+          dx = dx / len * max;
+          dy = dy / len * max;
+        }
+        aimDot.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      };
+
+      const finish = (event) => {
+        if (pointerId === null || (event && event.pointerId !== pointerId)) return;
+        event?.preventDefault();
+        event?.stopPropagation();
+        primaryButtonHeld = false;
+        button.classList.remove('active', 'aiming');
+        aimDot.style.transform = 'translate(-50%,-50%)';
+        pointerId = null;
+      };
+
+      button.addEventListener('pointerdown', (event) => {
+        if (event.pointerType !== 'touch' && mobileMode) return;
+        event.preventDefault();
+        event.stopPropagation();
+        pointerId = event.pointerId;
+        lastX = originX = event.clientX;
+        lastY = originY = event.clientY;
+        button.setPointerCapture(pointerId);
+        button.classList.add('active', 'aiming');
+        primaryButtonHeld = true;
+        primaryAttack();
+      });
+
+      button.addEventListener('pointermove', (event) => {
+        if (event.pointerId !== pointerId) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const dx = event.clientX - lastX;
+        const dy = event.clientY - lastY;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        updateAimDot(event);
+        rotateMobileView(dx, dy, 0.92);
+      });
+
+      button.addEventListener('pointerup', finish);
+      button.addEventListener('pointercancel', finish);
+      button.addEventListener('lostpointercapture', () => finish());
+    }
+
     function setupMobileControls() {
       if (!mobileMode) return;
       bindTouchJoystick(document.getElementById('moveStick'), (x, y) => { mobileMoveX = x; mobileMoveY = y; });
-      bindTouchJoystick(document.getElementById('lookStick'), (x, y) => { mobileLookX = x; mobileLookY = y; });
 
-      bindHoldButton('fireTouch', () => { primaryButtonHeld = true; primaryAttack(); }, () => { primaryButtonHeld = false; });
+      setupFullScreenTouchLook();
+      bindFireAimButton();
       bindHoldButton('sprintTouch', () => { mobileSprintHeld = true; }, () => { mobileSprintHeld = false; });
       bindHoldButton('crouchTouch', () => { mobileCrouchHeld = true; }, () => { mobileCrouchHeld = false; });
       bindHoldButton('zoomTouch', () => { if (activeWeapon === 'sniper') setSniperZoom(true); }, () => setSniperZoom(false));
@@ -2799,6 +2898,7 @@
     });
 
     document.addEventListener('mousedown', (event) => {
+      if (mobileMode) return;
       if (event.button === 0) {
         primaryButtonHeld = true;
         primaryAttack();
@@ -2812,6 +2912,7 @@
     });
 
     document.addEventListener('mouseup', (event) => {
+      if (mobileMode) return;
       if (event.button === 0) {
         primaryButtonHeld = false;
       }
