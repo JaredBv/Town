@@ -1,0 +1,2679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bosque Invernal - Mini FPS 3D</title>
+
+  <!--
+    Three.js cargado por CDN mediante Import Map.
+    PointerLockControls es un addon oficial de Three.js.
+  -->
+  <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=DDn1Zk7U7202ofJfEuqbW-Nq35C2apreUhdbVwSL7hGoA7adio0rD-O4T4a_R4XcrP4YGAe4CoFp9C2xHBDv_5frzRB1mnED0evxffD6eqMef_5wtx1jvpFFN5Ft7zN1sP0MFXi_C4_QVSDhTctoB9LY03sSWModIL6itUQkI83VtXrkPylZIwEVH8tQ44l_AZZJQRcN_ekZFHUZejfxoCxjhfdWlVhCKBxFd_nM_vm16E6v6gmKXQQORGywxQ3m4dxCvLyv89LSnnnoaYOYDoYOyF3yMBzgUGH6Aq6VlasNolz3G20jzMC2PSiZqV90" charset="UTF-8"></script><script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      font-family: Arial, Helvetica, sans-serif;
+      user-select: none;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #score {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.45);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(3px);
+    }
+
+    #enemyCount,
+    #defeatedCount,
+    #turretStatus,
+    #weaponStatus,
+    #ammoStatus,
+    #roundStatus,
+    #difficultyStatus,
+    #armorStatus,
+    #bossStatus {
+      position: absolute;
+      left: 20px;
+      padding: 7px 11px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.35);
+      color: #ddd;
+      font-size: 14px;
+    }
+
+    #enemyCount {
+      top: 70px;
+    }
+
+    #defeatedCount {
+      top: 106px;
+      color: #9fffb0;
+      font-weight: 700;
+    }
+
+    #turretStatus {
+      top: 142px;
+      color: #ffd27a;
+    }
+
+    #weaponStatus {
+      top: 178px;
+      color: #8fd7ff;
+      font-weight: 700;
+    }
+
+    #ammoStatus {
+      top: 214px;
+      color: #fff1a8;
+      font-weight: 700;
+    }
+
+    #roundStatus {
+      top: 250px;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    #difficultyStatus {
+      top: 286px;
+      color: #ffb3e6;
+    }
+
+    #armorStatus {
+      top: 322px;
+      color: #8fffd0;
+      font-weight: 700;
+    }
+
+    #bossStatus {
+      top: 358px;
+      color: #ff8f8f;
+      font-weight: 700;
+      display: none;
+    }
+
+    /* Mira */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 0 2px #000);
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: "";
+      position: absolute;
+      background: #fff;
+    }
+
+    #crosshair::before {
+      width: 2px;
+      height: 24px;
+      left: 11px;
+      top: 0;
+    }
+
+    #crosshair::after {
+      width: 24px;
+      height: 2px;
+      left: 0;
+      top: 11px;
+    }
+
+    /* Visor del francotirador. Se activa al mantener clic derecho. */
+    #scopeOverlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      pointer-events: none;
+      background:
+        linear-gradient(to right, transparent calc(50% - 1px), rgba(0,0,0,.9) 50%, transparent calc(50% + 1px)),
+        linear-gradient(to bottom, transparent calc(50% - 1px), rgba(0,0,0,.9) 50%, transparent calc(50% + 1px)),
+        radial-gradient(circle at center, transparent 0 31%, rgba(0,0,0,.92) 31.5% 100%);
+    }
+
+    #scopeOverlay.active {
+      display: block;
+    }
+
+    #scopeOverlay::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(62vw, 62vh);
+      height: min(62vw, 62vh);
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(0, 0, 0, .9);
+      border-radius: 50%;
+    }
+
+    /* Menú inicial, pausa y game over */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at center, rgba(20, 25, 30, 0.58), rgba(0, 0, 0, 0.88));
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #overlay.hidden {
+      display: none;
+    }
+
+    #panel {
+      width: min(92vw, 620px);
+      padding: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 16px;
+      background: rgba(8, 12, 16, 0.80);
+      text-align: center;
+      box-shadow: 0 16px 70px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+    }
+
+    #overlayTitle {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 5vw, 46px);
+      letter-spacing: 1px;
+    }
+
+    #overlayMessage {
+      margin: 0 0 22px;
+      color: #d8d8d8;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .controlsHelp {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+      color: #c8c8c8;
+      font-size: 14px;
+    }
+
+    .controlsHelp div {
+      padding: 9px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .key {
+      color: #fff;
+      font-weight: 700;
+    }
+
+
+    #backToMenu {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      margin-top: 22px;
+      padding: 10px 18px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 10px;
+      color: #fff;
+      background: rgba(255,255,255,.08);
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #backToMenu:hover {
+      background: rgba(255,255,255,.14);
+    }
+
+    #statusMessage {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div id="score">Puntaje: 0</div>
+    <div id="enemyCount">Enemigos en mapa: 0</div>
+    <div id="defeatedCount">Derrotados: 0 / 5</div>
+    <div id="turretStatus">Torretas: disparo cada 5 s</div>
+    <div id="weaponStatus">Arma: Pistola · [3] cambiar</div>
+    <div id="ammoStatus">Munición: ∞</div>
+    <div id="roundStatus">Ronda: 1</div>
+    <div id="difficultyStatus">Dificultad: +0% (×1.00)</div>
+    <div id="armorStatus">Chaleco: no disponible hasta ronda 3</div>
+    <div id="bossStatus">Jefe: --</div>
+    <div id="crosshair"></div>
+    <div id="scopeOverlay"></div>
+    <div id="statusMessage">ESC: pausa</div>
+  </div>
+
+  <div id="overlay">
+    <div id="panel">
+      <h1 id="overlayTitle">TOWN · Mini FPS 3D</h1>
+      <p id="overlayMessage">Haz clic en la pantalla para jugar</p>
+
+      <div class="controlsHelp">
+        <div><span class="key">WASD</span> — Movimiento</div>
+        <div><span class="key">Ratón</span> — Mirar</div>
+        <div><span class="key">ESPACIO</span> — Saltar</div>
+        <div><span class="key">Clic izquierdo</span> — Disparar / atacar</div>
+        <div><span class="key">3</span> — Cambiar arma</div>
+        <div><span class="key">R</span> — Recargar arma actual</div>
+        <div><span class="key">Clic derecho</span> — Zoom del francotirador</div>
+        <div><span class="key">Metralleta</span> — Mantén clic para fuego automático</div>
+        <div><span class="key">Espada</span> — Ataque de alcance extendido</div>
+        <div><span class="key">Torretas</span> — Apuntan a tu posición</div>
+        <div><span class="key">Cada 5 s</span> — Lanzan un proyectil</div>
+        <div><span class="key">Ronda 3+</span> — Recoge el chaleco y sus mejoras</div>
+        <div><span class="key">Jefe final</span> — Tras alcanzar +125% de dificultad</div>
+        <div><span class="key">Mundo 2</span> — Bosque nevado · osos polares más rápidos</div>
+      </div>
+
+      <a id="backToMenu" href="../../main.index.html">← Volver al menú principal</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+    // =========================================================
+    // CONFIGURACIÓN GENERAL
+    // =========================================================
+    const CONFIG = {
+      mapHalfSize: 50,
+      playerHeight: 1.7,
+      playerRadius: 0.45,
+      playerSpeed: 8.0,
+      jumpSpeed: 8.5,
+      gravity: 24.0,
+      enemyRadius: 0.78,
+      enemySpeedMin: 1.75,
+      enemySpeedMax: 2.75,
+      enemySpawnSeconds: 3.0,
+      initialEnemies: 4,
+      maxEnemies: 14,
+      shootCooldownMs: 120,
+      shootDistance: 80,
+
+      // Armas adicionales
+      sniperCooldownMs: 850,
+      sniperDistance: 125,
+      sniperZoomFov: 24,
+      sniperProjectileSpeed: 105.0,
+      sniperMagazineSize: 10,
+      sniperBoltReloadSeconds: 0.72,
+      sniperMagazineReloadSeconds: 1.85,
+
+      // Metralleta: 50 balas totales, cargadores de 5.
+      machineGunTotalAmmo: 50,
+      machineGunMagazineSize: 5,
+      machineGunFireIntervalMs: 105,
+      machineGunReloadSeconds: 1.25,
+      machineGunDistance: 85,
+      machineGunProjectileSpeed: 72.0,
+
+      swordCooldownMs: 430,
+      swordRange: 5.5,
+      pointsPerEnemy: 100,
+      enemiesToWin: 5,
+
+      // Bala visible del jugador
+      playerProjectileSpeed: 55.0,
+      playerProjectileRadius: 0.065,
+      playerProjectileMaxLife: 1.6,
+
+      // Torretas / obstáculos armados
+      turretShotSeconds: 5.0,
+      turretProjectileSpeed: 15.0,
+      turretProjectileRadius: 0.16,
+      turretProjectileMaxLife: 8.0,
+
+      // Progresión lineal: +25 puntos porcentuales por ronda hasta +125%.
+      difficultyStep: 0.25,
+      maxDifficultyBonus: 1.25,
+      finalNormalRound: 6,
+
+      // Chaleco antibalas: nivel 1 = 3 impactos; cada nivel suma 2; máximo 3.
+      armorStartRound: 3,
+      armorMaxLevel: 3,
+      armorBaseHits: 3,
+      armorHitsPerLevel: 2,
+      armorPickupRadius: 1.15,
+
+      // Jefe final.
+      bossScale: 3.0,
+      bossMovementMultiplier: 1.5,
+      bossMaxHealth: 24,
+      bossShotSeconds: 2.4,
+      bossScore: 2500,
+      finalResetMs: 4200,
+      roundTransitionMs: 2200
+    };
+
+    // =========================================================
+    // REFERENCIAS DOM
+    // =========================================================
+    const scoreElement = document.getElementById('score');
+    const enemyCountElement = document.getElementById('enemyCount');
+    const defeatedCountElement = document.getElementById('defeatedCount');
+    const weaponStatusElement = document.getElementById('weaponStatus');
+    const ammoStatusElement = document.getElementById('ammoStatus');
+    const roundStatusElement = document.getElementById('roundStatus');
+    const difficultyStatusElement = document.getElementById('difficultyStatus');
+    const armorStatusElement = document.getElementById('armorStatus');
+    const bossStatusElement = document.getElementById('bossStatus');
+    const turretStatusElement = document.getElementById('turretStatus');
+    const crosshairElement = document.getElementById('crosshair');
+    const scopeOverlayElement = document.getElementById('scopeOverlay');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayMessage = document.getElementById('overlayMessage');
+    const backToMenu = document.getElementById('backToMenu');
+    backToMenu.addEventListener('click', (event) => event.stopPropagation());
+
+    // =========================================================
+    // ESCENA, CÁMARA Y RENDERER
+    // =========================================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xdcecf4);
+    scene.fog = new THREE.Fog(0xdcecf4, 34, 92);
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      140
+    );
+    camera.position.set(0, CONFIG.playerHeight, 8);
+    scene.add(camera);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.prepend(renderer.domElement);
+
+    // PointerLockControls se encarga de la orientación de la cámara.
+    const controls = new PointerLockControls(camera, document.body);
+    controls.pointerSpeed = 0.9;
+    controls.minPolarAngle = 0.20;
+    controls.maxPolarAngle = Math.PI - 0.20;
+
+    // =========================================================
+    // ILUMINACIÓN
+    // =========================================================
+    const ambientLight = new THREE.HemisphereLight(0xf7fdff, 0x8fa7b0, 2.25);
+    scene.add(ambientLight);
+
+    const sun = new THREE.DirectionalLight(0xf7fbff, 2.6);
+    sun.position.set(25, 45, 15);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -60;
+    sun.shadow.camera.right = 60;
+    sun.shadow.camera.top = 60;
+    sun.shadow.camera.bottom = -60;
+    scene.add(sun);
+
+    // =========================================================
+    // MATERIALES
+    // =========================================================
+    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0xe7f1f4 });
+    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0xc8d9df });
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x5a3b28 });
+    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x1f5b46 });
+    const snowMaterial = new THREE.MeshLambertMaterial({ color: 0xf5fbff });
+    const iceMaterial = new THREE.MeshLambertMaterial({ color: 0xa8d8e8 });
+    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0xb7d5df });
+    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xf4f7f4 });
+    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const enemyDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x1c2428 });
+
+    // Materiales de los obstáculos armados.
+    const turretBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x3b434b });
+    const turretHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x8b1e1e });
+    const turretBarrelMaterial = new THREE.MeshLambertMaterial({ color: 0x20252a });
+    const turretProjectileMaterial = new THREE.MeshLambertMaterial({
+      color: 0xff5a1f,
+      emissive: 0x6b1200
+    });
+
+    const armorMaterial = new THREE.MeshLambertMaterial({ color: 0x1fc7a8, emissive: 0x063b34 });
+    const armorUpgradeMaterial = new THREE.MeshLambertMaterial({ color: 0x73e8ff, emissive: 0x0a4150 });
+    const bossBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x53106e, emissive: 0x16051e });
+    const bossHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x9b1b5e, emissive: 0x2d061d });
+    const bossSwordMaterial = new THREE.MeshLambertMaterial({ color: 0xb8d8e8, emissive: 0x182a33 });
+
+    // =========================================================
+    // SUELO
+    // =========================================================
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(CONFIG.mapHalfSize * 2, CONFIG.mapHalfSize * 2),
+      asphaltMaterial
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Sendero helado central, construido sin texturas externas.
+    const trailMaterial = new THREE.MeshLambertMaterial({ color: 0xcadce3 });
+    for (let z = -42; z <= 42; z += 7) {
+      const patch = new THREE.Mesh(
+        new THREE.BoxGeometry(3.2 + Math.random() * 1.8, 0.018, 4.4),
+        trailMaterial
+      );
+      patch.position.set((Math.random() - 0.5) * 2.2, 0.012, z);
+      patch.rotation.y = (Math.random() - 0.5) * 0.22;
+      scene.add(patch);
+    }
+
+    // =========================================================
+    // COLISIONES DEL MAPA
+    // =========================================================
+    // Formatos:
+    // { type: 'box', minX, maxX, minZ, maxZ }
+    // { type: 'circle', x, z, radius }
+    const staticColliders = [];
+    const shotBlockers = [];
+
+    // Torretas estáticas y sus proyectiles activos.
+    const turrets = [];
+    const turretProjectiles = [];
+    const armorPickups = [];
+    let finalBoss = null;
+    let bossActive = false;
+
+    function addBoxCollider(x, z, width, depth, padding = 0) {
+      staticColliders.push({
+        type: 'box',
+        minX: x - width / 2 - padding,
+        maxX: x + width / 2 + padding,
+        minZ: z - depth / 2 - padding,
+        maxZ: z + depth / 2 + padding
+      });
+    }
+
+    function addCircleCollider(x, z, radius) {
+      staticColliders.push({
+        type: 'circle',
+        x,
+        z,
+        radius
+      });
+    }
+
+    function circleIntersectsWorld(x, z, radius) {
+      // Límites del escenario.
+      if (
+        x - radius < -CONFIG.mapHalfSize ||
+        x + radius > CONFIG.mapHalfSize ||
+        z - radius < -CONFIG.mapHalfSize ||
+        z + radius > CONFIG.mapHalfSize
+      ) {
+        return true;
+      }
+
+      for (const collider of staticColliders) {
+        if (collider.type === 'box') {
+          const closestX = THREE.MathUtils.clamp(x, collider.minX, collider.maxX);
+          const closestZ = THREE.MathUtils.clamp(z, collider.minZ, collider.maxZ);
+          const dx = x - closestX;
+          const dz = z - closestZ;
+
+          if (dx * dx + dz * dz < radius * radius) {
+            return true;
+          }
+        } else {
+          const dx = x - collider.x;
+          const dz = z - collider.z;
+          const minDistance = radius + collider.radius;
+
+          if (dx * dx + dz * dz < minDistance * minDistance) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    // =========================================================
+    // GENERACIÓN DEL ENTORNO
+    // =========================================================
+    const buildingColors = [
+      0x6f7782,
+      0x7c858f,
+      0x59636f,
+      0x8a8177,
+      0x58636b,
+      0x737b84
+    ];
+
+    function randomRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function randomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function addBuilding(x, z, width, depth, height) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        new THREE.MeshLambertMaterial({ color: randomItem(buildingColors) })
+      );
+
+      mesh.position.set(x, height / 2, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData.blockShot = true;
+      scene.add(mesh);
+
+      addBoxCollider(x, z, width, depth, 0.08);
+      shotBlockers.push(mesh);
+
+      // Azotea ligeramente más oscura para dar variedad visual.
+      const roof = new THREE.Mesh(
+        new THREE.BoxGeometry(width * 0.55, 0.5, depth * 0.55),
+        new THREE.MeshLambertMaterial({ color: 0x444a52 })
+      );
+      roof.position.set(x, height + 0.25, z);
+      roof.castShadow = true;
+      roof.userData.blockShot = true;
+      scene.add(roof);
+      shotBlockers.push(roof);
+    }
+
+    function addCover(x, z, width = 2.6, depth = 1.3, height = 1.35) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        coverMaterial
+      );
+
+      mesh.position.set(x, height / 2, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData.blockShot = true;
+      scene.add(mesh);
+
+      addBoxCollider(x, z, width, depth, 0.05);
+      shotBlockers.push(mesh);
+    }
+
+    /**
+     * Crea una cobertura mejorada en forma de torreta.
+     * La base cuenta como obstáculo físico y todo el conjunto bloquea disparos.
+     */
+    function addTurret(x, z) {
+      const turret = new THREE.Group();
+      turret.position.set(x, 0, z);
+
+      // Base / barricada.
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(1.7, 0.9, 1.7),
+        turretBaseMaterial
+      );
+      base.position.y = 0.45;
+      base.castShadow = true;
+      base.receiveShadow = true;
+      base.userData.blockShot = true;
+      turret.add(base);
+
+      // Cabeza que rota de forma independiente para seguir al jugador.
+      const headPivot = new THREE.Group();
+      headPivot.position.y = 1.28;
+      turret.add(headPivot);
+
+      const head = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.48, 0.58, 0.48, 12),
+        turretHeadMaterial
+      );
+      head.castShadow = true;
+      head.receiveShadow = true;
+      head.userData.blockShot = true;
+      headPivot.add(head);
+
+      // El cilindro se rota para que su eje quede sobre Z.
+      // El +Z local del pivot es la dirección de fuego.
+      const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.085, 0.11, 1.35, 10),
+        turretBarrelMaterial
+      );
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.z = 0.72;
+      barrel.castShadow = true;
+      barrel.userData.blockShot = true;
+      headPivot.add(barrel);
+
+      // Boca del cañón usada como punto de origen del proyectil.
+      const muzzle = new THREE.Object3D();
+      muzzle.position.set(0, 0, 1.46);
+      headPivot.add(muzzle);
+
+      scene.add(turret);
+
+      // La base impide que jugador y enemigos atraviesen la torreta.
+      addBoxCollider(x, z, 1.7, 1.7, 0.05);
+
+      // La torreta también detiene los disparos del jugador.
+      shotBlockers.push(base, head, barrel);
+
+      turrets.push({
+        group: turret,
+        base,
+        headPivot,
+        head,
+        barrel,
+        muzzle,
+        shotTimer: CONFIG.turretShotSeconds
+      });
+    }
+
+    function addTree(x, z, scale = 1) {
+      const trunkRadius = 0.34 * scale;
+      const trunkHeight = 2.2 * scale;
+
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.15, trunkHeight, 10),
+        trunkMaterial
+      );
+      trunk.position.set(x, trunkHeight / 2, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      trunk.userData.blockShot = true;
+      scene.add(trunk);
+
+      const crown = new THREE.Mesh(
+        new THREE.SphereGeometry(1.15 * scale, 12, 10),
+        leafMaterial
+      );
+      crown.position.set(x, trunkHeight + 0.75 * scale, z);
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+      crown.userData.blockShot = true;
+      scene.add(crown);
+
+      addCircleCollider(x, z, 0.55 * scale);
+      shotBlockers.push(trunk, crown);
+    }
+
+    function addSidewalk(x, z, width, depth) {
+      const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(width, 0.12, depth),
+        sidewalkMaterial
+      );
+      mesh.position.set(x, 0.06, z);
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+    }
+
+    function addSnowPine(x, z, scale = 1) {
+      const trunkRadius = 0.28 * scale;
+      const trunkHeight = 2.1 * scale;
+
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.18, trunkHeight, 9),
+        trunkMaterial
+      );
+      trunk.position.set(x, trunkHeight / 2, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      trunk.userData.blockShot = true;
+      scene.add(trunk);
+
+      const foliageMeshes = [];
+      const snowMeshes = [];
+      const layers = [
+        { y: 2.15, radius: 1.35, height: 2.25 },
+        { y: 3.05, radius: 1.08, height: 2.00 },
+        { y: 3.88, radius: 0.78, height: 1.62 }
+      ];
+
+      for (const layer of layers) {
+        const foliage = new THREE.Mesh(
+          new THREE.ConeGeometry(layer.radius * scale, layer.height * scale, 10),
+          leafMaterial
+        );
+        foliage.position.set(x, layer.y * scale, z);
+        foliage.castShadow = true;
+        foliage.receiveShadow = true;
+        foliage.userData.blockShot = true;
+        scene.add(foliage);
+        foliageMeshes.push(foliage);
+
+        const cap = new THREE.Mesh(
+          new THREE.ConeGeometry(layer.radius * 0.83 * scale, layer.height * 0.34 * scale, 10),
+          snowMaterial
+        );
+        cap.position.set(x, (layer.y + layer.height * 0.28) * scale, z);
+        cap.castShadow = true;
+        cap.userData.blockShot = true;
+        scene.add(cap);
+        snowMeshes.push(cap);
+      }
+
+      addCircleCollider(x, z, 0.60 * scale);
+      shotBlockers.push(trunk, ...foliageMeshes, ...snowMeshes);
+    }
+
+    function addIceRock(x, z, scale = 1) {
+      const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.95 * scale, 0),
+        iceMaterial
+      );
+      rock.scale.set(1.25, 0.72, 1.0);
+      rock.position.set(x, 0.64 * scale, z);
+      rock.rotation.set(Math.random() * 0.35, Math.random() * Math.PI, Math.random() * 0.18);
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      rock.userData.blockShot = true;
+      scene.add(rock);
+      addCircleCollider(x, z, 0.92 * scale);
+      shotBlockers.push(rock);
+    }
+
+    function addSnowBank(x, z, width = 3.0, depth = 1.4, height = 1.15) {
+      const bank = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        snowMaterial
+      );
+      bank.position.set(x, height / 2, z);
+      bank.rotation.y = (Math.random() - 0.5) * 0.22;
+      bank.castShadow = true;
+      bank.receiveShadow = true;
+      bank.userData.blockShot = true;
+      scene.add(bank);
+      addBoxCollider(x, z, width, depth, 0.08);
+      shotBlockers.push(bank);
+    }
+
+    function createWinterForest() {
+      // Barreras naturales de nieve en los límites para reforzar el ambiente.
+      const edgeBanks = [
+        [0, -47, 86, 2.8], [0, 47, 86, 2.8],
+        [-47, 0, 2.8, 86], [47, 0, 2.8, 86]
+      ];
+      for (const [x, z, w, d] of edgeBanks) {
+        const edge = new THREE.Mesh(new THREE.BoxGeometry(w, 0.7, d), snowMaterial);
+        edge.position.set(x, 0.35, z);
+        edge.receiveShadow = true;
+        scene.add(edge);
+      }
+
+      // Coberturas de nieve y hielo, dejando corredores de combate.
+      const snowBanks = [
+        [-10, -9, 4.2, 1.5], [10, -11, 3.5, 1.4],
+        [-14, 10, 3.8, 1.5], [13, 10, 4.0, 1.4],
+        [0, -23, 4.5, 1.4], [0, 23, 4.5, 1.4],
+        [-20, 1, 1.5, 4.0], [20, -1, 1.5, 4.0]
+      ];
+      for (const [x, z, w, d] of snowBanks) {
+        addSnowBank(x, z, w, d, randomRange(1.0, 1.45));
+      }
+
+      const rockPositions = [
+        [-27, -13], [-30, 18], [29, -17], [27, 17],
+        [-8, 27], [10, -29], [-31, 1], [32, 4]
+      ];
+      for (const [x, z] of rockPositions) {
+        if (!circleIntersectsWorld(x, z, 1.2)) addIceRock(x, z, randomRange(0.85, 1.35));
+      }
+
+      // Las mismas torretas de la lógica original, reubicadas entre el bosque.
+      const turretPositions = [
+        [-17, -18], [17, -19], [-19, 17], [19, 18], [0, -34]
+      ];
+      for (const [x, z] of turretPositions) {
+        if (!circleIntersectsWorld(x, z, 1.3)) addTurret(x, z);
+      }
+
+      // Bosque muy denso: muchos pinos procedurales sin bloquear el punto inicial.
+      let createdTrees = 0;
+      let attempts = 0;
+      while (createdTrees < 58 && attempts < 900) {
+        attempts++;
+        const x = randomRange(-42, 42);
+        const z = randomRange(-42, 42);
+        const scale = randomRange(0.82, 1.42);
+
+        if (Math.hypot(x, z - 8) < 8) continue;
+        if (Math.hypot(x, z) < 5.5) continue;
+        if (circleIntersectsWorld(x, z, 1.10 * scale)) continue;
+
+        addSnowPine(x, z, scale);
+        createdTrees++;
+      }
+    }
+
+    createWinterForest();
+
+    // Nieve ambiental: partículas simples que caen continuamente.
+    const snowflakeCount = 420;
+    const snowPositions = new Float32Array(snowflakeCount * 3);
+    for (let i = 0; i < snowflakeCount; i++) {
+      snowPositions[i * 3] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+      snowPositions[i * 3 + 1] = randomRange(1.5, 24);
+      snowPositions[i * 3 + 2] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+    }
+    const snowGeometry = new THREE.BufferGeometry();
+    snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+    const snowPointsMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false
+    });
+    const snowfall = new THREE.Points(snowGeometry, snowPointsMaterial);
+    scene.add(snowfall);
+
+    function updateSnowfall(delta) {
+      const positions = snowGeometry.attributes.position.array;
+      for (let i = 0; i < snowflakeCount; i++) {
+        const index = i * 3;
+        positions[index + 1] -= delta * (2.2 + (i % 7) * 0.12);
+        positions[index] += Math.sin(elapsedTime * 0.7 + i) * delta * 0.18;
+        if (positions[index + 1] < 0.15) {
+          positions[index] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+          positions[index + 1] = randomRange(16, 25);
+          positions[index + 2] = randomRange(-CONFIG.mapHalfSize, CONFIG.mapHalfSize);
+        }
+      }
+      snowGeometry.attributes.position.needsUpdate = true;
+    }
+
+    // =========================================================
+    // RONDAS, CHALECO Y ESCALADO DE DIFICULTAD
+    // =========================================================
+    let currentRound = 1;
+    let armorLevel = 0;
+    let armorHitsRemaining = 0;
+
+    function getRoundDifficultyBonus(round = currentRound) {
+      return Math.min((Math.max(1, round) - 1) * CONFIG.difficultyStep, CONFIG.maxDifficultyBonus);
+    }
+
+    function getRoundMultiplier(round = currentRound) {
+      return 1 + getRoundDifficultyBonus(round);
+    }
+
+    function getEnemySpawnInterval() {
+      return CONFIG.enemySpawnSeconds / getRoundMultiplier();
+    }
+
+    function getInitialEnemyCount() {
+      return Math.max(1, Math.ceil(CONFIG.initialEnemies * getRoundMultiplier()));
+    }
+
+    function getMaxEnemies() {
+      return Math.max(CONFIG.maxEnemies, Math.ceil(CONFIG.maxEnemies * getRoundMultiplier()));
+    }
+
+    function getArmorCapacity(level = armorLevel) {
+      if (level <= 0) return 0;
+      return CONFIG.armorBaseHits + (level - 1) * CONFIG.armorHitsPerLevel;
+    }
+
+    function updateArmorHUD() {
+      if (currentRound < CONFIG.armorStartRound && armorLevel === 0) {
+        armorStatusElement.textContent = `Chaleco: disponible desde ronda ${CONFIG.armorStartRound}`;
+        return;
+      }
+      if (armorLevel <= 0 || armorHitsRemaining <= 0) {
+        armorStatusElement.textContent = 'Chaleco: DESTRUIDO / sin equipar';
+        return;
+      }
+      armorStatusElement.textContent =
+        `Chaleco Nv.${armorLevel}/${CONFIG.armorMaxLevel} · impactos ${armorHitsRemaining}/${getArmorCapacity()}`;
+    }
+
+    function updateBossHUD() {
+      if (!bossActive || !finalBoss) {
+        bossStatusElement.style.display = 'none';
+        return;
+      }
+      bossStatusElement.style.display = 'block';
+      bossStatusElement.textContent = `JEFE FINAL · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
+    }
+
+    function updateRoundHUD() {
+      const bonus = getRoundDifficultyBonus();
+      const multiplier = getRoundMultiplier();
+      const projectileSpeed = CONFIG.turretProjectileSpeed * multiplier;
+      const spawnInterval = getEnemySpawnInterval();
+
+      roundStatusElement.textContent = bossActive ? 'Ronda: JEFE FINAL' : `Ronda: ${currentRound}`;
+      difficultyStatusElement.textContent =
+        `Dificultad: +${Math.round(bonus * 100)}% (×${multiplier.toFixed(2)}) · Spawn: ${spawnInterval.toFixed(2)} s`;
+      turretStatusElement.textContent =
+        `Torretas: cada ${CONFIG.turretShotSeconds.toFixed(0)} s · bala ${projectileSpeed.toFixed(1)} u/s`;
+      updateArmorHUD();
+      updateBossHUD();
+    }
+
+    function absorbProjectileWithArmor() {
+      if (armorLevel <= 0 || armorHitsRemaining <= 0) return false;
+      armorHitsRemaining -= 1;
+      if (armorHitsRemaining <= 0) {
+        armorHitsRemaining = 0;
+        armorLevel = 0;
+      }
+      updateArmorHUD();
+      return true;
+    }
+
+    function clearArmorPickups() {
+      for (const pickup of armorPickups) scene.remove(pickup.group);
+      armorPickups.length = 0;
+    }
+
+    function findPickupPosition() {
+      for (let attempt = 0; attempt < 120; attempt++) {
+        const x = randomRange(-34, 34);
+        const z = randomRange(-34, 34);
+        if (Math.hypot(x - camera.position.x, z - camera.position.z) < 7) continue;
+        if (!circleIntersectsWorld(x, z, 1.0)) return { x, z };
+      }
+      return { x: 0, z: -8 };
+    }
+
+    function spawnArmorPickup(type) {
+      const { x, z } = findPickupPosition();
+      const group = new THREE.Group();
+      group.position.set(x, 0.85, z);
+
+      const material = type === 'vest' ? armorMaterial : armorUpgradeMaterial;
+      const core = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.0, 0.32), material);
+      core.castShadow = true;
+      group.add(core);
+
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.34, 0.38), material);
+      plate.position.y = 0.16;
+      plate.castShadow = true;
+      group.add(plate);
+
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.72, 0.07, 8, 18),
+        new THREE.MeshLambertMaterial({ color: type === 'vest' ? 0x5affd8 : 0xd0f7ff, emissive: 0x123d38 })
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = -0.52;
+      group.add(ring);
+
+      scene.add(group);
+      armorPickups.push({ group, type, bob: Math.random() * Math.PI * 2 });
+    }
+
+    function prepareArmorPickupForRound() {
+      clearArmorPickups();
+      if (bossActive) return;
+      if (currentRound >= CONFIG.armorStartRound && armorLevel === 0) {
+        // Si el chaleco se perdió o no se recogió, aparece otro chaleco base.
+        // Las mejoras solo aparecen cuando el jugador sí conservó el anterior.
+        spawnArmorPickup('vest');
+      } else if (currentRound > CONFIG.armorStartRound && armorLevel > 0 && armorLevel < CONFIG.armorMaxLevel) {
+        spawnArmorPickup('upgrade');
+      }
+    }
+
+    function updateArmorPickups(delta, elapsedTime) {
+      for (let i = armorPickups.length - 1; i >= 0; i--) {
+        const pickup = armorPickups[i];
+        pickup.group.rotation.y += delta * 1.7;
+        pickup.group.position.y = 0.9 + Math.sin(elapsedTime * 2.5 + pickup.bob) * 0.16;
+        const distance = Math.hypot(
+          camera.position.x - pickup.group.position.x,
+          camera.position.z - pickup.group.position.z
+        );
+        if (distance <= CONFIG.armorPickupRadius) {
+          if (pickup.type === 'vest') {
+            armorLevel = 1;
+            armorHitsRemaining = getArmorCapacity(armorLevel);
+          } else if (armorLevel > 0) {
+            armorLevel = Math.min(CONFIG.armorMaxLevel, armorLevel + 1);
+            armorHitsRemaining = getArmorCapacity(armorLevel);
+          }
+          scene.remove(pickup.group);
+          armorPickups.splice(i, 1);
+          updateArmorHUD();
+        }
+      }
+    }
+
+    // =========================================================
+    // TORRETAS: APUNTADO Y PROYECTILES
+    // =========================================================
+    const turretProjectileGeometry = new THREE.SphereGeometry(
+      CONFIG.turretProjectileRadius,
+      10,
+      8
+    );
+
+    const turretTarget = new THREE.Vector3();
+    const turretMuzzlePosition = new THREE.Vector3();
+    const turretDirection = new THREE.Vector3();
+    const projectilePreviousPosition = new THREE.Vector3();
+    const closestPointOnProjectilePath = new THREE.Vector3();
+    const projectilePath = new THREE.Line3();
+
+    function fireTurret(turret) {
+      // IMPORTANTE: se toma una instantánea de la posición EXACTA del
+      // jugador en el momento del disparo. La bala no te sigue después.
+      turretTarget.copy(camera.position);
+      turret.muzzle.getWorldPosition(turretMuzzlePosition);
+
+      turretDirection
+        .subVectors(turretTarget, turretMuzzlePosition)
+        .normalize();
+
+      const projectile = new THREE.Mesh(
+        turretProjectileGeometry,
+        turretProjectileMaterial
+      );
+
+      projectile.position.copy(turretMuzzlePosition);
+      projectile.castShadow = true;
+      scene.add(projectile);
+
+      turretProjectiles.push({
+        mesh: projectile,
+        velocity: turretDirection.clone().multiplyScalar(
+          CONFIG.turretProjectileSpeed * getRoundMultiplier()
+        ),
+        life: CONFIG.turretProjectileMaxLife
+      });
+    }
+
+    function removeTurretProjectile(index) {
+      const projectile = turretProjectiles[index];
+      if (!projectile) return;
+
+      scene.remove(projectile.mesh);
+      turretProjectiles.splice(index, 1);
+    }
+
+    function clearTurretProjectiles() {
+      for (let i = turretProjectiles.length - 1; i >= 0; i--) {
+        removeTurretProjectile(i);
+      }
+    }
+
+    function resetTurrets() {
+      for (const turret of turrets) {
+        turret.shotTimer = CONFIG.turretShotSeconds;
+      }
+    }
+
+    function updateTurrets(delta) {
+      turretTarget.copy(camera.position);
+
+      for (const turret of turrets) {
+        // El pivot mira continuamente al jugador, incluso mientras se mueve.
+        // Object3D.lookAt orienta el eje +Z del objeto hacia el objetivo.
+        turret.headPivot.lookAt(turretTarget);
+
+        turret.shotTimer -= delta;
+        if (turret.shotTimer <= 0) {
+          fireTurret(turret);
+          turret.shotTimer += CONFIG.turretShotSeconds;
+        }
+      }
+    }
+
+    function updateTurretProjectiles(delta) {
+      for (let i = turretProjectiles.length - 1; i >= 0; i--) {
+        const projectile = turretProjectiles[i];
+        const mesh = projectile.mesh;
+
+        projectilePreviousPosition.copy(mesh.position);
+        mesh.position.addScaledVector(projectile.velocity, delta);
+        projectile.life -= delta;
+
+        // Comprobación continua contra el jugador usando el segmento que
+        // recorrió la bala en este frame. Evita que una bala rápida atraviese
+        // al jugador entre dos frames consecutivos.
+        projectilePath.set(projectilePreviousPosition, mesh.position);
+        projectilePath.closestPointToPoint(camera.position, true, closestPointOnProjectilePath);
+
+        const hitPlayer = closestPointOnProjectilePath.distanceTo(camera.position) <
+          CONFIG.playerRadius + CONFIG.turretProjectileRadius;
+
+        if (hitPlayer) {
+          removeTurretProjectile(i);
+          if (!absorbProjectileWithArmor()) {
+            endGame('Una torreta te alcanzó.');
+            return;
+          }
+          continue;
+        }
+
+        // Pinos, rocas, bancos de nieve y otras torretas pueden detener
+        // físicamente el proyectil.
+        if (
+          circleIntersectsWorld(
+            mesh.position.x,
+            mesh.position.z,
+            CONFIG.turretProjectileRadius
+          ) ||
+          projectile.life <= 0
+        ) {
+          removeTurretProjectile(i);
+        }
+      }
+    }
+
+    // =========================================================
+    // ARMAS EN PRIMERA PERSONA
+    // =========================================================
+    // El jugador dispone de cuatro armas: pistola, francotirador,
+    // espada y metralleta. La tecla 3 recorre las cuatro armas.
+    const weaponGroup = new THREE.Group(); // Pistola
+    camera.add(weaponGroup);
+
+    function configureFirstPersonMesh(mesh, material) {
+      mesh.frustumCulled = false;
+      mesh.renderOrder = 999;
+      material.depthTest = false;
+      material.depthWrite = false;
+      return mesh;
+    }
+
+    // -------------------------
+    // 1) Pistola
+    // -------------------------
+    const weaponMaterial = new THREE.MeshLambertMaterial({ color: 0x2d3436 });
+    const weaponGripMaterial = new THREE.MeshLambertMaterial({ color: 0x15191d });
+
+    const weaponBody = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.22, 0.72), weaponMaterial),
+      weaponMaterial
+    );
+    weaponBody.position.set(0.33, -0.27, -0.72);
+    weaponBody.rotation.x = -0.08;
+    weaponGroup.add(weaponBody);
+
+    const weaponGrip = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.30, 0.20), weaponGripMaterial),
+      weaponGripMaterial
+    );
+    weaponGrip.position.set(0.33, -0.42, -0.57);
+    weaponGrip.rotation.x = -0.25;
+    weaponGroup.add(weaponGrip);
+
+    const barrel = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.34, 10), weaponMaterial),
+      weaponMaterial
+    );
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0.33, -0.22, -1.18);
+    weaponGroup.add(barrel);
+
+    const playerMuzzle = new THREE.Object3D();
+    playerMuzzle.position.set(0.33, -0.22, -1.40);
+    weaponGroup.add(playerMuzzle);
+
+    // -------------------------
+    // 2) Francotirador
+    // -------------------------
+    const sniperGroup = new THREE.Group();
+    camera.add(sniperGroup);
+    sniperGroup.visible = false;
+
+    const sniperBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x314238 });
+    const sniperMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x14191b });
+    const sniperScopeMaterial = new THREE.MeshLambertMaterial({ color: 0x202b35 });
+
+    const sniperBody = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.20, 1.18), sniperBodyMaterial),
+      sniperBodyMaterial
+    );
+    sniperBody.position.set(0.34, -0.29, -0.92);
+    sniperGroup.add(sniperBody);
+
+    const sniperStock = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.25, 0.48), sniperBodyMaterial),
+      sniperBodyMaterial
+    );
+    sniperStock.position.set(0.34, -0.36, -0.30);
+    sniperStock.rotation.x = -0.16;
+    sniperGroup.add(sniperStock);
+
+    const sniperBarrel = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.15, 10), sniperMetalMaterial),
+      sniperMetalMaterial
+    );
+    sniperBarrel.rotation.x = Math.PI / 2;
+    sniperBarrel.position.set(0.34, -0.25, -1.85);
+    sniperGroup.add(sniperBarrel);
+
+    const sniperScope = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.42, 12), sniperScopeMaterial),
+      sniperScopeMaterial
+    );
+    sniperScope.rotation.x = Math.PI / 2;
+    sniperScope.position.set(0.34, -0.12, -0.90);
+    sniperGroup.add(sniperScope);
+
+    const sniperMuzzle = new THREE.Object3D();
+    sniperMuzzle.position.set(0.34, -0.25, -2.48);
+    sniperGroup.add(sniperMuzzle);
+
+    // -------------------------
+    // 3) Espada
+    // -------------------------
+    const swordGroup = new THREE.Group();
+    camera.add(swordGroup);
+    swordGroup.visible = false;
+    swordGroup.position.set(0.42, -0.30, -0.72);
+    swordGroup.rotation.set(-0.25, 0.18, -0.32);
+
+    const swordBladeMaterial = new THREE.MeshLambertMaterial({
+      color: 0xdde8ee,
+      emissive: 0x1b2830,
+      emissiveIntensity: 0.35
+    });
+    const swordGuardMaterial = new THREE.MeshLambertMaterial({ color: 0xc49a3a });
+    const swordHandleMaterial = new THREE.MeshLambertMaterial({ color: 0x34251f });
+
+    const swordBlade = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 1.36), swordBladeMaterial),
+      swordBladeMaterial
+    );
+    swordBlade.position.set(0, 0, -0.75);
+    swordGroup.add(swordBlade);
+
+    const swordTip = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.26, 4), swordBladeMaterial),
+      swordBladeMaterial
+    );
+    swordTip.rotation.x = -Math.PI / 2;
+    swordTip.position.set(0, 0, -1.56);
+    swordGroup.add(swordTip);
+
+    const swordGuard = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.07, 0.10), swordGuardMaterial),
+      swordGuardMaterial
+    );
+    swordGuard.position.set(0, 0, -0.03);
+    swordGroup.add(swordGuard);
+
+    const swordHandle = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.43, 10), swordHandleMaterial),
+      swordHandleMaterial
+    );
+    swordHandle.rotation.x = Math.PI / 2;
+    swordHandle.position.set(0, 0, 0.22);
+    swordGroup.add(swordHandle);
+
+    // -------------------------
+    // 4) Metralleta
+    // -------------------------
+    const machineGunGroup = new THREE.Group();
+    camera.add(machineGunGroup);
+    machineGunGroup.visible = false;
+
+    const machineGunBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x3b4147 });
+    const machineGunMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x15191d });
+    const machineGunMagazineMaterial = new THREE.MeshLambertMaterial({ color: 0x2a2f34 });
+
+    const machineGunBody = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.22, 0.95), machineGunBodyMaterial),
+      machineGunBodyMaterial
+    );
+    machineGunBody.position.set(0.34, -0.28, -0.86);
+    machineGunGroup.add(machineGunBody);
+
+    const machineGunBarrel = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.72, 10), machineGunMetalMaterial),
+      machineGunMetalMaterial
+    );
+    machineGunBarrel.rotation.x = Math.PI / 2;
+    machineGunBarrel.position.set(0.34, -0.25, -1.66);
+    machineGunGroup.add(machineGunBarrel);
+
+    const machineGunStock = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.20, 0.46), machineGunBodyMaterial),
+      machineGunBodyMaterial
+    );
+    machineGunStock.position.set(0.34, -0.34, -0.24);
+    machineGunStock.rotation.x = -0.18;
+    machineGunGroup.add(machineGunStock);
+
+    const machineGunMagazine = configureFirstPersonMesh(
+      new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.36, 0.19), machineGunMagazineMaterial),
+      machineGunMagazineMaterial
+    );
+    machineGunMagazine.position.set(0.34, -0.48, -0.78);
+    machineGunMagazine.rotation.x = -0.16;
+    machineGunGroup.add(machineGunMagazine);
+
+    const machineGunMuzzle = new THREE.Object3D();
+    machineGunMuzzle.position.set(0.34, -0.25, -2.08);
+    machineGunGroup.add(machineGunMuzzle);
+
+    // =========================================================
+    // ENEMIGOS
+    // =========================================================
+    // En Mundo 2 los enemigos se construyen como osos polares estilizados.
+    const enemyBodyGeometry = new THREE.SphereGeometry(0.72, 14, 10);
+    const enemyHeadGeometry = new THREE.SphereGeometry(0.46, 12, 10);
+    const enemySnoutGeometry = new THREE.SphereGeometry(0.24, 10, 8);
+    const enemyEarGeometry = new THREE.SphereGeometry(0.14, 9, 7);
+    const enemyLegGeometry = new THREE.CylinderGeometry(0.16, 0.19, 0.62, 9);
+
+    const enemies = [];
+    const enemyHitMeshes = [];
+
+    function updateEnemyCount() {
+      enemyCountElement.textContent = `Enemigos en mapa: ${enemies.length}`;
+    }
+
+    function isSpawnPositionValid(x, z) {
+      const playerDistance = Math.hypot(
+        x - camera.position.x,
+        z - camera.position.z
+      );
+
+      if (playerDistance < 15) return false;
+      if (circleIntersectsWorld(x, z, CONFIG.enemyRadius + 0.15)) return false;
+
+      for (const enemy of enemies) {
+        const distance = Math.hypot(
+          x - enemy.group.position.x,
+          z - enemy.group.position.z
+        );
+        if (distance < 2.0) return false;
+      }
+
+      return true;
+    }
+
+    function spawnEnemy() {
+      if (enemies.length >= getMaxEnemies() || gameOver) return;
+
+      let spawnX = 0;
+      let spawnZ = 0;
+      let found = false;
+
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = randomRange(22, 42);
+
+        spawnX = THREE.MathUtils.clamp(
+          camera.position.x + Math.cos(angle) * distance,
+          -CONFIG.mapHalfSize + 3,
+          CONFIG.mapHalfSize - 3
+        );
+
+        spawnZ = THREE.MathUtils.clamp(
+          camera.position.z + Math.sin(angle) * distance,
+          -CONFIG.mapHalfSize + 3,
+          CONFIG.mapHalfSize - 3
+        );
+
+        if (isSpawnPositionValid(spawnX, spawnZ)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) return;
+
+      const group = new THREE.Group();
+      group.position.set(spawnX, 0, spawnZ);
+
+      const body = new THREE.Mesh(enemyBodyGeometry, enemyMaterial);
+      body.scale.set(1.38, 0.90, 1.72);
+      body.position.set(0, 0.92, 0);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      group.add(body);
+
+      const head = new THREE.Mesh(enemyHeadGeometry, enemyHeadMaterial);
+      head.position.set(0, 1.28, 0.92);
+      head.castShadow = true;
+      group.add(head);
+
+      const snout = new THREE.Mesh(enemySnoutGeometry, enemyHeadMaterial);
+      snout.scale.set(0.92, 0.72, 1.20);
+      snout.position.set(0, 1.18, 1.28);
+      snout.castShadow = true;
+      group.add(snout);
+
+      const nose = new THREE.Mesh(
+        new THREE.SphereGeometry(0.105, 9, 7),
+        enemyDarkMaterial
+      );
+      nose.scale.set(1.0, 0.72, 0.72);
+      nose.position.set(0, 1.20, 1.52);
+      nose.castShadow = true;
+      group.add(nose);
+
+      const leftEar = new THREE.Mesh(enemyEarGeometry, enemyHeadMaterial);
+      leftEar.position.set(-0.30, 1.63, 0.88);
+      const rightEar = leftEar.clone();
+      rightEar.position.x = 0.30;
+      leftEar.castShadow = rightEar.castShadow = true;
+      group.add(leftEar, rightEar);
+
+      const legs = [];
+      const legPositions = [
+        [-0.42, 0.38, 0.48], [0.42, 0.38, 0.48],
+        [-0.42, 0.38, -0.52], [0.42, 0.38, -0.52]
+      ];
+      for (const [lx, ly, lz] of legPositions) {
+        const leg = new THREE.Mesh(enemyLegGeometry, enemyMaterial);
+        leg.position.set(lx, ly, lz);
+        leg.castShadow = true;
+        group.add(leg);
+        legs.push(leg);
+      }
+
+      const enemy = {
+        group,
+        body,
+        head,
+        hitMeshes: [body, head, snout, nose, leftEar, rightEar, ...legs],
+        speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier(),
+        radius: CONFIG.enemyRadius,
+        health: 1,
+        maxHealth: 1,
+        isBoss: false,
+        bobOffset: Math.random() * Math.PI * 2
+      };
+
+      for (const mesh of enemy.hitMeshes) {
+        mesh.userData.enemyRef = enemy;
+      }
+
+      enemyHitMeshes.push(...enemy.hitMeshes);
+      enemies.push(enemy);
+      scene.add(group);
+      updateEnemyCount();
+    }
+
+    function removeEnemy(enemy) {
+      const enemyIndex = enemies.indexOf(enemy);
+      if (enemyIndex !== -1) {
+        enemies.splice(enemyIndex, 1);
+      }
+
+      for (const mesh of enemy.hitMeshes) {
+        const meshIndex = enemyHitMeshes.indexOf(mesh);
+        if (meshIndex !== -1) {
+          enemyHitMeshes.splice(meshIndex, 1);
+        }
+      }
+
+      scene.remove(enemy.group);
+      updateEnemyCount();
+    }
+
+    function clearEnemies() {
+      while (enemies.length > 0) {
+        removeEnemy(enemies[enemies.length - 1]);
+      }
+    }
+
+    // Movimiento enemigo con colisión simple contra el entorno.
+    function moveEnemyWithCollision(enemy, dx, dz) {
+      const group = enemy.group;
+      const radius = enemy.radius || CONFIG.enemyRadius;
+
+      const candidateX = group.position.x + dx;
+      if (!circleIntersectsWorld(candidateX, group.position.z, radius)) {
+        group.position.x = candidateX;
+      }
+
+      const candidateZ = group.position.z + dz;
+      if (!circleIntersectsWorld(group.position.x, candidateZ, radius)) {
+        group.position.z = candidateZ;
+      }
+    }
+
+    function updateEnemies(delta, elapsedTime) {
+      const playerX = camera.position.x;
+      const playerZ = camera.position.z;
+
+      for (const enemy of enemies) {
+        const ex = enemy.group.position.x;
+        const ez = enemy.group.position.z;
+        const dx = playerX - ex;
+        const dz = playerZ - ez;
+        const distance = Math.hypot(dx, dz);
+
+        if (distance > 0.0001) {
+          const step = enemy.speed * delta;
+          moveEnemyWithCollision(
+            enemy,
+            (dx / distance) * step,
+            (dz / distance) * step
+          );
+
+          // El enemigo mira hacia el jugador.
+          enemy.group.rotation.y = Math.atan2(dx, dz);
+        }
+
+        // Pequeño movimiento vertical para hacerlo más visible.
+        if (!enemy.isBoss) {
+          enemy.group.position.y = Math.sin(elapsedTime * 3 + enemy.bobOffset) * 0.045;
+        }
+
+        // Contacto enemigo-jugador = Game Over.
+        const updatedDistance = Math.hypot(
+          playerX - enemy.group.position.x,
+          playerZ - enemy.group.position.z
+        );
+
+        if (updatedDistance < CONFIG.playerRadius + (enemy.radius || CONFIG.enemyRadius) + 0.12) {
+          endGame();
+          break;
+        }
+      }
+    }
+
+    // =========================================================
+    // ARMAS, DISPAROS, ESPADA Y PUNTUACIÓN
+    // =========================================================
+    const raycaster = new THREE.Raycaster();
+    const centerScreen = new THREE.Vector2(0, 0);
+
+    const WEAPON_ORDER = ['pistol', 'sniper', 'sword', 'machinegun'];
+    const WEAPON_LABELS = {
+      pistol: 'Pistola',
+      sniper: 'Francotirador',
+      sword: 'Espada',
+      machinegun: 'Metralleta'
+    };
+
+    let activeWeapon = 'pistol';
+    let score = 0;
+    let defeatedEnemies = 0;
+    let lastShotTime = 0;
+    let weaponFlashTimer = null;
+    let victoryTimer = null;
+    let roundTransition = false;
+    let sniperZoomed = false;
+    let swordSwingRemaining = 0;
+    const swordSwingDuration = 0.24;
+
+    // Estado de munición y recargas.
+    let sniperAmmo = CONFIG.sniperMagazineSize;
+    let sniperAction = 'idle'; // idle | bolt | magazine
+    let sniperActionRemaining = 0;
+
+    let machineGunMagazineAmmo = CONFIG.machineGunMagazineSize;
+    let machineGunReserveAmmo = CONFIG.machineGunTotalAmmo - CONFIG.machineGunMagazineSize;
+    let machineGunReloading = false;
+    let machineGunReloadRemaining = 0;
+    let primaryButtonHeld = false;
+
+    // Balas visuales del jugador. El Raycaster decide el impacto exacto;
+    // las esferas permiten ver el proyectil viajando por el escenario.
+    const playerProjectiles = [];
+    const playerProjectileGeometry = new THREE.SphereGeometry(
+      CONFIG.playerProjectileRadius,
+      10,
+      8
+    );
+    const playerProjectileMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffe066,
+      emissive: 0xff8c00,
+      emissiveIntensity: 1.2
+    });
+    const sniperProjectileMaterial = new THREE.MeshLambertMaterial({
+      color: 0xd8f5ff,
+      emissive: 0x5bbcff,
+      emissiveIntensity: 1.8
+    });
+    const machineGunProjectileMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffd36b,
+      emissive: 0xff5a00,
+      emissiveIntensity: 1.45
+    });
+    const playerShotOrigin = new THREE.Vector3();
+    const playerShotDirection = new THREE.Vector3();
+
+    function setScore(value) {
+      score = value;
+      scoreElement.textContent = `Puntaje: ${score}`;
+    }
+
+    function setDefeatedEnemies(value) {
+      defeatedEnemies = value;
+      defeatedCountElement.textContent =
+        `Derrotados: ${defeatedEnemies} / ${CONFIG.enemiesToWin}`;
+    }
+
+    function updateWeaponStatus() {
+      const extra = activeWeapon === 'sniper'
+        ? ' · Clic derecho: zoom'
+        : activeWeapon === 'sword'
+          ? ` · Alcance: ${CONFIG.swordRange.toFixed(1)} m`
+          : activeWeapon === 'machinegun'
+            ? ' · Mantén clic: automático'
+            : '';
+
+      weaponStatusElement.textContent =
+        `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}`;
+      updateAmmoHUD();
+    }
+
+    function updateAmmoHUD() {
+      if (activeWeapon === 'sniper') {
+        const state = sniperAction === 'bolt'
+          ? ' · RECARGANDO CERROJO'
+          : sniperAction === 'magazine'
+            ? ' · RECARGANDO CARGADOR'
+            : '';
+        ammoStatusElement.textContent =
+          `Francotirador: ${sniperAmmo} / ${CONFIG.sniperMagazineSize}${state}`;
+      } else if (activeWeapon === 'machinegun') {
+        const state = machineGunReloading ? ' · RECARGANDO' : '';
+        ammoStatusElement.textContent =
+          `Metralleta: ${machineGunMagazineAmmo} / ${CONFIG.machineGunMagazineSize} · Reserva: ${machineGunReserveAmmo}${state}`;
+      } else if (activeWeapon === 'sword') {
+        ammoStatusElement.textContent = 'Espada: sin munición';
+      } else {
+        ammoStatusElement.textContent = 'Pistola: munición ilimitada';
+      }
+    }
+
+    function resetWeaponAmmo() {
+      sniperAmmo = CONFIG.sniperMagazineSize;
+      sniperAction = 'idle';
+      sniperActionRemaining = 0;
+      sniperGroup.position.set(0, 0, 0);
+      sniperGroup.rotation.set(0, 0, 0);
+
+      machineGunMagazineAmmo = CONFIG.machineGunMagazineSize;
+      machineGunReserveAmmo = CONFIG.machineGunTotalAmmo - CONFIG.machineGunMagazineSize;
+      machineGunReloading = false;
+      machineGunReloadRemaining = 0;
+      machineGunGroup.position.set(0, 0, 0);
+      machineGunGroup.rotation.set(0, 0, 0);
+      machineGunMagazine.position.set(0.34, -0.48, -0.78);
+      primaryButtonHeld = false;
+      updateAmmoHUD();
+    }
+
+    function setSniperZoom(enabled) {
+      const shouldZoom = Boolean(
+        enabled && activeWeapon === 'sniper' && controls.isLocked && !gameOver
+      );
+
+      sniperZoomed = shouldZoom;
+      camera.fov = shouldZoom ? CONFIG.sniperZoomFov : 75;
+      camera.updateProjectionMatrix();
+      controls.pointerSpeed = shouldZoom ? 0.35 : 0.9;
+      scopeOverlayElement.classList.toggle('active', shouldZoom);
+      crosshairElement.style.display = shouldZoom ? 'none' : 'block';
+
+      // Al apuntar, el modelo baja para que no obstruya el visor.
+      sniperGroup.position.y = shouldZoom ? -0.18 : 0;
+    }
+
+    function equipWeapon(name) {
+      if (!WEAPON_ORDER.includes(name)) return;
+
+      setSniperZoom(false);
+      activeWeapon = name;
+      weaponGroup.visible = name === 'pistol';
+      sniperGroup.visible = name === 'sniper';
+      swordGroup.visible = name === 'sword';
+      machineGunGroup.visible = name === 'machinegun';
+      lastShotTime = 0;
+      updateWeaponStatus();
+    }
+
+    function cycleWeapon() {
+      if (!controls.isLocked || gameOver) return;
+      const index = WEAPON_ORDER.indexOf(activeWeapon);
+      equipWeapon(WEAPON_ORDER[(index + 1) % WEAPON_ORDER.length]);
+    }
+
+    function flashFirearm(material, baseColor) {
+      clearTimeout(weaponFlashTimer);
+      material.color.setHex(0xffc857);
+
+      weaponFlashTimer = setTimeout(() => {
+        material.color.setHex(baseColor);
+      }, 100);
+    }
+
+    function createPlayerProjectile({
+      muzzle,
+      maxDistance,
+      speed,
+      material = playerProjectileMaterial,
+      scale = 1
+    }) {
+      muzzle.getWorldPosition(playerShotOrigin);
+      camera.getWorldDirection(playerShotDirection).normalize();
+
+      const bullet = new THREE.Mesh(playerProjectileGeometry, material);
+      bullet.position.copy(playerShotOrigin);
+      bullet.scale.setScalar(scale);
+      bullet.castShadow = true;
+      scene.add(bullet);
+
+      playerProjectiles.push({
+        mesh: bullet,
+        velocity: playerShotDirection.clone().multiplyScalar(speed),
+        speed,
+        life: CONFIG.playerProjectileMaxLife,
+        remainingDistance: Math.max(0.5, maxDistance)
+      });
+    }
+
+    function removePlayerProjectile(index) {
+      const projectile = playerProjectiles[index];
+      if (!projectile) return;
+      scene.remove(projectile.mesh);
+      playerProjectiles.splice(index, 1);
+    }
+
+    function clearPlayerProjectiles() {
+      for (let i = playerProjectiles.length - 1; i >= 0; i--) {
+        removePlayerProjectile(i);
+      }
+    }
+
+    function updatePlayerProjectiles(delta) {
+      for (let i = playerProjectiles.length - 1; i >= 0; i--) {
+        const projectile = playerProjectiles[i];
+        const step = projectile.speed * delta;
+
+        projectile.mesh.position.addScaledVector(projectile.velocity, delta);
+        projectile.remainingDistance -= step;
+        projectile.life -= delta;
+
+        if (projectile.remainingDistance <= 0 || projectile.life <= 0) {
+          removePlayerProjectile(i);
+        }
+      }
+    }
+
+    function registerEnemyDefeat(enemy) {
+      if (!enemy || gameOver) return;
+
+      enemy.health = Math.max(0, (enemy.health ?? 1) - 1);
+
+      if (enemy.isBoss) {
+        updateBossHUD();
+        if (enemy.health > 0) {
+          enemy.body?.material?.emissive?.setHex(0x5a165f);
+          setTimeout(() => enemy.body?.material?.emissive?.setHex(0x16051e), 90);
+          return;
+        }
+        defeatFinalBoss();
+        return;
+      }
+
+      if (enemy.health > 0) return;
+      removeEnemy(enemy);
+      setScore(score + CONFIG.pointsPerEnemy);
+      setDefeatedEnemies(defeatedEnemies + 1);
+
+      if (defeatedEnemies >= CONFIG.enemiesToWin) {
+        winRound();
+      }
+    }
+
+    function getFirstWeaponIntersection(maxDistance) {
+      raycaster.far = maxDistance;
+      raycaster.setFromCamera(centerScreen, camera);
+
+      // Los obstáculos se incluyen para evitar disparar o atacar a través
+      // de pinos, rocas, bancos de nieve y torretas.
+      const targets = [...enemyHitMeshes, ...shotBlockers];
+      const intersections = raycaster.intersectObjects(targets, false);
+      return intersections.length > 0 ? intersections[0] : null;
+    }
+
+    function shootPistol() {
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.shootCooldownMs) return;
+      lastShotTime = now;
+
+      flashFirearm(weaponMaterial, 0x2d3436);
+      const hit = getFirstWeaponIntersection(CONFIG.shootDistance);
+
+      createPlayerProjectile({
+        muzzle: playerMuzzle,
+        maxDistance: hit ? hit.distance : CONFIG.shootDistance,
+        speed: CONFIG.playerProjectileSpeed
+      });
+
+      if (hit?.object?.userData?.enemyRef) {
+        registerEnemyDefeat(hit.object.userData.enemyRef);
+      }
+    }
+
+    function startSniperMagazineReload() {
+      if (sniperAction === 'magazine') return;
+      setSniperZoom(false);
+      sniperAction = 'magazine';
+      sniperActionRemaining = CONFIG.sniperMagazineReloadSeconds;
+      updateAmmoHUD();
+    }
+
+    function shootSniper() {
+      if (sniperAction !== 'idle') return;
+      if (sniperAmmo <= 0) {
+        startSniperMagazineReload();
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.sniperCooldownMs) return;
+      lastShotTime = now;
+      sniperAmmo -= 1;
+
+      flashFirearm(sniperBodyMaterial, 0x314238);
+      const hit = getFirstWeaponIntersection(CONFIG.sniperDistance);
+
+      createPlayerProjectile({
+        muzzle: sniperMuzzle,
+        maxDistance: hit ? hit.distance : CONFIG.sniperDistance,
+        speed: CONFIG.sniperProjectileSpeed,
+        material: sniperProjectileMaterial,
+        scale: 1.25
+      });
+
+      if (hit?.object?.userData?.enemyRef) {
+        registerEnemyDefeat(hit.object.userData.enemyRef);
+      }
+
+      // Cada disparo inicia la animación de recarga/cerrojo.
+      setSniperZoom(false);
+      sniperAction = 'bolt';
+      sniperActionRemaining = CONFIG.sniperBoltReloadSeconds;
+      updateAmmoHUD();
+    }
+
+    function startMachineGunReload() {
+      if (machineGunReloading) return;
+      if (machineGunMagazineAmmo >= CONFIG.machineGunMagazineSize) return;
+      if (machineGunReserveAmmo <= 0) return;
+
+      machineGunReloading = true;
+      machineGunReloadRemaining = CONFIG.machineGunReloadSeconds;
+      updateAmmoHUD();
+    }
+
+    function shootMachineGun() {
+      if (machineGunReloading) return;
+
+      if (machineGunMagazineAmmo <= 0) {
+        startMachineGunReload();
+        return;
+      }
+
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.machineGunFireIntervalMs) return;
+      lastShotTime = now;
+      machineGunMagazineAmmo -= 1;
+
+      flashFirearm(machineGunBodyMaterial, 0x3b4147);
+      const hit = getFirstWeaponIntersection(CONFIG.machineGunDistance);
+
+      createPlayerProjectile({
+        muzzle: machineGunMuzzle,
+        maxDistance: hit ? hit.distance : CONFIG.machineGunDistance,
+        speed: CONFIG.machineGunProjectileSpeed,
+        material: machineGunProjectileMaterial,
+        scale: 0.85
+      });
+
+      if (hit?.object?.userData?.enemyRef) {
+        registerEnemyDefeat(hit.object.userData.enemyRef);
+      }
+
+      updateAmmoHUD();
+      if (machineGunMagazineAmmo <= 0) {
+        startMachineGunReload();
+      }
+    }
+
+    function reloadCurrentWeapon() {
+      if (!controls.isLocked || gameOver) return;
+      if (activeWeapon === 'sniper') {
+        if (sniperAmmo < CONFIG.sniperMagazineSize && sniperAction === 'idle') {
+          startSniperMagazineReload();
+        }
+      } else if (activeWeapon === 'machinegun') {
+        startMachineGunReload();
+      }
+    }
+
+    function updateFirearmAnimations(delta) {
+      if (sniperAction !== 'idle') {
+        sniperActionRemaining = Math.max(0, sniperActionRemaining - delta);
+
+        if (sniperAction === 'bolt') {
+          const duration = CONFIG.sniperBoltReloadSeconds;
+          const progress = 1 - sniperActionRemaining / duration;
+          const kick = Math.sin(progress * Math.PI);
+          sniperGroup.position.z = 0.13 * kick;
+          sniperGroup.rotation.x = -0.10 * kick;
+        } else {
+          const duration = CONFIG.sniperMagazineReloadSeconds;
+          const progress = 1 - sniperActionRemaining / duration;
+          const dip = Math.sin(progress * Math.PI);
+          sniperGroup.position.y = -0.38 * dip;
+          sniperGroup.rotation.z = 0.24 * dip;
+        }
+
+        if (sniperActionRemaining <= 0) {
+          const finishedAction = sniperAction;
+          sniperGroup.position.set(0, 0, 0);
+          sniperGroup.rotation.set(0, 0, 0);
+
+          if (finishedAction === 'bolt' && sniperAmmo <= 0) {
+            sniperAction = 'magazine';
+            sniperActionRemaining = CONFIG.sniperMagazineReloadSeconds;
+          } else {
+            if (finishedAction === 'magazine') {
+              sniperAmmo = CONFIG.sniperMagazineSize;
+            }
+            sniperAction = 'idle';
+            sniperActionRemaining = 0;
+          }
+          updateAmmoHUD();
+        }
+      }
+
+      if (machineGunReloading) {
+        machineGunReloadRemaining = Math.max(0, machineGunReloadRemaining - delta);
+        const progress = 1 - machineGunReloadRemaining / CONFIG.machineGunReloadSeconds;
+        const dip = Math.sin(progress * Math.PI);
+        machineGunGroup.position.y = -0.34 * dip;
+        machineGunGroup.rotation.z = -0.20 * dip;
+        machineGunMagazine.position.y = -0.48 - 0.34 * dip;
+
+        if (machineGunReloadRemaining <= 0) {
+          const needed = CONFIG.machineGunMagazineSize - machineGunMagazineAmmo;
+          const loaded = Math.min(needed, machineGunReserveAmmo);
+          machineGunMagazineAmmo += loaded;
+          machineGunReserveAmmo -= loaded;
+          machineGunReloading = false;
+          machineGunGroup.position.set(0, 0, 0);
+          machineGunGroup.rotation.set(0, 0, 0);
+          machineGunMagazine.position.set(0.34, -0.48, -0.78);
+          updateAmmoHUD();
+        }
+      }
+    }
+
+    function attackWithSword() {
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.swordCooldownMs) return;
+      lastShotTime = now;
+
+      swordSwingRemaining = swordSwingDuration;
+      swordBladeMaterial.emissive.setHex(0x5b879d);
+
+      const hit = getFirstWeaponIntersection(CONFIG.swordRange);
+      if (hit?.object?.userData?.enemyRef) {
+        registerEnemyDefeat(hit.object.userData.enemyRef);
+      }
+    }
+
+    function updateSwordAnimation(delta) {
+      if (swordSwingRemaining <= 0) return;
+
+      swordSwingRemaining = Math.max(0, swordSwingRemaining - delta);
+      const progress = 1 - swordSwingRemaining / swordSwingDuration;
+      const swing = Math.sin(progress * Math.PI);
+
+      swordGroup.rotation.y = 0.18 - swing * 1.25;
+      swordGroup.rotation.z = -0.32 + swing * 0.95;
+      swordGroup.position.x = 0.42 - swing * 0.10;
+
+      if (swordSwingRemaining === 0) {
+        swordGroup.rotation.set(-0.25, 0.18, -0.32);
+        swordGroup.position.set(0.42, -0.30, -0.72);
+        swordBladeMaterial.emissive.setHex(0x1b2830);
+      }
+    }
+
+    function primaryAttack() {
+      if (!controls.isLocked || gameOver) return;
+
+      if (activeWeapon === 'sniper') {
+        shootSniper();
+      } else if (activeWeapon === 'sword') {
+        attackWithSword();
+      } else if (activeWeapon === 'machinegun') {
+        shootMachineGun();
+      } else {
+        shootPistol();
+      }
+    }
+
+    function createFinalBoss() {
+      clearEnemies();
+      clearArmorPickups();
+      bossActive = true;
+
+      const scale = CONFIG.bossScale;
+      const group = new THREE.Group();
+      group.position.set(0, 0, -28);
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.72 * scale, 0.92 * scale, 1.9 * scale, 14),
+        bossBodyMaterial.clone()
+      );
+      body.position.y = 0.95 * scale;
+      body.castShadow = true;
+      group.add(body);
+
+      const shoulder = new THREE.Mesh(
+        new THREE.BoxGeometry(1.9 * scale, 0.36 * scale, 0.68 * scale),
+        bossBodyMaterial.clone()
+      );
+      shoulder.position.y = 1.78 * scale;
+      shoulder.castShadow = true;
+      group.add(shoulder);
+
+      // Cabeza-torreta móvil independiente del cuerpo.
+      const headPivot = new THREE.Group();
+      headPivot.position.y = 2.18 * scale;
+      group.add(headPivot);
+
+      const head = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.55 * scale, 0.70 * scale, 0.55 * scale, 14),
+        bossHeadMaterial.clone()
+      );
+      head.rotation.x = Math.PI / 2;
+      head.castShadow = true;
+      headPivot.add(head);
+
+      const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.10 * scale, 0.14 * scale, 1.45 * scale, 10),
+        turretBarrelMaterial
+      );
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.z = 0.82 * scale;
+      barrel.castShadow = true;
+      headPivot.add(barrel);
+
+      const muzzle = new THREE.Object3D();
+      muzzle.position.set(0, 0, 1.58 * scale);
+      headPivot.add(muzzle);
+
+      // Espada decorativa gigante fijada al costado derecho.
+      const sword = new THREE.Group();
+      sword.position.set(1.25 * scale, 1.15 * scale, 0);
+      sword.rotation.z = -0.34;
+      const grip = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11 * scale, 0.11 * scale, 0.78 * scale, 10),
+        turretBarrelMaterial
+      );
+      grip.position.y = -0.25 * scale;
+      sword.add(grip);
+      const blade = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22 * scale, 2.05 * scale, 0.10 * scale),
+        bossSwordMaterial
+      );
+      blade.position.y = 1.12 * scale;
+      blade.castShadow = true;
+      sword.add(blade);
+      group.add(sword);
+
+      const boss = {
+        group, body, head, barrel, headPivot, muzzle, sword,
+        hitMeshes: [body, shoulder, head, barrel],
+        radius: CONFIG.enemyRadius * scale,
+        speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier,
+        health: CONFIG.bossMaxHealth,
+        maxHealth: CONFIG.bossMaxHealth,
+        isBoss: true,
+        bossShotTimer: 1.2,
+        bobOffset: 0
+      };
+
+      for (const mesh of boss.hitMeshes) {
+        mesh.userData.enemyRef = boss;
+        enemyHitMeshes.push(mesh);
+      }
+      enemies.push(boss);
+      finalBoss = boss;
+      scene.add(group);
+      updateEnemyCount();
+      updateRoundHUD();
+    }
+
+    function fireBossTurret(boss) {
+      if (!boss?.muzzle) return;
+      turretTarget.copy(camera.position);
+      boss.muzzle.getWorldPosition(turretMuzzlePosition);
+      turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
+
+      const projectile = new THREE.Mesh(turretProjectileGeometry, turretProjectileMaterial);
+      projectile.scale.setScalar(1.45);
+      projectile.position.copy(turretMuzzlePosition);
+      projectile.castShadow = true;
+      scene.add(projectile);
+
+      turretProjectiles.push({
+        mesh: projectile,
+        velocity: turretDirection.clone().multiplyScalar(
+          CONFIG.turretProjectileSpeed * getRoundMultiplier()
+        ),
+        life: CONFIG.turretProjectileMaxLife
+      });
+    }
+
+    function updateFinalBoss(delta) {
+      if (!bossActive || !finalBoss || gameOver) return;
+      finalBoss.headPivot.lookAt(camera.position);
+      finalBoss.sword.rotation.y += delta * 0.55;
+      finalBoss.bossShotTimer -= delta;
+      if (finalBoss.bossShotTimer <= 0) {
+        fireBossTurret(finalBoss);
+        finalBoss.bossShotTimer += CONFIG.bossShotSeconds;
+      }
+    }
+
+    function clearFinalBoss() {
+      if (!finalBoss) { bossActive = false; return; }
+      const boss = finalBoss;
+      const idx = enemies.indexOf(boss);
+      if (idx !== -1) enemies.splice(idx, 1);
+      for (const mesh of boss.hitMeshes) {
+        const mi = enemyHitMeshes.indexOf(mesh);
+        if (mi !== -1) enemyHitMeshes.splice(mi, 1);
+      }
+      scene.remove(boss.group);
+      finalBoss = null;
+      bossActive = false;
+      updateEnemyCount();
+      updateBossHUD();
+    }
+
+    function defeatFinalBoss() {
+      if (!finalBoss || roundTransition) return;
+      setScore(score + CONFIG.bossScore);
+      clearFinalBoss();
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+      clearArmorPickups();
+      setSniperZoom(false);
+      gameOver = true;
+      roundTransition = true;
+
+      showOverlay(
+        '¡MUNDO COMPLETADO!',
+        `Derrotaste al jefe final. Puntaje final: ${score}. El mundo se reiniciará desde ronda 1, puntaje 0 y sin mejoras.`
+      );
+      if (controls.isLocked) controls.unlock();
+
+      clearTimeout(victoryTimer);
+      victoryTimer = setTimeout(() => {
+        resetGame();
+        showOverlay('NUEVO MUNDO', 'Todo volvió a cero. Haz clic para comenzar desde la ronda 1.');
+      }, CONFIG.finalResetMs);
+    }
+
+    function startFinalBossRound() {
+      currentRound = CONFIG.finalNormalRound + 1;
+      clearEnemies();
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+      clearArmorPickups();
+      resetTurrets();
+      setSniperZoom(false);
+      setDefeatedEnemies(0);
+      resetWeaponAmmo();
+      equipWeapon('pistol');
+      camera.position.set(0, CONFIG.playerHeight, 8);
+      camera.rotation.set(0, 0, 0);
+      verticalVelocity = 0;
+      onGround = true;
+      spawnAccumulator = 0;
+      gameOver = false;
+      roundTransition = false;
+      for (const key of Object.keys(keys)) keys[key] = false;
+      createFinalBoss();
+    }
+
+    function winRound() {
+      if (gameOver || roundTransition || bossActive) return;
+
+      roundTransition = true;
+      gameOver = true;
+      setSniperZoom(false);
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+
+      const completedRound = currentRound;
+      const finalNormalCompleted = completedRound >= CONFIG.finalNormalRound;
+      const nextRound = currentRound + 1;
+      const nextBonus = getRoundDifficultyBonus(nextRound);
+      const armorText = armorLevel > 0
+        ? ` Chaleco Nv.${armorLevel} con ${armorHitsRemaining}/${getArmorCapacity()} impactos.`
+        : '';
+
+      showOverlay(
+        `¡RONDA ${completedRound} SUPERADA!`,
+        finalNormalCompleted
+          ? `Llegaste al máximo de +125% de dificultad.${armorText} El JEFE FINAL está por aparecer.`
+          : `Derrotaste ${defeatedEnemies}/${CONFIG.enemiesToWin} enemigos. Puntaje total: ${score}. ` +
+            `La ronda ${nextRound} tendrá +${Math.round(nextBonus * 100)}% de dificultad.${armorText}`
+      );
+
+      if (controls.isLocked) controls.unlock();
+
+      clearTimeout(victoryTimer);
+      victoryTimer = setTimeout(() => {
+        if (finalNormalCompleted) {
+          startFinalBossRound();
+          showOverlay(
+            'JEFE FINAL',
+            `Movimiento al 150%, tamaño ×${CONFIG.bossScale.toFixed(0)}, cabeza-torreta móvil, espada gigante y ${CONFIG.bossMaxHealth} puntos de vida. Haz clic para luchar.`
+          );
+        } else {
+          startNextRound();
+          showOverlay(
+            `RONDA ${currentRound}`,
+            `Dificultad +${Math.round(getRoundDifficultyBonus() * 100)}% (×${getRoundMultiplier().toFixed(2)}). ` +
+            `${armorPickups.length ? 'Hay un objeto de chaleco en el mapa. ' : ''}` +
+            `Puntaje total: ${score}. Haz clic para continuar.`
+          );
+        }
+      }, CONFIG.roundTransitionMs);
+    }
+
+    function startNextRound() {
+      currentRound += 1;
+      clearEnemies();
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+      clearArmorPickups();
+      resetTurrets();
+      setSniperZoom(false);
+      setDefeatedEnemies(0);
+      resetWeaponAmmo();
+      equipWeapon('pistol');
+
+      swordSwingRemaining = 0;
+      swordGroup.rotation.set(-0.25, 0.18, -0.32);
+      swordGroup.position.set(0.42, -0.30, -0.72);
+      swordBladeMaterial.emissive.setHex(0x1b2830);
+
+      camera.position.set(0, CONFIG.playerHeight, 8);
+      camera.rotation.set(0, 0, 0);
+      verticalVelocity = 0;
+      onGround = true;
+      spawnAccumulator = 0;
+      gameOver = false;
+      roundTransition = false;
+      bossActive = false;
+      finalBoss = null;
+
+      for (const key of Object.keys(keys)) keys[key] = false;
+
+      prepareArmorPickupForRound();
+      updateRoundHUD();
+
+      for (let i = 0; i < getInitialEnemyCount(); i++) spawnEnemy();
+    }
+
+    // =========================================================
+    // MOVIMIENTO DEL JUGADOR
+    // =========================================================
+    const keys = {
+      KeyW: false,
+      KeyA: false,
+      KeyS: false,
+      KeyD: false
+    };
+
+    const forwardVector = new THREE.Vector3();
+    const rightVector = new THREE.Vector3();
+    const moveVector = new THREE.Vector3();
+
+    let verticalVelocity = 0;
+    let onGround = true;
+
+    function movePlayerWithCollision(dx, dz) {
+      // Resolver X y Z por separado permite deslizarse junto a paredes.
+      const candidateX = camera.position.x + dx;
+      if (!circleIntersectsWorld(candidateX, camera.position.z, CONFIG.playerRadius)) {
+        camera.position.x = candidateX;
+      }
+
+      const candidateZ = camera.position.z + dz;
+      if (!circleIntersectsWorld(camera.position.x, candidateZ, CONFIG.playerRadius)) {
+        camera.position.z = candidateZ;
+      }
+    }
+
+    function updatePlayer(delta) {
+      if (!controls.isLocked || gameOver) return;
+
+      let forwardInput = 0;
+      let rightInput = 0;
+
+      if (keys.KeyW) forwardInput += 1;
+      if (keys.KeyS) forwardInput -= 1;
+      if (keys.KeyD) rightInput += 1;
+      if (keys.KeyA) rightInput -= 1;
+
+      camera.getWorldDirection(forwardVector);
+      forwardVector.y = 0;
+
+      if (forwardVector.lengthSq() > 0) {
+        forwardVector.normalize();
+      }
+
+      rightVector.crossVectors(forwardVector, camera.up).normalize();
+
+      moveVector.set(0, 0, 0);
+      moveVector.addScaledVector(forwardVector, forwardInput);
+      moveVector.addScaledVector(rightVector, rightInput);
+
+      if (moveVector.lengthSq() > 0) {
+        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * delta);
+        movePlayerWithCollision(moveVector.x, moveVector.z);
+      }
+
+      // Gravedad y salto.
+      verticalVelocity -= CONFIG.gravity * delta;
+      camera.position.y += verticalVelocity * delta;
+
+      if (camera.position.y <= CONFIG.playerHeight) {
+        camera.position.y = CONFIG.playerHeight;
+        verticalVelocity = 0;
+        onGround = true;
+      }
+    }
+
+    // =========================================================
+    // ESTADO DEL JUEGO
+    // =========================================================
+    let gameStarted = false;
+    let gameOver = false;
+    let spawnAccumulator = 0;
+
+    function showOverlay(title, message) {
+      overlayTitle.textContent = title;
+      overlayMessage.textContent = message;
+      overlay.classList.remove('hidden');
+    }
+
+    function resetGame() {
+      clearTimeout(victoryTimer);
+      roundTransition = false;
+      currentRound = 1;
+      armorLevel = 0;
+      armorHitsRemaining = 0;
+      clearFinalBoss();
+      clearArmorPickups();
+      setSniperZoom(false);
+      clearEnemies();
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+      resetTurrets();
+      setScore(0);
+      setDefeatedEnemies(0);
+      resetWeaponAmmo();
+      equipWeapon('pistol');
+      swordSwingRemaining = 0;
+      swordGroup.rotation.set(-0.25, 0.18, -0.32);
+      swordGroup.position.set(0.42, -0.30, -0.72);
+      swordBladeMaterial.emissive.setHex(0x1b2830);
+
+      camera.position.set(0, CONFIG.playerHeight, 8);
+      camera.rotation.set(0, 0, 0);
+
+      verticalVelocity = 0;
+      onGround = true;
+      spawnAccumulator = 0;
+      gameOver = false;
+      gameStarted = true;
+
+      for (const key of Object.keys(keys)) {
+        keys[key] = false;
+      }
+
+      updateRoundHUD();
+
+      for (let i = 0; i < getInitialEnemyCount(); i++) {
+        spawnEnemy();
+      }
+    }
+
+    function endGame(reason = 'Un enemigo te alcanzó.') {
+      if (gameOver) return;
+
+      gameOver = true;
+      setSniperZoom(false);
+      clearTurretProjectiles();
+      clearPlayerProjectiles();
+      showOverlay(
+        'GAME OVER',
+        `${reason} ${bossActive ? 'Jefe final' : `Ronda: ${currentRound}`} · Puntaje final: ${score} · ` +
+        `Chaleco: ${armorLevel > 0 ? `Nv.${armorLevel} (${armorHitsRemaining}/${getArmorCapacity()})` : 'sin protección'}. Haz clic para reiniciar.`
+      );
+
+      if (controls.isLocked) {
+        controls.unlock();
+      }
+    }
+
+    // =========================================================
+    // EVENTOS
+    // =========================================================
+    overlay.addEventListener('click', () => {
+      if (roundTransition) return;
+
+      if (gameOver) {
+        resetGame();
+      } else if (!gameStarted) {
+        gameStarted = true;
+        currentRound = 1;
+        armorLevel = 0;
+        armorHitsRemaining = 0;
+        bossActive = false;
+        finalBoss = null;
+        clearArmorPickups();
+        setScore(0);
+        setDefeatedEnemies(0);
+        resetWeaponAmmo();
+        resetTurrets();
+        updateRoundHUD();
+        for (let i = 0; i < getInitialEnemyCount(); i++) {
+          spawnEnemy();
+        }
+      }
+
+      controls.lock();
+    });
+
+    controls.addEventListener('lock', () => {
+      overlay.classList.add('hidden');
+    });
+
+    controls.addEventListener('unlock', () => {
+      primaryButtonHeld = false;
+      setSniperZoom(false);
+      if (!gameOver) {
+        showOverlay('PAUSA', 'Haz clic para continuar jugando');
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.code in keys) {
+        keys[event.code] = true;
+      }
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+
+        if (controls.isLocked && !gameOver && onGround) {
+          verticalVelocity = CONFIG.jumpSpeed;
+          onGround = false;
+        }
+      }
+
+      // La tecla 3 alterna Pistola -> Francotirador -> Espada -> Metralleta.
+      if (event.code === 'Digit3' && !event.repeat) {
+        event.preventDefault();
+        cycleWeapon();
+      }
+
+      if (event.code === 'KeyR' && !event.repeat) {
+        event.preventDefault();
+        reloadCurrentWeapon();
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      if (event.code in keys) {
+        keys[event.code] = false;
+      }
+    });
+
+    document.addEventListener('mousedown', (event) => {
+      if (event.button === 0) {
+        primaryButtonHeld = true;
+        primaryAttack();
+      }
+
+      // Mantener clic derecho activa el visor únicamente con el francotirador.
+      if (event.button === 2 && activeWeapon === 'sniper') {
+        event.preventDefault();
+        setSniperZoom(true);
+      }
+    });
+
+    document.addEventListener('mouseup', (event) => {
+      if (event.button === 0) {
+        primaryButtonHeld = false;
+      }
+      if (event.button === 2) {
+        setSniperZoom(false);
+      }
+    });
+
+    document.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // =========================================================
+    // LOOP PRINCIPAL
+    // =========================================================
+    let previousTime = performance.now();
+    let elapsedTime = 0;
+
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+
+      // Delta limitado para evitar saltos enormes al volver a la pestaña.
+      const delta = Math.min((currentTime - previousTime) / 1000, 0.05);
+      previousTime = currentTime;
+      elapsedTime += delta;
+      updateSnowfall(delta);
+
+      if (controls.isLocked && !gameOver) {
+        updatePlayer(delta);
+        updateEnemies(delta, elapsedTime);
+        updateFinalBoss(delta);
+        updateArmorPickups(delta, elapsedTime);
+        updateTurrets(delta);
+        updateTurretProjectiles(delta);
+        updatePlayerProjectiles(delta);
+        updateSwordAnimation(delta);
+        updateFirearmAnimations(delta);
+
+        // Fuego automático de metralleta mientras se mantiene clic izquierdo.
+        if (primaryButtonHeld && activeWeapon === 'machinegun') {
+          shootMachineGun();
+        }
+
+        if (!bossActive) {
+          spawnAccumulator += delta;
+          if (spawnAccumulator >= getEnemySpawnInterval()) {
+            spawnAccumulator = 0;
+            spawnEnemy();
+          }
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    updateRoundHUD();
+    updateArmorHUD();
+    updateBossHUD();
+    updateWeaponStatus();
+    updateAmmoHUD();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
