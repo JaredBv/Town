@@ -354,6 +354,70 @@
       .touch-knob { width:50px; height:50px; }
     }
 
+
+    /* =========================================================
+       CONFIGURACIÓN DE JUEGO
+       ========================================================= */
+    #settingsButton {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 46;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 14px;
+      background: rgba(8,14,22,.72);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      pointer-events: auto;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 5px 20px rgba(0,0,0,.25);
+    }
+    #settingsButton:hover { background: rgba(28,42,58,.86); }
+    #settingsModal {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0,0,0,.72);
+      pointer-events: auto;
+    }
+    #settingsModal.open { display: flex; }
+    #settingsPanel {
+      width: min(520px, 94vw);
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      background: rgba(12,18,27,.96);
+      color: #fff;
+      box-shadow: 0 18px 70px rgba(0,0,0,.5);
+    }
+    #settingsPanel h2 { margin: 0 0 8px; font-size: 25px; }
+    #settingsPanel .settings-note { margin: 0 0 20px; color: #aebccc; font-size: 13px; line-height: 1.45; }
+    .setting-row { margin: 18px 0; }
+    .setting-row label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-weight: 800; font-size: 14px; }
+    .setting-row output { color: #8fe9ff; }
+    .setting-row input[type="range"] { width: 100%; accent-color: #78d9ff; cursor: pointer; }
+    .setting-scale { display: flex; justify-content: space-between; margin-top: 5px; color: #718196; font-size: 10px; }
+    #settingsDifficultyInfo { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.055); color: #dce7f2; font-size: 12px; line-height: 1.4; }
+    .settings-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+    .settings-actions button {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    #settingsReset { background: #293441; color: #e5eef7; }
+    #settingsClose { background: #79d9ff; color: #07131c; }
+    .mobile-mode #settingsButton { top: 74px; right: 16px; width: 48px; height: 48px; border-radius: 50%; }
+
   </style>
 </head>
 <body>
@@ -372,6 +436,35 @@
     <div id="crosshair"></div>
     <div id="scopeOverlay"></div>
     <div id="statusMessage">ESC: pausa</div>
+  </div>
+
+
+
+
+  <button id="settingsButton" type="button" aria-label="Abrir configuración" title="Configuración">⚙</button>
+  <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div id="settingsPanel">
+      <h2 id="settingsTitle">⚙ Configuración</h2>
+      <p class="settings-note">La sensibilidad original del juego equivale a <strong>25%</strong>. Los cambios se guardan y se comparten entre los mundos.</p>
+
+      <div class="setting-row">
+        <label for="sensitivityRange"><span>Sensibilidad de cámara</span><output id="sensitivityValue">25%</output></label>
+        <input id="sensitivityRange" type="range" min="10" max="100" step="5" value="25" />
+        <div class="setting-scale"><span>10% precisa</span><span>25% original</span><span>100% rápida</span></div>
+      </div>
+
+      <div class="setting-row">
+        <label for="difficultyRange"><span>Dificultad adicional</span><output id="difficultyValue">100%</output></label>
+        <input id="difficultyRange" type="range" min="100" max="200" step="25" value="100" />
+        <div class="setting-scale"><span>100% normal</span><span>150% difícil</span><span>200% extremo</span></div>
+      </div>
+
+      <div id="settingsDifficultyInfo">100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.</div>
+      <div class="settings-actions">
+        <button id="settingsReset" type="button">Restablecer</button>
+        <button id="settingsClose" type="button">Guardar y cerrar</button>
+      </div>
+    </div>
   </div>
 
 
@@ -403,6 +496,7 @@
         <div><span class="key">ESPACIO</span> — Saltar</div>
         <div><span class="key">SHIFT</span> — Sprint (6 s · recarga total en 2.5 s)</div>
         <div><span class="key">CTRL</span> — Agacharse mientras se mantenga presionado · velocidad reducida</div>
+        <div><span class="key">⚙</span> — Configuración: dificultad y sensibilidad (25% = original)</div>
         <div><span class="key">Clic izquierdo</span> — Disparar / atacar</div>
         <div><span class="key">3</span> — Cambiar arma</div>
         <div><span class="key">R</span> — Recargar arma actual</div>
@@ -567,10 +661,131 @@
     let mobileMoveY = 0;
     let mobileSprintHeld = false;
     let mobileCrouchHeld = false;
-    const mobileLookSensitivity = 0.00315;
+    const mobileLookSensitivityBase = 0.00315;
+
+    // =========================================================
+    // CONFIGURACIÓN PERSISTENTE: SENSIBILIDAD + DIFICULTAD
+    // La sensibilidad existente (pointerSpeed 0.9 / 0.00315 táctil) = 25%.
+    // =========================================================
+    const GAME_SETTINGS_KEY = 'miniFPS.sharedSettings.v1';
+    const SETTINGS_DEFAULTS = { sensitivity: 25, difficulty: 100 };
+    let userSensitivityPercent = SETTINGS_DEFAULTS.sensitivity;
+    let userDifficultyPercent = SETTINGS_DEFAULTS.difficulty;
+
+    function clampSetting(value, min, max, step) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return min;
+      const clamped = THREE.MathUtils.clamp(numeric, min, max);
+      return Math.round(clamped / step) * step;
+    }
+
+    function loadGameSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) || '{}');
+        userSensitivityPercent = clampSetting(saved.sensitivity ?? 25, 10, 100, 5);
+        userDifficultyPercent = clampSetting(saved.difficulty ?? 100, 100, 200, 25);
+      } catch (_) {
+        userSensitivityPercent = 25;
+        userDifficultyPercent = 100;
+      }
+    }
+
+    function saveGameSettings() {
+      try {
+        localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify({
+          sensitivity: userSensitivityPercent,
+          difficulty: userDifficultyPercent
+        }));
+      } catch (_) {}
+    }
+
+    loadGameSettings();
+    controls.pointerSpeed = 0.9 * (userSensitivityPercent / 25);
+
     const mobileLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
     document.body.classList.toggle('mobile-mode', mobileMode);
+
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsClose = document.getElementById('settingsClose');
+    const settingsReset = document.getElementById('settingsReset');
+    const sensitivityRange = document.getElementById('sensitivityRange');
+    const sensitivityValue = document.getElementById('sensitivityValue');
+    const difficultyRange = document.getElementById('difficultyRange');
+    const difficultyValue = document.getElementById('difficultyValue');
+    const settingsDifficultyInfo = document.getElementById('settingsDifficultyInfo');
+    let resumeAfterSettings = false;
+
+    function refreshSettingsUI() {
+      sensitivityRange.value = String(userSensitivityPercent);
+      difficultyRange.value = String(userDifficultyPercent);
+      sensitivityValue.textContent = `${userSensitivityPercent}%`;
+      difficultyValue.textContent = `${userDifficultyPercent}%`;
+      settingsDifficultyInfo.textContent = userDifficultyPercent === 100
+        ? '100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.'
+        : `${userDifficultyPercent}% aplica un multiplicador ×${(userDifficultyPercent / 100).toFixed(2)} adicional sobre la dificultad de la ronda.`;
+    }
+
+    function applySettingsFromControls() {
+      userSensitivityPercent = clampSetting(sensitivityRange.value, 10, 100, 5);
+      userDifficultyPercent = clampSetting(difficultyRange.value, 100, 200, 25);
+      controls.pointerSpeed = 0.9 * (userSensitivityPercent / 25);
+      saveGameSettings();
+      refreshSettingsUI();
+      // Las funciones están declaradas más adelante, pero cuando el usuario cambia
+      // un ajuste el juego ya terminó de inicializarse.
+      if (typeof updateRoundHUD === 'function') updateRoundHUD();
+    }
+
+    function openSettings(event) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      resumeAfterSettings = isGameplayActive();
+      primaryButtonHeld = false;
+      mobileSprintHeld = false;
+      mobileCrouchHeld = false;
+      if (typeof setSniperZoom === 'function') setSniperZoom(false);
+      if (mobileMode) mobilePaused = true;
+      else if (controls.isLocked) controls.unlock();
+      refreshSettingsUI();
+      settingsModal.classList.add('open');
+    }
+
+    function closeSettings(event) {
+      event?.preventDefault();
+      event?.stopPropagation();
+      applySettingsFromControls();
+      settingsModal.classList.remove('open');
+      if (resumeAfterSettings && !gameOver && !roundTransition) {
+        if (mobileMode) {
+          mobilePaused = false;
+          overlay.classList.add('hidden');
+        } else {
+          controls.lock();
+        }
+      }
+      resumeAfterSettings = false;
+    }
+
+    settingsButton.addEventListener('click', openSettings);
+    settingsClose.addEventListener('click', closeSettings);
+    settingsModal.addEventListener('click', (event) => {
+      if (event.target === settingsModal) closeSettings(event);
+    });
+    sensitivityRange.addEventListener('input', applySettingsFromControls);
+    difficultyRange.addEventListener('input', applySettingsFromControls);
+    settingsReset.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation();
+      userSensitivityPercent = 25;
+      userDifficultyPercent = 100;
+      controls.pointerSpeed = 0.9;
+      saveGameSettings();
+      refreshSettingsUI();
+      if (typeof updateRoundHUD === 'function') updateRoundHUD();
+    });
+    refreshSettingsUI();
+
 
     function isGameplayActive() {
       return mobileMode
@@ -582,7 +797,7 @@
       if (!mobileMode || !isGameplayActive()) return;
       mobileLookEuler.setFromQuaternion(camera.quaternion);
       const zoomFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
-      const sensitivity = mobileLookSensitivity * zoomFactor * sensitivityScale;
+      const sensitivity = mobileLookSensitivityBase * (userSensitivityPercent / 25) * zoomFactor * sensitivityScale;
       mobileLookEuler.y -= deltaX * sensitivity;
       mobileLookEuler.x -= deltaY * sensitivity;
       mobileLookEuler.x = THREE.MathUtils.clamp(
@@ -1068,7 +1283,7 @@
     }
 
     function getRoundMultiplier(round = currentRound) {
-      return 1 + getRoundDifficultyBonus(round);
+      return (1 + getRoundDifficultyBonus(round)) * (userDifficultyPercent / 100);
     }
 
     function getEnemySpawnInterval() {
@@ -1118,7 +1333,7 @@
 
       roundStatusElement.textContent = bossActive ? 'Ronda: JEFE FINAL' : `Ronda: ${currentRound}`;
       difficultyStatusElement.textContent =
-        `Dificultad: +${Math.round(bonus * 100)}% (×${multiplier.toFixed(2)}) · Spawn: ${spawnInterval.toFixed(2)} s`;
+        `Dificultad ronda: +${Math.round(bonus * 100)}% · Ajuste: ${userDifficultyPercent}% · Total ×${multiplier.toFixed(2)} · Spawn: ${spawnInterval.toFixed(2)} s`;
       turretStatusElement.textContent =
         `Torretas: cada ${CONFIG.turretShotSeconds.toFixed(0)} s · bala ${projectileSpeed.toFixed(1)} u/s`;
       updateArmorHUD();
@@ -2259,7 +2474,7 @@
         group, body, head, barrel, headPivot, muzzle, sword,
         hitMeshes: [body, shoulder, head, barrel],
         radius: CONFIG.enemyRadius * scale,
-        speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier,
+        speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier * (userDifficultyPercent / 100),
         health: CONFIG.bossMaxHealth,
         maxHealth: CONFIG.bossMaxHealth,
         isBoss: true,

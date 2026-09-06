@@ -43,3 +43,16 @@ Al seleccionar cualquier mundo desde main.index.html se pregunta PC o Android.
 PC: WASD + ratón + teclado con Pointer Lock.
 Android: joystick izquierdo para movimiento, joystick derecho para simular la vista del ratón y botones táctiles para Disparar, Saltar, Cambiar arma, Recargar, Sprint, Agacharse, Zoom y Pausa.
 La plataforma se transmite por ?platform=pc o ?platform=android.
+
+ACTUALIZACION - CONFIGURACION Y CHALECO
+---------------------------------------
+- Bosque Invernal y Medio Oeste: chaleco antibalas activo desde ronda 3.
+- Chaleco Nv.1: 3 impactos.
+- Chaleco Nv.2: 5 impactos.
+- Chaleco Nv.3: 7 impactos (máximo).
+- Si el chaleco se conserva al avanzar de ronda y aún no es Nv.3, aparece un objeto de mejora.
+- Si se destruye, puede reaparecer un chaleco base en una ronda posterior.
+- Botón ⚙ Configuración disponible dentro de Town, Bosque Invernal y Medio Oeste.
+- Sensibilidad: 10% a 100%. La sensibilidad original equivale a 25% y es el valor predeterminado.
+- Dificultad manual: 100% a 200% en pasos de 25%. Se multiplica sobre la dificultad propia de la ronda.
+- La configuración se guarda en localStorage y se comparte entre los tres mundos.
