@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Bosque Invernal - Defusual</title>
 
   <!--
@@ -634,6 +637,189 @@
       .controlsDetails .controlsHelp { grid-template-columns: 1fr; max-height: 38vh; }
     }
 
+
+    /* =========================================================
+       ANDROID · FULLSCREEN + HUD COMPACTO + EDITOR DE CONTROLES
+       ========================================================= */
+    body.mobile-mode {
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+    body.mobile-mode #mobilePlatformBadge {
+      top: max(6px, env(safe-area-inset-top));
+      right: 112px;
+      padding: 4px 7px;
+      font-size: 8px;
+      opacity: .72;
+      pointer-events: none;
+    }
+    body.mobile-mode #mobileLookHint {
+      bottom: max(5px, env(safe-area-inset-bottom));
+      padding: 4px 8px;
+      font-size: 8px;
+      opacity: .58;
+    }
+    body.mobile-mode #pauseTouch {
+      top: max(7px, env(safe-area-inset-top));
+      right: max(7px, env(safe-area-inset-right));
+      width: 40px;
+      height: 40px;
+      font-size: 12px;
+    }
+    #fullscreenTouch {
+      display: none;
+      position: absolute;
+      top: max(7px, env(safe-area-inset-top));
+      right: calc(max(7px, env(safe-area-inset-right)) + 48px);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      pointer-events: auto;
+      z-index: 18;
+      font-size: 16px;
+    }
+    body.mobile-mode #fullscreenTouch { display: block; }
+
+    /* HUD Android: la información esencial sigue visible, pero ocupa mucho menos. */
+    body.mobile-mode #score,
+    body.mobile-mode #enemyCount,
+    body.mobile-mode #defeatedCount,
+    body.mobile-mode #turretStatus,
+    body.mobile-mode #weaponStatus,
+    body.mobile-mode #ammoStatus,
+    body.mobile-mode #roundStatus,
+    body.mobile-mode #difficultyStatus,
+    body.mobile-mode #armorStatus,
+    body.mobile-mode #bossStatus,
+    body.mobile-mode #sprintStatus,
+    body.mobile-mode #playerHealthStatus {
+      left: max(6px, env(safe-area-inset-left));
+      padding: 3px 6px;
+      border-radius: 5px;
+      font-size: 9px;
+      line-height: 1.12;
+      min-width: 0;
+      max-width: 255px;
+      backdrop-filter: blur(2px);
+      background: rgba(0,0,0,.30);
+    }
+    body.mobile-mode #score { top: max(6px, env(safe-area-inset-top)); font-size: 13px; padding: 5px 7px; }
+    body.mobile-mode #enemyCount { top: 39px; }
+    body.mobile-mode #defeatedCount { top: 61px; }
+    body.mobile-mode #turretStatus { top: 83px; }
+    body.mobile-mode #weaponStatus { top: 105px; }
+    body.mobile-mode #ammoStatus { top: 127px; }
+    body.mobile-mode #roundStatus { top: 149px; }
+    body.mobile-mode #difficultyStatus { top: 171px; }
+    body.mobile-mode #armorStatus { top: 193px; }
+    body.mobile-mode #playerHealthStatus { top: 215px; width: 170px; }
+    body.mobile-mode #playerHealthTrack { height: 6px; margin-top: 3px; }
+    body.mobile-mode #bossStatus { top: 250px; max-width: 230px; }
+    body.mobile-mode #bossHealthBar { top: 270px; left: max(6px, env(safe-area-inset-left)); width: 210px; height: 8px; }
+    body.mobile-mode #sprintStatus { top: auto; bottom: max(7px, env(safe-area-inset-bottom)); min-width: 150px; }
+    body.mobile-mode #sprintBar { width: 62px; height: 5px; margin-left: 4px; }
+    body.mobile-mode #jumpBoostStatus { font-size: 8px !important; opacity: .65; }
+    body.mobile-mode #equippedWeaponCard {
+      width: 94px;
+      min-height: 58px;
+      top: max(7px, env(safe-area-inset-top));
+      left: 50%;
+      padding: 5px 7px;
+      opacity: .82;
+      transform: translateX(-50%);
+    }
+    body.mobile-mode #equippedWeaponCard .weapon-card-kicker { font-size: 6px; }
+    body.mobile-mode #equippedWeaponIcon { height: 30px; margin: 0; }
+    body.mobile-mode #equippedWeaponName { font-size: 9px; }
+    body.mobile-mode #settingsButton {
+      top: calc(max(7px, env(safe-area-inset-top)) + 48px);
+      right: max(7px, env(safe-area-inset-right));
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+    body.mobile-mode #moveStick { left: 12px; bottom: 14px; width: 106px; height: 106px; }
+    body.mobile-mode .touch-knob { width: 44px; height: 44px; }
+    body.mobile-mode .touch-stick-label { bottom: -15px; font-size: 8px; }
+    body.mobile-mode #touchActions {
+      right: max(9px, env(safe-area-inset-right));
+      bottom: max(10px, env(safe-area-inset-bottom));
+      grid-template-columns: repeat(3, 46px);
+      gap: 6px;
+    }
+    body.mobile-mode .touch-btn { width: 46px; height: 46px; border-radius: 13px; font-size: 7.5px; }
+    body.mobile-mode #fireTouch { width: 66px; height: 66px; font-size: 8px; }
+
+    /* Editor de distribución táctil */
+    #controlEditorBar {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: max(8px, env(safe-area-inset-top));
+      transform: translateX(-50%);
+      z-index: 90;
+      pointer-events: auto;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 10px;
+      background: rgba(6,10,16,.92);
+      color: #fff;
+      font: 700 9px Arial;
+      box-shadow: 0 6px 22px rgba(0,0,0,.36);
+    }
+    #controlEditorBar button {
+      min-height: 30px;
+      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 7px;
+      color: #fff;
+      background: rgba(255,255,255,.10);
+      font: 700 9px Arial;
+    }
+    body.mobile-mode.control-edit-mode #controlEditorBar { display: flex; }
+    body.mobile-mode.control-edit-mode #mobileControls { z-index: 80; }
+    body.mobile-mode.control-edit-mode #mobileLookHint,
+    body.mobile-mode.control-edit-mode #mobilePlatformBadge { display: none; }
+    body.mobile-mode.control-edit-mode #moveStick,
+    body.mobile-mode.control-edit-mode .touch-btn,
+    body.mobile-mode.control-edit-mode #settingsButton,
+    body.mobile-mode.control-edit-mode #fullscreenTouch {
+      outline: 2px dashed rgba(121,217,255,.95);
+      outline-offset: 2px;
+      cursor: move;
+    }
+    body.mobile-mode.control-edit-mode #moveStick::after,
+    body.mobile-mode.control-edit-mode .touch-btn::after {
+      content: '↕';
+      position: absolute;
+      right: -4px;
+      top: -8px;
+      color: #79d9ff;
+      font-size: 13px;
+      text-shadow: 0 1px 3px #000;
+      pointer-events: none;
+    }
+    .android-only-setting { display: none; }
+    body.mobile-mode .android-only-setting { display: block; }
+    .android-tools-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .android-tools-row button {
+      min-height: 40px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 9px;
+      background: rgba(121,217,255,.12);
+      color: #eaf7ff;
+      font-weight: 800;
+    }
+    #editControlsPauseButton { display: none; }
+    body.mobile-mode #editControlsPauseButton { display: inline-flex; }
+
   </style>
 </head>
 <body>
@@ -702,6 +888,16 @@
         <input id="ambientVolumeRange" type="range" min="0" max="100" step="5" value="45" />
       </div>
 
+
+      <div class="setting-row android-only-setting" id="androidControlSettings">
+        <label><span>Android · pantalla y controles</span></label>
+        <div class="android-tools-row">
+          <button id="settingsFullscreenButton" type="button">⛶ Pantalla completa</button>
+          <button id="settingsEditControlsButton" type="button">✥ Mover controles</button>
+        </div>
+        <div class="setting-scale"><span>Fullscreen intenta ocultar buscador, hora y batería</span><span>Las posiciones se guardan</span></div>
+      </div>
+
       <div id="settingsDifficultyInfo">100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.</div>
       <div class="settings-actions">
         <button id="settingsReset" type="button">Restablecer</button>
@@ -713,7 +909,8 @@
 
   <div id="mobileControls" aria-label="Controles táctiles Android">
     <div id="mobilePlatformBadge">ANDROID · CONTROLES TÁCTILES</div>
-    <div id="mobileLookHint">DESLIZA EN LA PANTALLA PARA MIRAR · ARRASTRA 🔥 PARA APUNTAR DISPARANDO</div>
+    <div id="mobileLookHint">DESLIZA PARA MIRAR · ARRASTRA 🔥 PARA APUNTAR</div>
+    <button id="fullscreenTouch" class="touch-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button>
     <button id="pauseTouch" class="touch-btn" type="button" aria-label="Pausa">Ⅱ</button>
     <div id="moveStick" class="touch-stick" aria-label="Joystick de movimiento"><div class="touch-knob"></div><span class="touch-stick-label">MOVER</span></div>
     <div id="touchActions">
@@ -728,6 +925,12 @@
     </div>
   </div>
 
+  <div id="controlEditorBar" aria-live="polite">
+    <span>Arrastra los controles</span>
+    <button id="controlLayoutReset" type="button">Restablecer</button>
+    <button id="controlLayoutSave" type="button">Guardar</button>
+  </div>
+
   <div id="overlay">
     <div id="panel">
       <h1 id="overlayTitle">BOSQUE INVERNAL · Defusual</h1>
@@ -737,6 +940,7 @@
         <button id="resumeGameButton" type="button">▶ Continuar</button>
         <a id="backToMenu" href="main.index.html">↩ Cambiar mundo</a>
         <button id="pauseSettingsButton" type="button">⚙ Configuración</button>
+        <button id="editControlsPauseButton" type="button">✥ Mover controles</button>
       </div>
 
       <details class="controlsDetails">
@@ -1426,6 +1630,193 @@
     const mobileLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
     document.body.classList.toggle('mobile-mode', mobileMode);
+
+    // =========================================================
+    // ANDROID · FULLSCREEN Y DISTRIBUCIÓN PERSONALIZABLE
+    // =========================================================
+    const MOBILE_LAYOUT_KEY = 'defusual.mobileLayout.v2';
+    const draggableMobileControlIds = [
+      'moveStick', 'fireTouch', 'jumpTouch', 'weaponTouch', 'sprintTouch',
+      'crouchTouch', 'reloadTouch', 'zoomTouch', 'inspectTouch', 'pauseTouch',
+      'fullscreenTouch', 'settingsButton'
+    ];
+    let mobileControlLayout = {};
+    let controlEditMode = false;
+    let controlDrag = null;
+
+    function loadMobileControlLayout() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(MOBILE_LAYOUT_KEY) || '{}');
+        mobileControlLayout = parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (_) {
+        mobileControlLayout = {};
+      }
+    }
+
+    function saveMobileControlLayout() {
+      try { localStorage.setItem(MOBILE_LAYOUT_KEY, JSON.stringify(mobileControlLayout)); } catch (_) {}
+    }
+
+    function applyMobileControlLayout() {
+      if (!mobileMode) return;
+      for (const id of draggableMobileControlIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const pos = mobileControlLayout[id];
+        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
+          el.style.translate = '';
+          continue;
+        }
+        el.style.translate = `${pos.x * window.innerWidth}px ${pos.y * window.innerHeight}px`;
+      }
+    }
+
+    async function requestAndroidFullscreen() {
+      if (!mobileMode) return false;
+      try {
+        gameAudio?.ensure?.();
+        const target = document.documentElement;
+        if (!document.fullscreenElement && target.requestFullscreen) {
+          await target.requestFullscreen({ navigationUI: 'hide' });
+        }
+        try {
+          if (screen.orientation?.lock) await screen.orientation.lock('landscape');
+        } catch (_) {}
+        return Boolean(document.fullscreenElement);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function exitAndroidFullscreen() {
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+      } catch (_) {}
+    }
+
+    function setControlEditMode(enabled) {
+      if (!mobileMode) return;
+      controlEditMode = Boolean(enabled);
+      document.body.classList.toggle('control-edit-mode', controlEditMode);
+      primaryButtonHeld = false;
+      mobileSprintHeld = false;
+      mobileCrouchHeld = false;
+      mobilePaused = controlEditMode ? true : mobilePaused;
+      if (controlEditMode) {
+        settingsModal?.classList.remove('open');
+        overlay?.classList.add('hidden');
+      }
+    }
+
+    function startControlEditor(event) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      if (!mobileMode) return;
+      setControlEditMode(true);
+      applyMobileControlLayout();
+    }
+
+    function finishControlEditor(save = true) {
+      if (!mobileMode) return;
+      if (save) saveMobileControlLayout();
+      setControlEditMode(false);
+      if (gameStarted && !gameOver && !roundTransition) {
+        mobilePaused = false;
+        overlay?.classList.add('hidden');
+      } else {
+        mobilePaused = true;
+        overlay?.classList.remove('hidden');
+      }
+    }
+
+    function resetMobileControlLayout() {
+      mobileControlLayout = {};
+      saveMobileControlLayout();
+      applyMobileControlLayout();
+    }
+
+    loadMobileControlLayout();
+    window.addEventListener('resize', applyMobileControlLayout);
+    window.addEventListener('orientationchange', () => setTimeout(applyMobileControlLayout, 120));
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!controlEditMode || event.pointerType !== 'touch') return;
+      const target = event.target.closest?.('#moveStick, #fireTouch, #jumpTouch, #weaponTouch, #sprintTouch, #crouchTouch, #reloadTouch, #zoomTouch, #inspectTouch, #pauseTouch, #fullscreenTouch, #settingsButton');
+      if (!target) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const saved = mobileControlLayout[target.id] || { x: 0, y: 0 };
+      controlDrag = {
+        id: target.id,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        baseX: saved.x * window.innerWidth,
+        baseY: saved.y * window.innerHeight,
+        rect: target.getBoundingClientRect()
+      };
+      try { target.setPointerCapture(event.pointerId); } catch (_) {}
+    }, true);
+
+    document.addEventListener('pointermove', (event) => {
+      if (!controlEditMode || !controlDrag || event.pointerId !== controlDrag.pointerId) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const el = document.getElementById(controlDrag.id);
+      if (!el) return;
+      const moveX = event.clientX - controlDrag.startX;
+      const moveY = event.clientY - controlDrag.startY;
+      const margin = 5;
+      const minMoveX = margin - controlDrag.rect.left;
+      const maxMoveX = window.innerWidth - margin - controlDrag.rect.right;
+      const minMoveY = margin - controlDrag.rect.top;
+      const maxMoveY = window.innerHeight - margin - controlDrag.rect.bottom;
+      const clampedMoveX = THREE.MathUtils.clamp(moveX, minMoveX, maxMoveX);
+      const clampedMoveY = THREE.MathUtils.clamp(moveY, minMoveY, maxMoveY);
+      const clampedX = controlDrag.baseX + clampedMoveX;
+      const clampedY = controlDrag.baseY + clampedMoveY;
+      el.style.translate = `${clampedX}px ${clampedY}px`;
+      mobileControlLayout[controlDrag.id] = {
+        x: clampedX / Math.max(1, window.innerWidth),
+        y: clampedY / Math.max(1, window.innerHeight)
+      };
+    }, true);
+
+    function finishDrag(event) {
+      if (!controlDrag || event.pointerId !== controlDrag.pointerId) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      controlDrag = null;
+    }
+    document.addEventListener('pointerup', finishDrag, true);
+    document.addEventListener('pointercancel', finishDrag, true);
+
+    document.getElementById('fullscreenTouch')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); requestAndroidFullscreen();
+    });
+    document.getElementById('settingsFullscreenButton')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); requestAndroidFullscreen();
+    });
+    document.getElementById('settingsEditControlsButton')?.addEventListener('click', startControlEditor);
+    document.getElementById('editControlsPauseButton')?.addEventListener('click', startControlEditor);
+    document.getElementById('controlLayoutSave')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); finishControlEditor(true);
+    });
+    document.getElementById('controlLayoutReset')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); resetMobileControlLayout();
+    });
+
+    if (mobileMode) {
+      // Primer toque válido: intenta entrar a fullscreen. Si el navegador lo rechaza,
+      // el botón ⛶ permanece disponible para que el usuario lo active manualmente.
+      const tryFullscreenOnce = () => {
+        requestAndroidFullscreen();
+        document.removeEventListener('pointerdown', tryFullscreenOnce, true);
+      };
+      document.addEventListener('pointerdown', tryFullscreenOnce, true);
+      setTimeout(applyMobileControlLayout, 0);
+    }
+
     document.body.classList.toggle('gamepad-mode', xboxMode);
     const gamepadStatusElement = document.getElementById('gamepadStatus');
     if (xboxMode) {
@@ -1559,7 +1950,7 @@
     }
 
     function rotateMobileView(deltaX, deltaY, sensitivityScale = 1) {
-      if (!mobileMode || !isGameplayActive()) return;
+      if (!mobileMode || controlEditMode || !isGameplayActive()) return;
       mobileLookEuler.setFromQuaternion(camera.quaternion);
       const zoomFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
       const sensitivity = mobileLookSensitivityBase * (userSensitivityPercent / 25) * zoomFactor * sensitivityScale;

@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Zombiland - Defusual</title>
 
   <!--
@@ -541,7 +544,8 @@
     .controlsDetails .controlsHelp div { padding: 7px 8px; }
 
     #damageFlash,
-    #criticalHealthBorder {
+    #criticalHealthBorder,
+    #acidScreenEffect {
       position: fixed;
       inset: 0;
       pointer-events: none;
@@ -634,6 +638,189 @@
       .controlsDetails .controlsHelp { grid-template-columns: 1fr; max-height: 38vh; }
     }
 
+
+    /* =========================================================
+       ANDROID · FULLSCREEN + HUD COMPACTO + EDITOR DE CONTROLES
+       ========================================================= */
+    body.mobile-mode {
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+    body.mobile-mode #mobilePlatformBadge {
+      top: max(6px, env(safe-area-inset-top));
+      right: 112px;
+      padding: 4px 7px;
+      font-size: 8px;
+      opacity: .72;
+      pointer-events: none;
+    }
+    body.mobile-mode #mobileLookHint {
+      bottom: max(5px, env(safe-area-inset-bottom));
+      padding: 4px 8px;
+      font-size: 8px;
+      opacity: .58;
+    }
+    body.mobile-mode #pauseTouch {
+      top: max(7px, env(safe-area-inset-top));
+      right: max(7px, env(safe-area-inset-right));
+      width: 40px;
+      height: 40px;
+      font-size: 12px;
+    }
+    #fullscreenTouch {
+      display: none;
+      position: absolute;
+      top: max(7px, env(safe-area-inset-top));
+      right: calc(max(7px, env(safe-area-inset-right)) + 48px);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      pointer-events: auto;
+      z-index: 18;
+      font-size: 16px;
+    }
+    body.mobile-mode #fullscreenTouch { display: block; }
+
+    /* HUD Android: la información esencial sigue visible, pero ocupa mucho menos. */
+    body.mobile-mode #score,
+    body.mobile-mode #enemyCount,
+    body.mobile-mode #defeatedCount,
+    body.mobile-mode #turretStatus,
+    body.mobile-mode #weaponStatus,
+    body.mobile-mode #ammoStatus,
+    body.mobile-mode #roundStatus,
+    body.mobile-mode #difficultyStatus,
+    body.mobile-mode #armorStatus,
+    body.mobile-mode #bossStatus,
+    body.mobile-mode #sprintStatus,
+    body.mobile-mode #playerHealthStatus {
+      left: max(6px, env(safe-area-inset-left));
+      padding: 3px 6px;
+      border-radius: 5px;
+      font-size: 9px;
+      line-height: 1.12;
+      min-width: 0;
+      max-width: 255px;
+      backdrop-filter: blur(2px);
+      background: rgba(0,0,0,.30);
+    }
+    body.mobile-mode #score { top: max(6px, env(safe-area-inset-top)); font-size: 13px; padding: 5px 7px; }
+    body.mobile-mode #enemyCount { top: 39px; }
+    body.mobile-mode #defeatedCount { top: 61px; }
+    body.mobile-mode #turretStatus { top: 83px; }
+    body.mobile-mode #weaponStatus { top: 105px; }
+    body.mobile-mode #ammoStatus { top: 127px; }
+    body.mobile-mode #roundStatus { top: 149px; }
+    body.mobile-mode #difficultyStatus { top: 171px; }
+    body.mobile-mode #armorStatus { top: 193px; }
+    body.mobile-mode #playerHealthStatus { top: 215px; width: 170px; }
+    body.mobile-mode #playerHealthTrack { height: 6px; margin-top: 3px; }
+    body.mobile-mode #bossStatus { top: 250px; max-width: 230px; }
+    body.mobile-mode #bossHealthBar { top: 270px; left: max(6px, env(safe-area-inset-left)); width: 210px; height: 8px; }
+    body.mobile-mode #sprintStatus { top: auto; bottom: max(7px, env(safe-area-inset-bottom)); min-width: 150px; }
+    body.mobile-mode #sprintBar { width: 62px; height: 5px; margin-left: 4px; }
+    body.mobile-mode #jumpBoostStatus { font-size: 8px !important; opacity: .65; }
+    body.mobile-mode #equippedWeaponCard {
+      width: 94px;
+      min-height: 58px;
+      top: max(7px, env(safe-area-inset-top));
+      left: 50%;
+      padding: 5px 7px;
+      opacity: .82;
+      transform: translateX(-50%);
+    }
+    body.mobile-mode #equippedWeaponCard .weapon-card-kicker { font-size: 6px; }
+    body.mobile-mode #equippedWeaponIcon { height: 30px; margin: 0; }
+    body.mobile-mode #equippedWeaponName { font-size: 9px; }
+    body.mobile-mode #settingsButton {
+      top: calc(max(7px, env(safe-area-inset-top)) + 48px);
+      right: max(7px, env(safe-area-inset-right));
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+    body.mobile-mode #moveStick { left: 12px; bottom: 14px; width: 106px; height: 106px; }
+    body.mobile-mode .touch-knob { width: 44px; height: 44px; }
+    body.mobile-mode .touch-stick-label { bottom: -15px; font-size: 8px; }
+    body.mobile-mode #touchActions {
+      right: max(9px, env(safe-area-inset-right));
+      bottom: max(10px, env(safe-area-inset-bottom));
+      grid-template-columns: repeat(3, 46px);
+      gap: 6px;
+    }
+    body.mobile-mode .touch-btn { width: 46px; height: 46px; border-radius: 13px; font-size: 7.5px; }
+    body.mobile-mode #fireTouch { width: 66px; height: 66px; font-size: 8px; }
+
+    /* Editor de distribución táctil */
+    #controlEditorBar {
+      display: none;
+      position: fixed;
+      left: 50%;
+      top: max(8px, env(safe-area-inset-top));
+      transform: translateX(-50%);
+      z-index: 90;
+      pointer-events: auto;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 10px;
+      background: rgba(6,10,16,.92);
+      color: #fff;
+      font: 700 9px Arial;
+      box-shadow: 0 6px 22px rgba(0,0,0,.36);
+    }
+    #controlEditorBar button {
+      min-height: 30px;
+      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 7px;
+      color: #fff;
+      background: rgba(255,255,255,.10);
+      font: 700 9px Arial;
+    }
+    body.mobile-mode.control-edit-mode #controlEditorBar { display: flex; }
+    body.mobile-mode.control-edit-mode #mobileControls { z-index: 80; }
+    body.mobile-mode.control-edit-mode #mobileLookHint,
+    body.mobile-mode.control-edit-mode #mobilePlatformBadge { display: none; }
+    body.mobile-mode.control-edit-mode #moveStick,
+    body.mobile-mode.control-edit-mode .touch-btn,
+    body.mobile-mode.control-edit-mode #settingsButton,
+    body.mobile-mode.control-edit-mode #fullscreenTouch {
+      outline: 2px dashed rgba(121,217,255,.95);
+      outline-offset: 2px;
+      cursor: move;
+    }
+    body.mobile-mode.control-edit-mode #moveStick::after,
+    body.mobile-mode.control-edit-mode .touch-btn::after {
+      content: '↕';
+      position: absolute;
+      right: -4px;
+      top: -8px;
+      color: #79d9ff;
+      font-size: 13px;
+      text-shadow: 0 1px 3px #000;
+      pointer-events: none;
+    }
+    .android-only-setting { display: none; }
+    body.mobile-mode .android-only-setting { display: block; }
+    .android-tools-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .android-tools-row button {
+      min-height: 40px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 9px;
+      background: rgba(121,217,255,.12);
+      color: #eaf7ff;
+      font-weight: 800;
+    }
+    #editControlsPauseButton { display: none; }
+    body.mobile-mode #editControlsPauseButton { display: inline-flex; }
+
   </style>
 </head>
 <body>
@@ -665,6 +852,7 @@
     <div id="equippedWeaponName">Escopeta</div>
   </div>
   <div id="damageFlash" aria-hidden="true"></div>
+  <div id="acidScreenEffect" aria-hidden="true"></div>
   <div id="criticalHealthBorder" aria-hidden="true"></div>
 
   <button id="settingsButton" type="button" aria-label="Abrir configuración" title="Configuración">⚙</button>
@@ -702,6 +890,16 @@
         <input id="ambientVolumeRange" type="range" min="0" max="100" step="5" value="45" />
       </div>
 
+
+      <div class="setting-row android-only-setting" id="androidControlSettings">
+        <label><span>Android · pantalla y controles</span></label>
+        <div class="android-tools-row">
+          <button id="settingsFullscreenButton" type="button">⛶ Pantalla completa</button>
+          <button id="settingsEditControlsButton" type="button">✥ Mover controles</button>
+        </div>
+        <div class="setting-scale"><span>Fullscreen intenta ocultar buscador, hora y batería</span><span>Las posiciones se guardan</span></div>
+      </div>
+
       <div id="settingsDifficultyInfo">100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.</div>
       <div class="settings-actions">
         <button id="settingsReset" type="button">Restablecer</button>
@@ -713,7 +911,8 @@
 
   <div id="mobileControls" aria-label="Controles táctiles Android">
     <div id="mobilePlatformBadge">ANDROID · CONTROLES TÁCTILES</div>
-    <div id="mobileLookHint">DESLIZA EN LA PANTALLA PARA MIRAR · ARRASTRA 🔥 PARA APUNTAR DISPARANDO</div>
+    <div id="mobileLookHint">DESLIZA PARA MIRAR · ARRASTRA 🔥 PARA APUNTAR</div>
+    <button id="fullscreenTouch" class="touch-btn" type="button" aria-label="Pantalla completa" title="Pantalla completa">⛶</button>
     <button id="pauseTouch" class="touch-btn" type="button" aria-label="Pausa">Ⅱ</button>
     <div id="moveStick" class="touch-stick" aria-label="Joystick de movimiento"><div class="touch-knob"></div><span class="touch-stick-label">MOVER</span></div>
     <div id="touchActions">
@@ -728,6 +927,12 @@
     </div>
   </div>
 
+  <div id="controlEditorBar" aria-live="polite">
+    <span>Arrastra los controles</span>
+    <button id="controlLayoutReset" type="button">Restablecer</button>
+    <button id="controlLayoutSave" type="button">Guardar</button>
+  </div>
+
   <div id="overlay">
     <div id="panel">
       <h1 id="overlayTitle">ZOMBILAND · Defusual</h1>
@@ -737,6 +942,7 @@
         <button id="resumeGameButton" type="button">▶ Continuar</button>
         <a id="backToMenu" href="main.index.html">↩ Cambiar mundo</a>
         <button id="pauseSettingsButton" type="button">⚙ Configuración</button>
+        <button id="editControlsPauseButton" type="button">✥ Mover controles</button>
       </div>
 
       <details class="controlsDetails">
@@ -748,7 +954,7 @@
         <div><span class="key">Xbox</span> — Stick izq.: mover · Stick der.: mirar · RT disparar · LT apuntar · A saltar · B agachar/barrida · L3 sprint · LB/RB armas · X recargar · Menu pausa · D-Pad ↑ inspeccionar</div>
         <div><span class="key">ESPACIO</span> — Saltar</div>
         <div><span class="key">SHIFT</span> — Sprint (6 s · recarga total en 2.5 s)</div>
-        <div><span class="key">C</span> — Agacharse · mientras corres hacia delante con SHIFT + W, pulsa C para barrerte 1 s</div>
+        <div><span class="key">C</span> — Agacharse · mientras corres hacia delante con SHIFT + W, pulsa C para barrerte 0.6 s</div>
         <div><span class="key">⚙</span> — Configuración: dificultad y sensibilidad (25% = original)</div>
         <div><span class="key">Clic izquierdo</span> — Disparar / atacar</div>
         <div><span class="key">3</span> — Cambiar arma</div>
@@ -1218,8 +1424,8 @@
       jumpSpeed: 8.5,
       gravity: 24.0,
       enemyRadius: 0.55,
-      enemySpeedMin: 2.35,
-      enemySpeedMax: 3.40,
+      enemySpeedMin: 3.40,
+      enemySpeedMax: 4.80,
       enemySpawnSeconds: 0.78,
       initialEnemies: 3,
       maxEnemies: 8,
@@ -1338,6 +1544,7 @@
     const backToMenu = document.getElementById('backToMenu');
     const damageFlashElement = document.getElementById('damageFlash');
     const criticalHealthBorderElement = document.getElementById('criticalHealthBorder');
+    const acidScreenEffectElement = document.getElementById('acidScreenEffect');
     const equippedWeaponIconElement = document.getElementById('equippedWeaponIcon');
     const equippedWeaponNameElement = document.getElementById('equippedWeaponName');
     const pauseSettingsButton = document.getElementById('pauseSettingsButton');
@@ -1445,6 +1652,193 @@
     const mobileLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
     document.body.classList.toggle('mobile-mode', mobileMode);
+
+    // =========================================================
+    // ANDROID · FULLSCREEN Y DISTRIBUCIÓN PERSONALIZABLE
+    // =========================================================
+    const MOBILE_LAYOUT_KEY = 'defusual.mobileLayout.v2';
+    const draggableMobileControlIds = [
+      'moveStick', 'fireTouch', 'jumpTouch', 'weaponTouch', 'sprintTouch',
+      'crouchTouch', 'reloadTouch', 'zoomTouch', 'inspectTouch', 'pauseTouch',
+      'fullscreenTouch', 'settingsButton'
+    ];
+    let mobileControlLayout = {};
+    let controlEditMode = false;
+    let controlDrag = null;
+
+    function loadMobileControlLayout() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(MOBILE_LAYOUT_KEY) || '{}');
+        mobileControlLayout = parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (_) {
+        mobileControlLayout = {};
+      }
+    }
+
+    function saveMobileControlLayout() {
+      try { localStorage.setItem(MOBILE_LAYOUT_KEY, JSON.stringify(mobileControlLayout)); } catch (_) {}
+    }
+
+    function applyMobileControlLayout() {
+      if (!mobileMode) return;
+      for (const id of draggableMobileControlIds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const pos = mobileControlLayout[id];
+        if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) {
+          el.style.translate = '';
+          continue;
+        }
+        el.style.translate = `${pos.x * window.innerWidth}px ${pos.y * window.innerHeight}px`;
+      }
+    }
+
+    async function requestAndroidFullscreen() {
+      if (!mobileMode) return false;
+      try {
+        gameAudio?.ensure?.();
+        const target = document.documentElement;
+        if (!document.fullscreenElement && target.requestFullscreen) {
+          await target.requestFullscreen({ navigationUI: 'hide' });
+        }
+        try {
+          if (screen.orientation?.lock) await screen.orientation.lock('landscape');
+        } catch (_) {}
+        return Boolean(document.fullscreenElement);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function exitAndroidFullscreen() {
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+      } catch (_) {}
+    }
+
+    function setControlEditMode(enabled) {
+      if (!mobileMode) return;
+      controlEditMode = Boolean(enabled);
+      document.body.classList.toggle('control-edit-mode', controlEditMode);
+      primaryButtonHeld = false;
+      mobileSprintHeld = false;
+      mobileCrouchHeld = false;
+      mobilePaused = controlEditMode ? true : mobilePaused;
+      if (controlEditMode) {
+        settingsModal?.classList.remove('open');
+        overlay?.classList.add('hidden');
+      }
+    }
+
+    function startControlEditor(event) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      if (!mobileMode) return;
+      setControlEditMode(true);
+      applyMobileControlLayout();
+    }
+
+    function finishControlEditor(save = true) {
+      if (!mobileMode) return;
+      if (save) saveMobileControlLayout();
+      setControlEditMode(false);
+      if (gameStarted && !gameOver && !roundTransition) {
+        mobilePaused = false;
+        overlay?.classList.add('hidden');
+      } else {
+        mobilePaused = true;
+        overlay?.classList.remove('hidden');
+      }
+    }
+
+    function resetMobileControlLayout() {
+      mobileControlLayout = {};
+      saveMobileControlLayout();
+      applyMobileControlLayout();
+    }
+
+    loadMobileControlLayout();
+    window.addEventListener('resize', applyMobileControlLayout);
+    window.addEventListener('orientationchange', () => setTimeout(applyMobileControlLayout, 120));
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!controlEditMode || event.pointerType !== 'touch') return;
+      const target = event.target.closest?.('#moveStick, #fireTouch, #jumpTouch, #weaponTouch, #sprintTouch, #crouchTouch, #reloadTouch, #zoomTouch, #inspectTouch, #pauseTouch, #fullscreenTouch, #settingsButton');
+      if (!target) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const saved = mobileControlLayout[target.id] || { x: 0, y: 0 };
+      controlDrag = {
+        id: target.id,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        baseX: saved.x * window.innerWidth,
+        baseY: saved.y * window.innerHeight,
+        rect: target.getBoundingClientRect()
+      };
+      try { target.setPointerCapture(event.pointerId); } catch (_) {}
+    }, true);
+
+    document.addEventListener('pointermove', (event) => {
+      if (!controlEditMode || !controlDrag || event.pointerId !== controlDrag.pointerId) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const el = document.getElementById(controlDrag.id);
+      if (!el) return;
+      const moveX = event.clientX - controlDrag.startX;
+      const moveY = event.clientY - controlDrag.startY;
+      const margin = 5;
+      const minMoveX = margin - controlDrag.rect.left;
+      const maxMoveX = window.innerWidth - margin - controlDrag.rect.right;
+      const minMoveY = margin - controlDrag.rect.top;
+      const maxMoveY = window.innerHeight - margin - controlDrag.rect.bottom;
+      const clampedMoveX = THREE.MathUtils.clamp(moveX, minMoveX, maxMoveX);
+      const clampedMoveY = THREE.MathUtils.clamp(moveY, minMoveY, maxMoveY);
+      const clampedX = controlDrag.baseX + clampedMoveX;
+      const clampedY = controlDrag.baseY + clampedMoveY;
+      el.style.translate = `${clampedX}px ${clampedY}px`;
+      mobileControlLayout[controlDrag.id] = {
+        x: clampedX / Math.max(1, window.innerWidth),
+        y: clampedY / Math.max(1, window.innerHeight)
+      };
+    }, true);
+
+    function finishDrag(event) {
+      if (!controlDrag || event.pointerId !== controlDrag.pointerId) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      controlDrag = null;
+    }
+    document.addEventListener('pointerup', finishDrag, true);
+    document.addEventListener('pointercancel', finishDrag, true);
+
+    document.getElementById('fullscreenTouch')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); requestAndroidFullscreen();
+    });
+    document.getElementById('settingsFullscreenButton')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); requestAndroidFullscreen();
+    });
+    document.getElementById('settingsEditControlsButton')?.addEventListener('click', startControlEditor);
+    document.getElementById('editControlsPauseButton')?.addEventListener('click', startControlEditor);
+    document.getElementById('controlLayoutSave')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); finishControlEditor(true);
+    });
+    document.getElementById('controlLayoutReset')?.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation(); resetMobileControlLayout();
+    });
+
+    if (mobileMode) {
+      // Primer toque válido: intenta entrar a fullscreen. Si el navegador lo rechaza,
+      // el botón ⛶ permanece disponible para que el usuario lo active manualmente.
+      const tryFullscreenOnce = () => {
+        requestAndroidFullscreen();
+        document.removeEventListener('pointerdown', tryFullscreenOnce, true);
+      };
+      document.addEventListener('pointerdown', tryFullscreenOnce, true);
+      setTimeout(applyMobileControlLayout, 0);
+    }
+
     document.body.classList.toggle('gamepad-mode', xboxMode);
     const gamepadStatusElement = document.getElementById('gamepadStatus');
     if (xboxMode) {
@@ -1580,7 +1974,7 @@
     }
 
     function rotateMobileView(deltaX, deltaY, sensitivityScale = 1) {
-      if (!mobileMode || !isGameplayActive()) return;
+      if (!mobileMode || controlEditMode || !isGameplayActive()) return;
       mobileLookEuler.setFromQuaternion(camera.quaternion);
       const zoomFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
       const sensitivity = mobileLookSensitivityBase * (userSensitivityPercent / 25) * zoomFactor * sensitivityScale;
@@ -2269,7 +2663,7 @@
     let sprintExhausted = false;
     let crouchActive = false;
     let currentPlayerHeight = CONFIG.playerHeight;
-    const SLIDE_DURATION = 1.0;
+    const SLIDE_DURATION = 0.6;
     const SLIDE_SPEED_MULTIPLIER = 2.05;
     const SLIDE_COOLDOWN_SECONDS = 0.55;
     let slideActive = false;
@@ -2392,8 +2786,60 @@
     let bleedRemaining = 0;
     let bleedTickTimer = 0;
     let knockdownRemaining = 0;
+    let stunRemaining = 0;
+    let acidExposureRemaining = 0;
+    let healthRegenTimer = 2.5;
     const BLEED_DURATION = 2.7;
     const BLEED_TICK_SECONDS = 0.45;
+    const HEALTH_REGEN_SECONDS = 2.5;
+    const HEALTH_REGEN_AMOUNT = 3;
+    const TANK_STUN_SECONDS = 1.5;
+
+    const cameraRenderBaseQuaternion = new THREE.Quaternion();
+    const cameraRenderEffectQuaternion = new THREE.Quaternion();
+    const cameraRenderEffectEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+    let cameraMicroMotion = { remaining: 0, duration: 0, pitch: 0, yaw: 0, roll: 0, frequency: 12 };
+
+    function triggerCameraMicroMotion(kind = 'generic', power = 1) {
+      const presets = {
+        fire:    { duration: 0.12, pitch: 0.0045, yaw: 0.0025, roll: 0.0035, frequency: 24 },
+        inspect: { duration: 1.05, pitch: 0.0030, yaw: 0.0050, roll: 0.0080, frequency: 8 },
+        equip:   { duration: 0.32, pitch: 0.0040, yaw: 0.0040, roll: 0.0065, frequency: 13 },
+        reload:  { duration: 0.48, pitch: 0.0035, yaw: 0.0030, roll: 0.0050, frequency: 10 },
+        stun:    { duration: 1.50, pitch: 0.0100, yaw: 0.0120, roll: 0.0140, frequency: 18 },
+        generic: { duration: 0.20, pitch: 0.0030, yaw: 0.0030, roll: 0.0040, frequency: 12 }
+      };
+      const preset = presets[kind] || presets.generic;
+      cameraMicroMotion = {
+        remaining: preset.duration, duration: preset.duration,
+        pitch: preset.pitch * power, yaw: preset.yaw * power, roll: preset.roll * power, frequency: preset.frequency
+      };
+    }
+
+    function updateCameraMicroMotion(delta) {
+      cameraMicroMotion.remaining = Math.max(0, cameraMicroMotion.remaining - delta);
+    }
+
+    function renderWithCameraMicroMotion() {
+      if (cameraMicroMotion.remaining <= 0 || cameraMicroMotion.duration <= 0) {
+        renderer.render(scene, camera);
+        return;
+      }
+      const elapsed = cameraMicroMotion.duration - cameraMicroMotion.remaining;
+      const t = THREE.MathUtils.clamp(elapsed / cameraMicroMotion.duration, 0, 1);
+      const envelope = Math.sin(Math.PI * t) * (1 - 0.18 * t);
+      const wave = elapsed * cameraMicroMotion.frequency * Math.PI * 2;
+      cameraRenderBaseQuaternion.copy(camera.quaternion);
+      cameraRenderEffectEuler.set(
+        Math.sin(wave) * cameraMicroMotion.pitch * envelope,
+        Math.sin(wave * 0.73 + 0.7) * cameraMicroMotion.yaw * envelope,
+        Math.sin(wave * 0.51 + 1.2) * cameraMicroMotion.roll * envelope
+      );
+      cameraRenderEffectQuaternion.setFromEuler(cameraRenderEffectEuler);
+      camera.quaternion.multiply(cameraRenderEffectQuaternion);
+      renderer.render(scene, camera);
+      camera.quaternion.copy(cameraRenderBaseQuaternion);
+    }
 
     function applyZombieBleed(duration = BLEED_DURATION) {
       bleedRemaining = Math.max(bleedRemaining, duration);
@@ -2410,7 +2856,23 @@
           damagePlayer(1, 'El sangrado de los infectados terminó contigo.');
         }
       }
+
       knockdownRemaining = Math.max(0, knockdownRemaining - delta);
+      stunRemaining = Math.max(0, stunRemaining - delta);
+      acidExposureRemaining = Math.max(0, acidExposureRemaining - delta);
+      acidScreenEffectElement?.classList.toggle('active', acidExposureRemaining > 0);
+
+      if (!gameOver && !roundTransition) {
+        healthRegenTimer -= delta;
+        if (healthRegenTimer <= 0) {
+          healthRegenTimer += HEALTH_REGEN_SECONDS;
+          if (playerHealth > 0 && playerHealth < CONFIG.playerMaxHealth) {
+            playerHealth = Math.min(CONFIG.playerMaxHealth, playerHealth + HEALTH_REGEN_AMOUNT);
+            updatePlayerHealthHUD();
+          }
+        }
+      }
+
       if (typeof updateRoundHUD === 'function') updateRoundHUD();
     }
 
@@ -2432,6 +2894,10 @@
     function resetPlayerHealth() {
       playerHealth = CONFIG.playerMaxHealth;
       playerDamageCooldown = 0;
+      healthRegenTimer = HEALTH_REGEN_SECONDS;
+      stunRemaining = 0;
+      acidExposureRemaining = 0;
+      acidScreenEffectElement?.classList.remove('active');
       updatePlayerHealthHUD();
     }
 
@@ -2498,7 +2964,8 @@
       difficultyStatusElement.textContent =
         `Dificultad ronda: +${Math.round(bonus * 100)}% · Ajuste: ${userDifficultyPercent}% · Total ×${multiplier.toFixed(2)}`;
       const bleedText = bleedRemaining > 0 ? ` · SANGRADO ${bleedRemaining.toFixed(1)} s` : '';
-      turretStatusElement.textContent = `Infección: ${ZOMBILAND_ROUND_NAMES[currentRound] || 'Oleada'}${bleedText}`;
+      const stunText = stunRemaining > 0 ? ` · ATURDIDO ${stunRemaining.toFixed(1)} s` : '';
+      turretStatusElement.textContent = `Infección: ${ZOMBILAND_ROUND_NAMES[currentRound] || 'Oleada'}${bleedText}${stunText} · Regen +3/2.5s`;
       updateArmorHUD();
       updateBossHUD();
     }
@@ -2788,6 +3255,10 @@
 
         if (hitPlayer) {
           removeTurretProjectile(i);
+          if (projectile.effect === 'tankStun') {
+            stunRemaining = Math.max(stunRemaining, TANK_STUN_SECONDS);
+            triggerCameraMicroMotion('stun', 1.0);
+          }
           if (!absorbProjectileWithArmor()) {
             damagePlayer(getHostileProjectileDamage(projectile), projectile.reason || 'Una torreta te alcanzó.');
             if (gameOver) return;
@@ -3111,7 +3582,7 @@
     function fireSpitterAcid(enemy) {
       const origin = new THREE.Vector3(enemy.group.position.x, enemy.group.position.y + 1.55, enemy.group.position.z);
       const target = camera.position.clone();
-      const velocity = target.sub(origin).normalize().multiplyScalar(10.5 * getRoundMultiplier());
+      const velocity = target.sub(origin).normalize().multiplyScalar(14.0 * getRoundMultiplier());
       velocity.y += 1.6;
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), spitterAcidMaterial.clone());
       mesh.position.copy(origin); scene.add(mesh);
@@ -3126,7 +3597,7 @@
       acidPools.length = 0;
       if (activeSmokerPull?.tongueLine) scene.remove(activeSmokerPull.tongueLine);
       activeSmokerPull = null;
-      bleedRemaining = 0; bleedTickTimer = 0; knockdownRemaining = 0;
+      bleedRemaining = 0; bleedTickTimer = 0; knockdownRemaining = 0; stunRemaining = 0; acidExposureRemaining = 0; healthRegenTimer = HEALTH_REGEN_SECONDS;
     }
 
     function updateZombieProjectiles(delta) {
@@ -3145,9 +3616,12 @@
         const pool = acidPools[i]; pool.life -= delta; pool.tick -= delta;
         pool.mesh.material.opacity = Math.min(.72, Math.max(0, pool.life / 2.2));
         const dx = camera.position.x - pool.mesh.position.x, dz = camera.position.z - pool.mesh.position.z;
-        if (dx*dx + dz*dz < 5.0 && pool.tick <= 0) {
-          pool.tick = 0.42;
-          damagePlayer(4, 'El ácido de un Spitter te consumió.');
+        if (dx*dx + dz*dz < 5.0) {
+          acidExposureRemaining = Math.max(acidExposureRemaining, 0.30);
+          if (pool.tick <= 0) {
+            pool.tick = 0.42;
+            damagePlayer(4, 'El ácido de un Spitter te consumió.');
+          }
         }
         if (pool.life <= 0) { scene.remove(pool.mesh); acidPools.splice(i,1); }
       }
@@ -3267,17 +3741,17 @@
 
       const group=new THREE.Group(); group.position.set(spawnX,0,spawnZ);
       const healthByType={common:2,spitter:3,hunter:3,smoker:4,parasite:1,charger:6};
-      const speedByType={common:1.18,spitter:.98,hunter:1.38,smoker:.94,parasite:1.82,charger:.96};
+      const speedByType={common:1.35,spitter:1.18,hunter:1.48,smoker:1.20,parasite:2.05,charger:1.12};
       const radiusByType={common:.55,spitter:.58,hunter:.52,smoker:.58,parasite:.34,charger:.88};
       const enemy={
         group, hitMeshes:[], type, health:healthByType[type], maxHealth:healthByType[type],
         speed:randomRange(CONFIG.enemySpeedMin,CONFIG.enemySpeedMax)*getRoundMultiplier()*speedByType[type],
         radius:radiusByType[type], isElite:type!=='common', isBoss:false, bobOffset:Math.random()*Math.PI*2,
-        attackTimer:0.55+Math.random()*0.65, leapCooldown:0.75+Math.random()*0.75, leaping:false, leapVelocityY:0, leapDirection:new THREE.Vector3(),
-        tongueCooldown:0.95+Math.random()*0.85, pulling:false, pullRemaining:0,
+        attackTimer:0.28+Math.random()*0.38, leapCooldown:0.45+Math.random()*0.45, leaping:false, leapVelocityY:0, leapDirection:new THREE.Vector3(),
+        tongueCooldown:0.55+Math.random()*0.55, tongueWindup:0, tongueTarget:new THREE.Vector3(), pulling:false, pullRemaining:0,
         attached:false, attachRemaining:0, attachTick:.42,
-        chargeCooldown:0.85+Math.random()*0.80, charging:false, chargeRemaining:0, chargeDirection:new THREE.Vector3(), hasHitCharge:false,
-        reactionDelay:0.08+Math.random()*0.12
+        chargeCooldown:0.48+Math.random()*0.52, charging:false, chargeRemaining:0, chargeDirection:new THREE.Vector3(), hasHitCharge:false,
+        reactionDelay:0.02+Math.random()*0.04
       };
       buildZombilandEnemyModel(type,enemy);
       attachEntityHealthBar(enemy);
@@ -3337,27 +3811,68 @@
       }
     }
 
+    function cancelSmokerTongue(enemy, cooldown = 1.8) {
+      enemy.pulling = false;
+      enemy.tongueWindup = 0;
+      enemy.pullRemaining = 0;
+      enemy.tongueCooldown = Math.max(enemy.tongueCooldown || 0, cooldown);
+      if (enemy.tongueLine) { scene.remove(enemy.tongueLine); enemy.tongueLine = null; }
+      if (activeSmokerPull === enemy) activeSmokerPull = null;
+    }
+
     function startSmokerPull(enemy) {
       if (activeSmokerPull || !hasClearInfectedLine(enemy)) return;
-      activeSmokerPull = enemy; enemy.pulling = true; enemy.pullRemaining = 2.65; enemy.tongueCooldown = 3.7;
+      activeSmokerPull = enemy;
+      enemy.pulling = false;
+      enemy.tongueWindup = 1.0;
+      enemy.tongueTarget.copy(camera.position);
+      enemy.tongueTarget.y = Math.max(0.9, camera.position.y - 0.15);
+      enemy.tongueCooldown = 3.0;
       const geom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-      enemy.tongueLine = new THREE.Line(geom, smokerTongueMaterial); scene.add(enemy.tongueLine);
-      damagePlayer(7, 'La lengua de un Smoker te atrapó.');
+      enemy.tongueLine = new THREE.Line(geom, smokerTongueMaterial.clone());
+      enemy.tongueLine.material.opacity = 0.52;
+      scene.add(enemy.tongueLine);
     }
 
     function updateSmokerTongue(enemy, delta) {
-      if (!enemy.pulling) return;
-      enemy.pullRemaining -= delta;
+      if (!enemy.tongueLine) return;
       const mouth = enemy.group.position.clone().add(enemy.mouthOffset || new THREE.Vector3(0,1.7,.3));
       const arr = enemy.tongueLine.geometry.attributes.position.array;
-      arr[0]=mouth.x; arr[1]=mouth.y; arr[2]=mouth.z; arr[3]=camera.position.x; arr[4]=camera.position.y-.18; arr[5]=camera.position.z;
+      arr[0]=mouth.x; arr[1]=mouth.y; arr[2]=mouth.z;
+
+      if (enemy.tongueWindup > 0) {
+        enemy.tongueWindup = Math.max(0, enemy.tongueWindup - delta);
+        const progress = 1 - enemy.tongueWindup / 1.0;
+        const endpoint = mouth.clone().lerp(enemy.tongueTarget, THREE.MathUtils.smoothstep(progress, 0, 1));
+        arr[3]=endpoint.x; arr[4]=endpoint.y; arr[5]=endpoint.z;
+        enemy.tongueLine.material.opacity = 0.35 + progress * 0.55;
+        enemy.tongueLine.geometry.attributes.position.needsUpdate=true;
+
+        if (!hasClearInfectedLine(enemy)) { cancelSmokerTongue(enemy, 1.5); return; }
+        if (enemy.tongueWindup <= 0) {
+          const dodgeDistance = Math.hypot(camera.position.x - enemy.tongueTarget.x, camera.position.z - enemy.tongueTarget.z);
+          if (dodgeDistance > 1.35) { cancelSmokerTongue(enemy, 1.35); return; }
+          enemy.pulling = true;
+          enemy.pullRemaining = 2.35;
+          enemy.tongueLine.material.opacity = 0.95;
+          damagePlayer(5, 'La lengua de un Smoker te atrapó.');
+        }
+        return;
+      }
+
+      if (!enemy.pulling) { cancelSmokerTongue(enemy, 1.5); return; }
+      enemy.pullRemaining -= delta;
+      arr[3]=camera.position.x; arr[4]=camera.position.y-.18; arr[5]=camera.position.z;
       enemy.tongueLine.geometry.attributes.position.needsUpdate=true;
       const pull = enemy.group.position.clone().sub(camera.position); pull.y=0;
       const dist=pull.length();
-      if(dist>1.4){pull.normalize(); const pullStep=Math.min(dist-1.2,6.8*delta); const nx=camera.position.x+pull.x*pullStep, nz=camera.position.z+pull.z*pullStep; if(!circleIntersectsWorld(nx,nz,CONFIG.playerRadius)){camera.position.x=nx;camera.position.z=nz;}}
-      if(enemy.pullRemaining<=0 || dist<1.35 || !hasClearInfectedLine(enemy)){
-        enemy.pulling=false; if(enemy.tongueLine){scene.remove(enemy.tongueLine);enemy.tongueLine=null;} if(activeSmokerPull===enemy)activeSmokerPull=null;
+      if(dist>1.4){
+        pull.normalize();
+        const pullStep=Math.min(dist-1.2,7.5*delta);
+        const nx=camera.position.x+pull.x*pullStep, nz=camera.position.z+pull.z*pullStep;
+        if(!circleIntersectsWorld(nx,nz,CONFIG.playerRadius)){camera.position.x=nx;camera.position.z=nz;}
       }
+      if(enemy.pullRemaining<=0 || dist<1.35 || !hasClearInfectedLine(enemy)) cancelSmokerTongue(enemy, 2.3);
     }
 
     function attachParasite(enemy) {
@@ -3391,30 +3906,30 @@
         enemy.attackTimer-=delta; enemy.leapCooldown-=delta; enemy.tongueCooldown-=delta; enemy.chargeCooldown-=delta; enemy.reactionDelay=Math.max(0,(enemy.reactionDelay||0)-delta);
 
         if(enemy.type==='spitter'){
-          if(enemy.reactionDelay<=0 && distance>7 && distance<30 && enemy.attackTimer<=0 && hasClearInfectedLine(enemy)){fireSpitterAcid(enemy);enemy.attackTimer=1.9+Math.random()*0.65;}
-          if(distance>8 && distance>0.001){const step=enemy.speed*.50*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          if(enemy.reactionDelay<=0 && distance>7 && distance<30 && enemy.attackTimer<=0 && hasClearInfectedLine(enemy)){fireSpitterAcid(enemy);enemy.attackTimer=1.25+Math.random()*0.40;}
+          if(distance>8 && distance>0.001){const step=enemy.speed*.95*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
           enemy.group.position.y=Math.sin(elapsedTime*2.4+enemy.bobOffset)*.025;
         } else if(enemy.type==='hunter'){
-          if(enemy.reactionDelay<=0 && !enemy.leaping && enemy.leapCooldown<=0 && distance>3.5 && distance<21){enemy.leaping=true;enemy.leapVelocityY=9.3;enemy.leapDirection.set(dx,0,dz).normalize();enemy.leapCooldown=2.1+Math.random()*0.7;}
+          if(enemy.reactionDelay<=0 && !enemy.leaping && enemy.leapCooldown<=0 && distance>3.5 && distance<21){enemy.leaping=true;enemy.leapVelocityY=9.3;enemy.leapDirection.set(dx,0,dz).normalize();enemy.leapCooldown=1.55+Math.random()*0.45;}
           if(enemy.leaping){
-            enemy.leapVelocityY-=18*delta; enemy.group.position.y+=enemy.leapVelocityY*delta; moveEnemyWithCollision(enemy,enemy.leapDirection.x*11.8*delta,enemy.leapDirection.z*11.8*delta);
+            enemy.leapVelocityY-=18*delta; enemy.group.position.y+=enemy.leapVelocityY*delta; moveEnemyWithCollision(enemy,enemy.leapDirection.x*14.2*delta,enemy.leapDirection.z*14.2*delta);
             const d=Math.hypot(camera.position.x-enemy.group.position.x,camera.position.z-enemy.group.position.z);
             if(d<1.0 && enemy.group.position.y<1.5){damagePlayer(24,'Un Hunter te derribó.');knockdownRemaining=Math.max(knockdownRemaining,1.15);applyZombieBleed();enemy.leaping=false;enemy.group.position.y=0;}
             if(enemy.group.position.y<=0){enemy.group.position.y=0;enemy.leaping=false;}
           } else if(distance>0.001){const step=enemy.speed*.72*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
         } else if(enemy.type==='smoker'){
-          if(enemy.reactionDelay<=0 && !enemy.pulling && !activeSmokerPull && enemy.tongueCooldown<=0 && distance>4 && distance<28) startSmokerPull(enemy);
+          if(enemy.reactionDelay<=0 && !enemy.pulling && enemy.tongueWindup<=0 && !activeSmokerPull && enemy.tongueCooldown<=0 && distance>4 && distance<30) startSmokerPull(enemy);
           updateSmokerTongue(enemy,delta);
-          if(!enemy.pulling && distance>9 && distance>0.001){const step=enemy.speed*.45*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          if(!enemy.pulling && enemy.tongueWindup<=0 && distance>8 && distance>0.001){const step=enemy.speed*.72*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
           enemy.group.position.y=Math.sin(elapsedTime*2+enemy.bobOffset)*.02;
         } else if(enemy.type==='charger'){
-          if(enemy.reactionDelay<=0 && !enemy.charging && enemy.chargeCooldown<=0 && distance>5 && distance<30 && hasClearInfectedLine(enemy)){enemy.charging=true;enemy.chargeRemaining=1.15;enemy.hasHitCharge=false;enemy.chargeDirection.set(dx,0,dz).normalize();enemy.chargeCooldown=2.8;}
+          if(enemy.reactionDelay<=0 && !enemy.charging && enemy.chargeCooldown<=0 && distance>5 && distance<30 && hasClearInfectedLine(enemy)){enemy.charging=true;enemy.chargeRemaining=1.15;enemy.hasHitCharge=false;enemy.chargeDirection.set(dx,0,dz).normalize();enemy.chargeCooldown=2.15;}
           if(enemy.charging){
-            enemy.chargeRemaining-=delta; moveEnemyWithCollision(enemy,enemy.chargeDirection.x*17.0*delta,enemy.chargeDirection.z*17.0*delta);
+            enemy.chargeRemaining-=delta; moveEnemyWithCollision(enemy,enemy.chargeDirection.x*19.5*delta,enemy.chargeDirection.z*19.5*delta);
             const d=Math.hypot(camera.position.x-enemy.group.position.x,camera.position.z-enemy.group.position.z);
             if(d<1.25 && !enemy.hasHitCharge){enemy.hasHitCharge=true;damagePlayer(38,'Un Charger te embistió con su brazo gigante.');knockdownRemaining=Math.max(knockdownRemaining,1.45);applyZombieBleed();const away=camera.position.clone().sub(enemy.group.position);away.y=0;if(away.lengthSq()>0){away.normalize();const nx=camera.position.x+away.x*2.2,nz=camera.position.z+away.z*2.2;if(!circleIntersectsWorld(nx,nz,CONFIG.playerRadius)){camera.position.x=nx;camera.position.z=nz;}}}
             if(enemy.chargeRemaining<=0) enemy.charging=false;
-          } else if(distance>0.001){const step=enemy.speed*.55*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          } else if(distance>0.001){const step=enemy.speed*.70*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
         } else {
           if(distance>0.001){const factor=enemy.type==='parasite'?1.2:1;const step=enemy.speed*factor*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
           enemy.group.position.y=enemy.type==='parasite'?Math.abs(Math.sin(elapsedTime*5+enemy.bobOffset))*.12:Math.sin(elapsedTime*3+enemy.bobOffset)*.035;
@@ -3426,7 +3941,7 @@
           if(damagePlayer(CONFIG.enemyContactDamage,'Un infectado te mordió.',true)){applyZombieBleed();}
           if(distance>.001){enemy.group.position.x-=dx/distance*.45;enemy.group.position.z-=dz/distance*.45;}
         } else if(enemy.type==='spitter' && updatedDistance<1.0){damagePlayer(8,'Un Spitter te golpeó.',true);}
-        else if(enemy.type==='smoker' && !enemy.pulling && updatedDistance<1.0){damagePlayer(10,'Un Smoker te golpeó.',true);}
+        else if(enemy.type==='smoker' && !enemy.pulling && enemy.tongueWindup<=0 && updatedDistance<1.0){damagePlayer(10,'Un Smoker te golpeó.',true);}
         else if(enemy.type==='hunter' && !enemy.leaping && updatedDistance<.9){damagePlayer(12,'Un Hunter te arañó.',true);}
       }
     }
@@ -3566,6 +4081,7 @@
       primaryButtonHeld = false;
       inspectingWeapon = true;
       gameAudio.inspect();
+      triggerCameraMicroMotion('inspect', 1.0);
       inspectProgress = 0;
       updateWeaponStatus();
     }
@@ -3679,6 +4195,7 @@
       holsteredWeapon = activeWeapon && activeWeapon !== name ? activeWeapon : null;
       activeWeapon = name;
       gameAudio.equip();
+      triggerCameraMicroMotion('equip', 1.0);
       weaponEquipProgress = 0;
       weaponHolsterProgress = 0;
       viewmodelRecoil = 0;
@@ -3820,6 +4337,7 @@
       lastShotTime = now;
       triggerViewmodelRecoil(0.50);
       gameAudio.gun('pistol');
+      triggerCameraMicroMotion('fire', 0.70);
 
       flashFirearm(weaponMaterial, 0x2d3436);
       const hit = getFirstWeaponIntersection(CONFIG.shootDistance);
@@ -3839,6 +4357,7 @@
       if (sniperAction === 'magazine') return;
       setSniperZoom(false);
       gameAudio.reload('sniper');
+      triggerCameraMicroMotion('reload', 0.85);
       sniperAction = 'magazine';
       sniperActionRemaining = CONFIG.sniperMagazineReloadSeconds;
       updateAmmoHUD();
@@ -3857,6 +4376,7 @@
       sniperAmmo -= 1;
       triggerViewmodelRecoil(1.32);
       gameAudio.gun('sniper');
+      triggerCameraMicroMotion('fire', 1.15);
 
       flashFirearm(sniperBodyMaterial, 0x314238);
       const hit = getFirstWeaponIntersection(CONFIG.sniperDistance);
@@ -3886,6 +4406,7 @@
       if (machineGunReserveAmmo <= 0) return;
 
       gameAudio.reload('machinegun');
+      triggerCameraMicroMotion('reload', 0.65);
       machineGunReloading = true;
       machineGunReloadRemaining = CONFIG.machineGunReloadSeconds;
       updateAmmoHUD();
@@ -3905,6 +4426,7 @@
       machineGunMagazineAmmo -= 1;
       triggerViewmodelRecoil(0.24);
       gameAudio.gun('machinegun');
+      triggerCameraMicroMotion('fire', 0.36);
 
       flashFirearm(machineGunBodyMaterial, 0x3b4147);
       const hit = getFirstWeaponIntersection(CONFIG.machineGunDistance);
@@ -3933,6 +4455,7 @@
       shotgunAction = 'reload';
       shotgunActionRemaining = CONFIG.shotgunShellReloadSeconds;
       gameAudio.shotgunShell();
+      triggerCameraMicroMotion('reload', 0.62);
       updateAmmoHUD();
     }
 
@@ -3944,6 +4467,7 @@
       lastShotTime = now;
       shotgunTubeAmmo -= 1;
       gameAudio.gun('shotgun');
+      triggerCameraMicroMotion('fire', 1.05);
       flashFirearm(shotgunBodyMaterial, 0x343a40);
 
       const baseDirection = new THREE.Vector3();
@@ -3971,6 +4495,7 @@
       rpgReloading = true;
       rpgReloadRemaining = CONFIG.rpgReloadSeconds;
       gameAudio.reload('sniper');
+      triggerCameraMicroMotion('reload', 0.90);
       updateAmmoHUD();
     }
 
@@ -4035,7 +4560,7 @@
       if (rpgAmmo <= 0) { startRpgReload(); return; }
       const now=performance.now();
       if (now-lastShotTime<CONFIG.rpgCooldownMs) return;
-      lastShotTime=now; rpgAmmo-=1; gameAudio.rpgFire();
+      lastShotTime=now; rpgAmmo-=1; gameAudio.rpgFire(); triggerCameraMicroMotion('fire', 0.88);
       const origin=new THREE.Vector3(); const dir=new THREE.Vector3();
       rpgMuzzle.getWorldPosition(origin); camera.getWorldDirection(dir).normalize();
       const mesh=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.42,10),rpgProjectileMaterial);
@@ -4175,6 +4700,7 @@
       lastShotTime = now;
 
       swordSwingRemaining = swordSwingDuration;
+      triggerCameraMicroMotion('fire', 0.30);
       gameAudio.sword();
       swordBladeMaterial.emissive.setHex(0x5b879d);
 
@@ -4417,7 +4943,7 @@
       for(let i=0;i<4;i++){const chip=new THREE.Mesh(new THREE.DodecahedronGeometry(0.12+Math.random()*0.10,0),rockMat);chip.position.set(boss.group.position.x+randomRange(-1,1),0.18,boss.group.position.z+randomRange(-1,1));scene.add(chip);setTimeout(()=>scene.remove(chip),420);}
       const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(0.52,0),rockMat); rock.position.set(boss.group.position.x,boss.group.position.y+3.4,boss.group.position.z); rock.castShadow=true; scene.add(rock);
       const target=camera.position.clone(); const dir=target.sub(rock.position).normalize();
-      turretProjectiles.push({mesh:rock,velocity:dir.multiplyScalar(20*getRoundMultiplier()),life:5.5,damage:CONFIG.bossRockDamage,hitRadius:0.58,reason:'El Tank te golpeó con un pedazo del suelo.'});
+      turretProjectiles.push({mesh:rock,velocity:dir.multiplyScalar(20*getRoundMultiplier()),life:5.5,damage:CONFIG.bossRockDamage,hitRadius:0.58,reason:'El Tank te golpeó con un pedazo del suelo.',effect:'tankStun'});
       gameAudio.noise?.(0.25,0.08,900,gameAudio.sfx,0,0,80);
     }
 
@@ -4627,7 +5153,7 @@
 
     function tryPlayerJump() {
       if (!isGameplayActive() || gameOver || roundTransition) return false;
-      if (slideActive) return false;
+      if (slideActive || stunRemaining > 0) return false;
       const crouchedNow = keys.KeyC || mobileCrouchHeld || xboxCrouchHeld;
       if (crouchedNow) return false;
 
@@ -4707,7 +5233,7 @@
       }
       crouchActive = slideActive || keys.KeyC || mobileCrouchHeld || xboxCrouchHeld;
       const sprintHeld = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld || xboxSprintHeld;
-      let sprintActive = sprintHeld && !slideActive && !crouchActive && isMoving && sprintEnergy > 0 && !sprintExhausted;
+      let sprintActive = sprintHeld && !slideActive && !crouchActive && stunRemaining <= 0 && isMoving && sprintEnergy > 0 && !sprintExhausted;
 
       if (sprintActive) {
         sprintEnergy = Math.max(0, sprintEnergy - delta);
@@ -4726,7 +5252,8 @@
       }
 
       const knockdownFactor = knockdownRemaining > 0 ? 0.25 : 1;
-      if (knockdownRemaining > 0 && slideActive) {
+      const stunFactor = stunRemaining > 0 ? 0.14 : 1;
+      if ((knockdownRemaining > 0 || stunRemaining > 0) && slideActive) {
         slideActive = false;
         playerViewmodelSliding = false;
       }
@@ -4735,9 +5262,9 @@
         const slideSpeed = CONFIG.playerSpeed * SLIDE_SPEED_MULTIPLIER * (0.72 + 0.28 * slidePhase);
         movePlayerWithCollision(slideDirection.x * slideSpeed * delta, slideDirection.z * slideSpeed * delta);
       } else if (isMoving) {
-        const sprintFactor = sprintActive && knockdownRemaining <= 0 ? CONFIG.sprintMultiplier : 1;
+        const sprintFactor = sprintActive && knockdownRemaining <= 0 && stunRemaining <= 0 ? CONFIG.sprintMultiplier : 1;
         const crouchFactor = crouchActive ? CONFIG.crouchSpeedMultiplier : 1;
-        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * knockdownFactor * delta);
+        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * knockdownFactor * stunFactor * delta);
         movePlayerWithCollision(moveVector.x, moveVector.z);
       }
 
@@ -4859,7 +5386,7 @@
       gameStarted = true;
       resetSprintState();
       resetPlayerHealth();
-      bleedRemaining = 0; knockdownRemaining = 0;
+      bleedRemaining = 0; knockdownRemaining = 0; stunRemaining = 0; acidExposureRemaining = 0; healthRegenTimer = HEALTH_REGEN_SECONDS;
 
       for (const key of Object.keys(keys)) {
         keys[key] = false;
@@ -5209,6 +5736,7 @@
       previousTime = currentTime;
       elapsedTime += delta;
       playerDamageCooldown = Math.max(0, playerDamageCooldown - delta);
+      updateCameraMicroMotion(delta);
       updateZombieStatusEffects(delta);
       updateApocalypseAmbience(delta);
 
@@ -5244,7 +5772,7 @@
         }
       }
 
-      renderer.render(scene, camera);
+      renderWithCameraMicroMotion();
     }
 
     updateRoundHUD();
