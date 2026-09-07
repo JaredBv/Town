@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Medio Oeste - Duelo de Forajidos - Mini FPS 3D</title>
+  <title>Medio Oeste - Duelo de Forajidos - Defusual</title>
 
   <!--
     Three.js cargado por CDN mediante Import Map.
@@ -124,15 +124,62 @@
       font-weight: 700;
     }
 
-    #bossStatus {
+
+    #playerHealthStatus {
+      position: absolute;
       top: 358px;
+      left: 20px;
+      width: 260px;
+      padding: 8px 11px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.48);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    #playerHealthTrack,
+    #bossHealthBar {
+      display: block;
+      width: 100%;
+      height: 11px;
+      margin-top: 6px;
+      border: 1px solid rgba(255,255,255,.42);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.10);
+    }
+
+    #playerHealthFill,
+    #bossHealthFill {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: #55e176;
+      transition: width .16s linear, background .16s linear;
+    }
+
+    #bossHealthBar {
+      position: absolute;
+      top: 446px;
+      left: 20px;
+      width: 320px;
+      height: 14px;
+      margin-top: 0;
+      display: none;
+      background: rgba(0,0,0,.56);
+    }
+
+    #bossStatus {
+      top: 410px;
       color: #ff8f8f;
       font-weight: 700;
       display: none;
     }
 
     #sprintStatus {
-      top: 394px;
+      top: 482px;
       color: #b9f4ff;
       font-weight: 700;
       min-width: 245px;
@@ -317,6 +364,8 @@
     #mobileControls { display: none; position: fixed; inset: 0; z-index: 14; pointer-events: none; touch-action: none; }
     body.mobile-mode #mobileControls { display: block; }
     body.mobile-mode #statusMessage { display: none; }
+    #gamepadStatus { display:none; margin-top:6px; color:#b8ffbf; font-weight:700; }
+    body.gamepad-mode #gamepadStatus { display:block; }
     body.mobile-mode .controlsHelp { grid-template-columns: 1fr; max-height: 34vh; overflow: auto; }
     .touch-stick {
       position: absolute; width: 132px; height: 132px; border-radius: 50%; pointer-events: auto; touch-action: none;
@@ -418,6 +467,173 @@
     #settingsClose { background: #79d9ff; color: #07131c; }
     .mobile-mode #settingsButton { top: 74px; right: 16px; width: 48px; height: 48px; border-radius: 50%; }
 
+
+
+    /* =========================================================
+       PAUSA COMPACTA + FEEDBACK DE DAÑO + ARMA EQUIPADA
+       ========================================================= */
+    #panel {
+      width: min(94vw, 760px);
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      padding: 24px;
+      scrollbar-width: thin;
+      cursor: default;
+    }
+    #overlayTitle { font-size: clamp(25px, 4vw, 38px); margin-bottom: 8px; }
+    #overlayMessage { font-size: 16px; margin-bottom: 14px; }
+    .pauseActions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 12px 0 14px;
+      position: sticky;
+      top: -24px;
+      z-index: 2;
+      padding: 10px 0;
+      background: linear-gradient(rgba(8,12,16,.98), rgba(8,12,16,.88));
+    }
+    .pauseActions button,
+    .pauseActions a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,.20);
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: #fff;
+      background: rgba(255,255,255,.075);
+      text-decoration: none;
+      font: 800 13px Arial, sans-serif;
+      cursor: pointer;
+    }
+    #resumeGameButton { background: rgba(83,176,111,.24); border-color: rgba(104,225,139,.38); }
+    #backToMenu { margin: 0; background: rgba(90,145,220,.20); border-color: rgba(111,173,255,.34); }
+    #pauseSettingsButton { background: rgba(210,162,76,.18); border-color: rgba(255,201,102,.30); }
+    .controlsDetails {
+      margin-top: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,.035);
+      overflow: hidden;
+    }
+    .controlsDetails summary {
+      list-style: none;
+      padding: 12px 14px;
+      font-weight: 800;
+      color: #e8edf2;
+      cursor: pointer;
+      user-select: none;
+    }
+    .controlsDetails summary::-webkit-details-marker { display: none; }
+    .controlsDetails summary::after { content: '＋'; float: right; color: #9ec8ef; }
+    .controlsDetails[open] summary::after { content: '－'; }
+    .controlsDetails .controlsHelp {
+      margin: 0;
+      padding: 0 12px 12px;
+      max-height: 42vh;
+      overflow-y: auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      font-size: 12px;
+      gap: 7px;
+    }
+    .controlsDetails .controlsHelp div { padding: 7px 8px; }
+
+    #damageFlash,
+    #criticalHealthBorder {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+    #damageFlash {
+      z-index: 17;
+      opacity: 0;
+      background:
+        radial-gradient(circle at 14% 24%, rgba(175,0,0,.48) 0 2.5%, transparent 7%),
+        radial-gradient(circle at 87% 31%, rgba(195,0,0,.42) 0 2%, transparent 6%),
+        radial-gradient(circle at 22% 82%, rgba(135,0,0,.38) 0 3%, transparent 8%),
+        radial-gradient(circle at 78% 84%, rgba(155,0,0,.30) 0 2%, transparent 7%),
+        radial-gradient(circle at center, transparent 34%, rgba(120,0,0,.12) 66%, rgba(105,0,0,.58) 100%);
+    }
+    #damageFlash.hit { animation: damageFlashAnim .52s ease-out; }
+    @keyframes damageFlashAnim {
+      0% { opacity: .95; }
+      26% { opacity: .72; }
+      100% { opacity: 0; }
+    }
+    #criticalHealthBorder {
+      z-index: 16;
+      opacity: 0;
+      box-shadow:
+        inset 0 0 0 4px rgba(220,0,0,.48),
+        inset 0 0 54px 16px rgba(175,0,0,.56),
+        inset 0 0 115px 40px rgba(95,0,0,.20);
+      transition: opacity .25s ease;
+    }
+    #criticalHealthBorder.active {
+      opacity: 1;
+      animation: criticalPulse 1.05s ease-in-out infinite alternate;
+    }
+    @keyframes criticalPulse {
+      from { opacity: .55; }
+      to { opacity: .95; }
+    }
+
+    #equippedWeaponCard {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 11;
+      width: 190px;
+      min-height: 112px;
+      padding: 10px 12px 11px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 13px;
+      background: rgba(7,11,16,.72);
+      color: #fff;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+      box-shadow: 0 8px 28px rgba(0,0,0,.28);
+    }
+    #equippedWeaponCard .weapon-card-kicker {
+      color: #8da2b7;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    #equippedWeaponIcon {
+      display: block;
+      width: 100%;
+      height: 62px;
+      margin: 2px 0 0;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.45));
+    }
+    #equippedWeaponName {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 900;
+      color: #eaf3fb;
+    }
+    body.mobile-mode #equippedWeaponCard {
+      width: 142px;
+      min-height: 88px;
+      top: 74px;
+      left: 50%;
+      right: auto;
+      bottom: auto;
+      transform: translateX(-50%) scale(.86);
+      transform-origin: top center;
+    }
+    body.mobile-mode #equippedWeaponIcon { height: 48px; }
+
+    @media (max-width: 720px) {
+      #panel { width: min(96vw, 680px); padding: 18px; }
+      .pauseActions { grid-template-columns: 1fr; top: -18px; }
+      .controlsDetails .controlsHelp { grid-template-columns: 1fr; max-height: 38vh; }
+    }
+
   </style>
 </head>
 <body>
@@ -431,15 +647,25 @@
     <div id="roundStatus">Ronda: 1</div>
     <div id="difficultyStatus">Dificultad: +0% (×1.00)</div>
     <div id="armorStatus">Chaleco: no disponible hasta ronda 3</div>
+    <div id="playerHealthStatus"><span id="playerHealthText">Vida: 100 / 100</span><span id="playerHealthTrack"><span id="playerHealthFill"></span></span></div>
     <div id="bossStatus">Jefe: --</div>
+    <div id="bossHealthBar"><span id="bossHealthFill"></span></div>
+    <div id="jumpBoostStatus">Doble salto: solo en ronda del jefe</div>
     <div id="sprintStatus"><span id="sprintText">Sprint: 6.0/6 s · SHIFT ×1.7</span><span id="sprintBar"><span id="sprintFill"></span></span></div>
     <div id="crosshair"></div>
     <div id="scopeOverlay"></div>
     <div id="statusMessage">ESC: pausa</div>
+    <div id="gamepadStatus">🎮 Xbox: buscando mando...</div>
   </div>
 
 
-
+  <div id="equippedWeaponCard" aria-label="Arma equipada">
+    <div class="weapon-card-kicker">Arma equipada</div>
+    <svg id="equippedWeaponIcon" viewBox="0 0 180 70" aria-hidden="true"></svg>
+    <div id="equippedWeaponName">Pistola</div>
+  </div>
+  <div id="damageFlash" aria-hidden="true"></div>
+  <div id="criticalHealthBorder" aria-hidden="true"></div>
 
   <button id="settingsButton" type="button" aria-label="Abrir configuración" title="Configuración">⚙</button>
   <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -457,6 +683,23 @@
         <label for="difficultyRange"><span>Dificultad adicional</span><output id="difficultyValue">100%</output></label>
         <input id="difficultyRange" type="range" min="100" max="200" step="25" value="100" />
         <div class="setting-scale"><span>100% normal</span><span>150% difícil</span><span>200% extremo</span></div>
+      </div>
+
+      <div class="setting-row">
+        <label for="masterVolumeRange"><span>Volumen general</span><output id="masterVolumeValue">80%</output></label>
+        <input id="masterVolumeRange" type="range" min="0" max="100" step="5" value="80" />
+      </div>
+      <div class="setting-row">
+        <label for="sfxVolumeRange"><span>Efectos</span><output id="sfxVolumeValue">100%</output></label>
+        <input id="sfxVolumeRange" type="range" min="0" max="100" step="5" value="100" />
+      </div>
+      <div class="setting-row">
+        <label for="musicVolumeRange"><span>Música</span><output id="musicVolumeValue">55%</output></label>
+        <input id="musicVolumeRange" type="range" min="0" max="100" step="5" value="55" />
+      </div>
+      <div class="setting-row">
+        <label for="ambientVolumeRange"><span>Ambiente</span><output id="ambientVolumeValue">45%</output></label>
+        <input id="ambientVolumeRange" type="range" min="0" max="100" step="5" value="45" />
       </div>
 
       <div id="settingsDifficultyInfo">100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.</div>
@@ -481,43 +724,468 @@
       <button id="crouchTouch" class="touch-btn" type="button">Agachar</button>
       <button id="reloadTouch" class="touch-btn" type="button">Recarga</button>
       <button id="zoomTouch" class="touch-btn" type="button">Zoom</button>
+      <button id="inspectTouch" class="touch-btn" type="button">Inspeccionar</button>
     </div>
   </div>
 
   <div id="overlay">
     <div id="panel">
-      <h1 id="overlayTitle">MEDIO OESTE · Mini FPS 3D</h1>
+      <h1 id="overlayTitle">MEDIO OESTE · Defusual</h1>
       <p id="overlayMessage">Haz clic o toca la pantalla para jugar</p>
 
-      <div class="controlsHelp">
+      <div class="pauseActions">
+        <button id="resumeGameButton" type="button">▶ Continuar</button>
+        <a id="backToMenu" href="main.index.html">↩ Cambiar mundo</a>
+        <button id="pauseSettingsButton" type="button">⚙ Configuración</button>
+      </div>
+
+      <details class="controlsDetails">
+        <summary>Ver controles y ayuda</summary>
+        <div class="controlsHelp">
         <div><span class="key">WASD</span> — Movimiento</div>
         <div><span class="key">Ratón</span> — Mirar</div>
         <div><span class="key">Android</span> — Joystick izq.: mover · der.: mirar · botones táctiles</div>
+        <div><span class="key">Xbox</span> — Stick izq.: mover · Stick der.: mirar · RT disparar · LT apuntar · A saltar · B agachar/barrida · L3 sprint · LB/RB armas · X recargar · Menu pausa · D-Pad ↑ inspeccionar</div>
         <div><span class="key">ESPACIO</span> — Saltar</div>
         <div><span class="key">SHIFT</span> — Sprint (6 s · recarga total en 2.5 s)</div>
-        <div><span class="key">CTRL</span> — Agacharse mientras se mantenga presionado · velocidad reducida</div>
+        <div><span class="key">C</span> — Agacharse · mientras corres hacia delante con SHIFT + W, pulsa C para barrerte 1 s</div>
         <div><span class="key">⚙</span> — Configuración: dificultad y sensibilidad (25% = original)</div>
         <div><span class="key">Clic izquierdo</span> — Disparar / atacar</div>
         <div><span class="key">3</span> — Cambiar arma</div>
         <div><span class="key">R</span> — Recargar arma actual</div>
+        <div><span class="key">F</span> — Inspeccionar arma</div>
         <div><span class="key">Clic derecho</span> — Zoom del francotirador</div>
         <div><span class="key">Metralleta</span> — Mantén clic para fuego automático</div>
         <div><span class="key">Espada</span> — Ataque de alcance extendido</div>
         <div><span class="key">Torretas</span> — Apuntan a tu posición</div>
         <div><span class="key">Cada 5 s</span> — Lanzan un proyectil</div>
         <div><span class="key">Ronda 3+</span> — Recoge el chaleco y sus mejoras</div>
+        <div><span class="key">Ronda 4+</span> — Aparece un pistolero veterano más resistente</div>
         <div><span class="key">R</span> — Recargar armas con cargador/cilindro</div>
         <div><span class="key">Ronda 10</span> — Jefe vaquero gigante montado a caballo</div>
         <div><span class="key">Mundo 3</span> — Pueblo western cálido · cactus y forajidos armados</div>
-      </div>
-
-      <a id="backToMenu" href="main.index.html">← Volver al menú principal</a>
+        </div>
+      </details>
     </div>
   </div>
 
   <script type="module">
     import * as THREE from 'three';
     import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+
+    // =========================================================
+    // AUDIO HÍBRIDO · DEFUSUAL
+    // Disparos, equipar, daño y pisadas usan WAV originales; ambiente/música siguen con Web Audio API.
+    // =========================================================
+    const AUDIO_SETTINGS_KEY = 'defusual.audio.v1';
+    const AUDIO_DEFAULTS = { master: 80, sfx: 100, music: 55, ambient: 45 };
+
+    class DefusualAudio {
+      constructor(theme = 'town') {
+        this.theme = theme;
+        this.ctx = null;
+        this.master = null;
+        this.sfx = null;
+        this.music = null;
+        this.ambient = null;
+        this.compressor = null;
+        this.noiseBuffer = null;
+        this.ambientSource = null;
+        this.ambientFilter = null;
+        this.musicTimer = null;
+        this.musicMode = 'none';
+        this.musicStep = 0;
+        this.settings = { ...AUDIO_DEFAULTS };
+        this.sampleBase = theme === 'town' ? '../../assets/audio/' : 'assets/audio/';
+        this.sampleFiles = {
+          pistol: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/1911/A_34P.wav',
+          sniper: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Savage%2010%20.300%20Blackout/T_17P.wav',
+          machinegun: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/PPSh/P_16P.wav',
+          revolver: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Smith%20%26%20Wesson%20642/V_22P.wav',
+          shotgun: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Mossberg/N_26P.wav',
+          equip: 'equip.wav',
+          reload: 'reload.wav',
+          reloadFinish: 'reload_finish.wav',
+          blood: 'blood_hit.wav',
+          pumpBack: 'pump_back.wav',
+          pumpForward: 'pump_forward.wav',
+          shellInsert: 'shell_insert.wav'
+        };
+        this.sampleCache = new Map();
+        this.sampleFallbackFiles = {
+          pistol: 'pistol.wav',
+          sniper: 'sniper.wav',
+          machinegun: 'machinegun.wav',
+          revolver: 'revolver.wav',
+          shotgun: 'shotgun.wav'
+        };
+        this.footstepFiles = {
+          concrete: ['foot_concrete_1.wav', 'foot_concrete_2.wav', 'foot_concrete_3.wav'],
+          grass: ['foot_grass_1.wav', 'foot_grass_2.wav', 'foot_grass_3.wav'],
+          snow: ['foot_snow_1.wav', 'foot_snow_2.wav', 'foot_snow_3.wav'],
+          sand: ['foot_sand_1.wav', 'foot_sand_2.wav', 'foot_sand_3.wav'],
+          metal: ['foot_metal_1.wav', 'foot_metal_2.wav', 'foot_metal_3.wav'],
+          plastic: ['foot_plastic_1.wav', 'foot_plastic_2.wav', 'foot_plastic_3.wav'],
+          glass: ['foot_glass_1.wav', 'foot_glass_2.wav', 'foot_glass_3.wav'],
+          wood: ['foot_wood_1.wav', 'foot_wood_2.wav', 'foot_wood_3.wav']
+        };
+        this.lastFootstepVariant = -1;
+        this.loadSettings();
+      }
+
+      loadSettings() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY) || '{}');
+          for (const key of Object.keys(this.settings)) {
+            const n = Number(saved[key]);
+            if (Number.isFinite(n)) this.settings[key] = Math.max(0, Math.min(100, n));
+          }
+        } catch (_) {}
+      }
+
+      saveSettings() {
+        try { localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(this.settings)); } catch (_) {}
+      }
+
+      ensure() {
+        if (!this.ctx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return false;
+          this.ctx = new Ctx();
+          this.master = this.ctx.createGain();
+          this.sfx = this.ctx.createGain();
+          this.music = this.ctx.createGain();
+          this.ambient = this.ctx.createGain();
+          this.compressor = this.ctx.createDynamicsCompressor();
+          this.compressor.threshold.value = -15;
+          this.compressor.knee.value = 18;
+          this.compressor.ratio.value = 5;
+          this.compressor.attack.value = 0.003;
+          this.compressor.release.value = 0.18;
+          this.sfx.connect(this.master);
+          this.music.connect(this.master);
+          this.ambient.connect(this.master);
+          this.master.connect(this.compressor);
+          this.compressor.connect(this.ctx.destination);
+          this.createNoiseBuffer();
+          this.applyVolumes();
+          this.preloadWeaponSamples();
+          this.startAmbient();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+        return true;
+      }
+
+
+      preloadWeaponSamples() {
+        for (const [name, file] of Object.entries(this.sampleFiles || {})) {
+          if (!['pistol','sniper','machinegun','revolver','shotgun'].includes(name)) continue;
+          try {
+            const url = /^https?:\/\//i.test(file) ? file : this.sampleBase + file;
+            const audio = new Audio(url);
+            audio.preload = 'auto';
+            audio.load();
+            this.sampleCache.set(name, audio);
+          } catch (_) {}
+        }
+      }
+
+      createNoiseBuffer() {
+        if (!this.ctx) return;
+        const length = Math.floor(this.ctx.sampleRate * 2);
+        const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let last = 0;
+        for (let i = 0; i < length; i++) {
+          const white = Math.random() * 2 - 1;
+          last = last * 0.82 + white * 0.18;
+          data[i] = last * 0.8 + white * 0.2;
+        }
+        this.noiseBuffer = buffer;
+      }
+
+      applyVolumes() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        this.master.gain.setTargetAtTime(this.settings.master / 100, now, 0.02);
+        this.sfx.gain.setTargetAtTime(this.settings.sfx / 100, now, 0.02);
+        this.music.gain.setTargetAtTime(this.settings.music / 100, now, 0.02);
+        this.ambient.gain.setTargetAtTime(this.settings.ambient / 100, now, 0.02);
+      }
+
+      setSettings(next) {
+        Object.assign(this.settings, next);
+        for (const key of Object.keys(this.settings)) {
+          this.settings[key] = Math.max(0, Math.min(100, Number(this.settings[key]) || 0));
+        }
+        this.saveSettings();
+        this.ensure();
+        this.applyVolumes();
+      }
+
+      playFileSample(file, volume = 1, playbackRate = 1, cacheKey = file) {
+        if (!file) return false;
+        try {
+          let base = this.sampleCache.get(cacheKey);
+          if (!base) {
+            base = new Audio(/^https?:\/\//i.test(file) ? file : this.sampleBase + file);
+            base.preload = 'auto';
+            this.sampleCache.set(cacheKey, base);
+          }
+          const audio = base.cloneNode(true);
+          const master = (this.settings.master ?? 80) / 100;
+          const sfx = (this.settings.sfx ?? 100) / 100;
+          audio.volume = Math.max(0, Math.min(1, master * sfx * volume));
+          audio.playbackRate = Math.max(0.72, Math.min(1.35, playbackRate));
+          audio.play().catch(() => {});
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      playSample(name, volume = 1, playbackRate = 1) {
+        const file = this.sampleFiles?.[name];
+        if (!file) return false;
+        try {
+          const url = /^https?:\/\//i.test(file) ? file : this.sampleBase + file;
+          let base = this.sampleCache.get(name);
+          if (!base || base.src !== url) {
+            base = new Audio(url);
+            base.preload = 'auto';
+            this.sampleCache.set(name, base);
+          }
+          const audio = base.cloneNode(true);
+          const master = (this.settings.master ?? 80) / 100;
+          const sfx = (this.settings.sfx ?? 100) / 100;
+          audio.volume = Math.max(0, Math.min(1, master * sfx * volume));
+          audio.playbackRate = Math.max(0.72, Math.min(1.35, playbackRate));
+          const fallback = this.sampleFallbackFiles?.[name];
+          let fallbackTriggered = false;
+          audio.addEventListener('error', () => {
+            if (fallbackTriggered || !fallback) return;
+            fallbackTriggered = true;
+            this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`);
+          }, { once: true });
+          const p = audio.play();
+          if (p?.catch) p.catch(() => {
+            if (!fallbackTriggered && fallback) {
+              fallbackTriggered = true;
+              this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`);
+            }
+          });
+          return true;
+        } catch (_) {
+          const fallback = this.sampleFallbackFiles?.[name];
+          return fallback ? this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`) : false;
+        }
+      }
+
+      makePan(destination, pan = 0) {
+        if (!this.ctx || !this.ctx.createStereoPanner) return destination;
+        const panner = this.ctx.createStereoPanner();
+        panner.pan.value = Math.max(-1, Math.min(1, pan));
+        panner.connect(destination);
+        return panner;
+      }
+
+      tone(freq = 440, duration = 0.08, volume = 0.08, type = 'sine', destination = null, when = 0, pan = 0, endFreq = null) {
+        if (!this.ensure()) return;
+        const t = this.ctx.currentTime + Math.max(0, when);
+        const gain = this.ctx.createGain();
+        const osc = this.ctx.createOscillator();
+        const dest = destination || this.sfx;
+        const out = this.makePan(dest, pan);
+        osc.type = type;
+        osc.frequency.setValueAtTime(Math.max(20, freq), t);
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), t + duration);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), t + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        osc.connect(gain);
+        gain.connect(out);
+        osc.start(t);
+        osc.stop(t + duration + 0.02);
+      }
+
+      noise(duration = 0.08, volume = 0.08, cutoff = 2000, destination = null, when = 0, pan = 0, highpass = 0) {
+        if (!this.ensure() || !this.noiseBuffer) return;
+        const t = this.ctx.currentTime + Math.max(0, when);
+        const src = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const hp = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        const out = this.makePan(destination || this.sfx, pan);
+        src.buffer = this.noiseBuffer;
+        filter.type = 'lowpass';
+        filter.frequency.value = cutoff;
+        hp.type = 'highpass';
+        hp.frequency.value = highpass;
+        gain.gain.setValueAtTime(Math.max(0.0002, volume), t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        src.connect(filter); filter.connect(hp); hp.connect(gain); gain.connect(out);
+        src.start(t, Math.random() * 1.6);
+        src.stop(t + duration + 0.02);
+      }
+
+      startAmbient() {
+        if (!this.ctx || this.ambientSource || !this.noiseBuffer) return;
+        const source = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        source.buffer = this.noiseBuffer;
+        source.loop = true;
+        filter.type = 'lowpass';
+        const cfg = this.theme === 'winter'
+          ? { f: 1200, q: 0.7, g: 0.075 }
+          : this.theme === 'west'
+            ? { f: 780, q: 0.4, g: 0.060 }
+            : { f: 520, q: 0.5, g: 0.045 };
+        filter.frequency.value = cfg.f;
+        filter.Q.value = cfg.q;
+        gain.gain.value = cfg.g;
+        source.connect(filter); filter.connect(gain); gain.connect(this.ambient);
+        source.start();
+        this.ambientSource = source;
+        this.ambientFilter = filter;
+      }
+
+      setMusic(mode = 'none') {
+        if (!this.ensure()) return;
+        if (this.musicMode === mode && this.musicTimer) return;
+        if (this.musicTimer) clearInterval(this.musicTimer);
+        this.musicTimer = null;
+        this.musicMode = mode;
+        this.musicStep = 0;
+        if (mode === 'none') return;
+        const interval = mode === 'boss' ? 300 : mode === 'pause' ? 760 : 520;
+        this.musicTick();
+        this.musicTimer = setInterval(() => this.musicTick(), interval);
+      }
+
+      musicTick() {
+        if (!this.ctx || this.musicMode === 'none') return;
+        const mode = this.musicMode;
+        const themeShift = this.theme === 'winter' ? 5 : this.theme === 'west' ? -2 : 0;
+        if (mode === 'boss') {
+          const seq = [55, 55, 62, 58, 55, 65, 62, 58];
+          const f = 440 * Math.pow(2, ((seq[this.musicStep % seq.length] + themeShift) - 69) / 12);
+          this.tone(f, 0.22, 0.055, 'sawtooth', this.music, 0, 0, f * 0.94);
+          if (this.musicStep % 2 === 0) this.noise(0.09, 0.035, 180, this.music, 0, 0, 25);
+        } else if (mode === 'pause') {
+          const seq = [48, 55, 60, 55, 50, 57, 62, 57];
+          const f = 440 * Math.pow(2, ((seq[this.musicStep % seq.length] + themeShift) - 69) / 12);
+          this.tone(f, 0.65, 0.025, 'triangle', this.music);
+          this.tone(f * 1.5, 0.42, 0.010, 'sine', this.music, 0.08);
+        } else if (mode === 'menu') {
+          const seq = [48, 52, 55, 60, 55, 52, 50, 55];
+          const f = 440 * Math.pow(2, (seq[this.musicStep % seq.length] - 69) / 12);
+          this.tone(f, 0.46, 0.03, 'triangle', this.music);
+          if (this.musicStep % 4 === 0) this.tone(f / 2, 0.8, 0.018, 'sine', this.music);
+        }
+        this.musicStep++;
+      }
+
+      ui() { this.tone(720, 0.045, 0.04, 'sine', this.sfx, 0, 0, 930); }
+      equip() { this.noise(0.07, 0.035, 3600, this.sfx, 0, 0, 900); this.tone(430, 0.055, 0.025, 'triangle', this.sfx, 0.01, 0, 620); }
+      inspect() { this.tone(460, 0.035, 0.025, 'square'); this.tone(620, 0.035, 0.018, 'square', this.sfx, 0.10); }
+      jump(doubleJump = false) { this.noise(0.09, 0.035, 850); this.tone(doubleJump ? 420 : 300, 0.10, 0.025, 'sine', this.sfx, 0, 0, doubleJump ? 620 : 390); }
+      land(surface) { this.footstep(surface, 1.35); }
+      slide(surface) { this.noise(0.46, 0.07, surface === 'metal' ? 2600 : 950, this.sfx, 0, 0, surface === 'metal' ? 650 : 80); }
+      gun(kind) {
+        const profile = {
+          pistol: [0.15, 0.10, 2700, 125],
+          sniper: [0.30, 0.15, 2300, 72],
+          machinegun: [0.10, 0.075, 3200, 150],
+          revolver: [0.21, 0.12, 2500, 92],
+          shotgun: [0.34, 0.17, 1900, 62]
+        }[kind] || [0.14, 0.10, 2600, 110];
+        this.noise(profile[0], profile[1], profile[2], this.sfx, 0, 0, 90);
+        this.tone(profile[3], profile[0] * 0.75, profile[1] * 0.34, 'triangle', this.sfx, 0, 0, Math.max(42, profile[3] * 0.58));
+      }
+
+      sword() { this.noise(0.18, 0.055, 4500, this.sfx, 0, 0, 700); this.tone(780, 0.12, 0.025, 'sine', this.sfx, 0, 0, 410); }
+      reload(kind = 'gun') {
+        this.noise(0.10, 0.035, kind === 'sniper' ? 3900 : 3200, this.sfx, 0, 0, 700);
+        this.tone(kind === 'sniper' ? 420 : 520, 0.055, 0.018, 'triangle', this.sfx, 0.035, 0, 310);
+      }
+      reloadFinish() { this.noise(0.065, 0.032, 4400, this.sfx, 0, 0, 900); }
+      shotgunPumpBack() { this.noise(0.095, 0.040, 2800, this.sfx, 0, 0, 520); this.tone(250, 0.07, 0.018, 'triangle', this.sfx); }
+      shotgunPumpForward() { this.noise(0.075, 0.038, 3400, this.sfx, 0, 0, 760); this.tone(330, 0.055, 0.015, 'triangle', this.sfx); }
+      shotgunShell() { this.noise(0.055, 0.030, 4100, this.sfx, 0, 0, 1300); this.tone(610, 0.035, 0.012, 'triangle', this.sfx); }
+      damage() { this.noise(0.19, 0.060, 720, this.sfx, 0, 0, 38); this.tone(115, 0.12, 0.028, 'sine', this.sfx, 0, 0, 72); }
+      armor() { this.tone(1180, 0.09, 0.07, 'square', this.sfx, 0, 0, 640); this.noise(0.10, 0.045, 3400); }
+      enemyHit() { this.tone(260, 0.055, 0.025, 'square', this.sfx, 0, 0, 190); }
+      enemyDeath() { this.tone(170, 0.13, 0.04, 'sawtooth', this.sfx, 0, 0, 70); }
+      pickup() { this.tone(520, 0.08, 0.04, 'sine'); this.tone(780, 0.10, 0.04, 'sine', this.sfx, 0.08); this.tone(1040, 0.13, 0.03, 'sine', this.sfx, 0.18); }
+      roundWin() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 0.045, 'triangle', this.sfx, i * 0.10)); }
+      gameOver() { this.tone(220, 0.28, 0.06, 'sawtooth', this.sfx, 0, 0, 110); this.tone(110, 0.5, 0.04, 'triangle', this.sfx, 0.20, 0, 55); }
+
+      hostile(kind = 'turret', pan = 0, volume = 1) {
+        if (kind === 'ice') {
+          this.tone(980, 0.20, 0.045 * volume, 'sine', this.sfx, 0, pan, 360);
+          this.noise(0.18, 0.035 * volume, 5000, this.sfx, 0, pan, 1200);
+        } else if (kind === 'shotgun') {
+          this.noise(0.26, 0.085 * volume, 1800, this.sfx, 0, pan, 70); this.tone(74, 0.16, 0.025 * volume, 'triangle', this.sfx, 0, pan, 46);
+        } else if (kind === 'lasso') {
+          this.noise(0.35, 0.045 * volume, 3800, this.sfx, 0, pan, 500);
+          this.tone(520, 0.22, 0.025 * volume, 'triangle', this.sfx, 0, pan, 260);
+        } else if (kind === 'revolver') {
+          this.noise(0.16, 0.060 * volume, 2400, this.sfx, 0, pan, 95); this.tone(105, 0.10, 0.022 * volume, 'triangle', this.sfx, 0, pan, 62);
+        } else {
+          this.noise(0.12, 0.055 * volume, 2100, this.sfx, 0, pan, 110);
+          this.tone(130, 0.10, 0.035 * volume, 'square', this.sfx, 0, pan, 80);
+        }
+      }
+
+      footstep(material = 'concrete', intensity = 1) {
+        const i = Math.max(0.45, Math.min(1.5, intensity));
+        const materialKey = this.footstepFiles[material] ? material : 'concrete';
+        const variants = this.footstepFiles[materialKey];
+        let variant = Math.floor(Math.random() * variants.length);
+        if (variant === this.lastFootstepVariant && variants.length > 1) variant = (variant + 1) % variants.length;
+        this.lastFootstepVariant = variant;
+        const rate = 0.94 + Math.random() * 0.12;
+        if (this.playFileSample(variants[variant], 0.48 * i, rate, `foot:${materialKey}:${variant}`)) return;
+
+        // Respaldo procedural únicamente si el navegador no pudo cargar el WAV.
+        this.noise(0.08, 0.035 * i, materialKey === 'metal' ? 3400 : 1500, this.sfx, 0, 0, materialKey === 'snow' ? 420 : 100);
+      }
+
+      horse(pan = 0) {
+        this.tone(96, 0.08, 0.04, 'triangle', this.sfx, 0, pan, 70);
+        this.noise(0.065, 0.025, 700, this.sfx, 0, pan, 80);
+      }
+
+
+      enemySpawn() {
+        if (this.theme === 'winter') {
+          this.tone(115, 0.12, 0.018, 'sawtooth', this.sfx, 0, 0, 82);
+        } else if (this.theme === 'west') {
+          this.tone(360, 0.055, 0.013, 'triangle', this.sfx, 0, 0, 290);
+        } else {
+          this.tone(150, 0.07, 0.012, 'square', this.sfx, 0, 0, 120);
+        }
+      }
+
+      bossIntro() {
+        if (this.theme === 'winter') {
+          this.noise(0.65, 0.075, 700, this.sfx, 0, 0, 45);
+          this.tone(82, 0.72, 0.075, 'sawtooth', this.sfx, 0, 0, 48);
+          this.tone(130, 0.35, 0.025, 'triangle', this.sfx, 0.18, 0, 70);
+        } else if (this.theme === 'west') {
+          this.tone(110, 0.45, 0.055, 'sawtooth', this.sfx, 0, 0, 72);
+          this.tone(440, 0.16, 0.025, 'triangle', this.sfx, 0.10, 0, 620);
+          this.horse();
+        } else {
+          this.tone(92, 0.50, 0.055, 'square', this.sfx, 0, 0, 58);
+          this.tone(184, 0.35, 0.028, 'sawtooth', this.sfx, 0.10, 0, 110);
+        }
+      }
+    }
+
+    const gameAudio = new DefusualAudio('west');
 
     // =========================================================
     // CONFIGURACIÓN GENERAL
@@ -526,6 +1194,15 @@
       mapHalfSize: 50,
       playerHeight: 1.7,
       playerRadius: 0.45,
+      playerMaxHealth: 100,
+      turretDamage: 25,
+      enemyContactDamage: 22,
+      enemyContactCooldown: 0.75,
+      normalEnemyHealth: 2,
+      eliteStartRound: 4,
+      eliteEnemyHealth: 4,
+      eliteSpeedMultiplier: 1.20,
+      eliteSpawnChance: 0.35,
       playerSpeed: 8.0,
       sprintMultiplier: 1.70,
       sprintMaxSeconds: 6.0,
@@ -539,8 +1216,8 @@
       enemySpeedMin: 1.45,
       enemySpeedMax: 2.35,
       enemySpawnSeconds: 3.0,
-      initialEnemies: 4,
-      maxEnemies: 14,
+      initialEnemies: 2,
+      maxEnemies: 7,
       shootCooldownMs: 120,
       shootDistance: 80,
 
@@ -578,7 +1255,7 @@
       swordCooldownMs: 430,
       swordRange: 5.5,
       pointsPerEnemy: 100,
-      enemiesToWin: 5,
+      enemiesToWin: 3,
 
       // Bala visible del jugador
       playerProjectileSpeed: 55.0,
@@ -606,12 +1283,19 @@
 
       // Jefe final.
       bossScale: 3.0,
-      bossMovementMultiplier: 1.5,
+      bossMovementMultiplier: 2.20,
+      bossContactDamage: 55,
       bossMaxHealth: 36,
-      bossShotSeconds: 2.65,
-      bossShotgunPellets: 7,
-      bossShotgunSpread: 0.095,
-      bossShotgunProjectileSpeed: 31.0,
+      bossShotSeconds: 1.65,
+      bossShotgunPellets: 9,
+      bossShotgunSpread: 0.11,
+      bossShotgunProjectileSpeed: 42.0,
+      bossShotgunPelletDamage: 14,
+      bossLassoCooldownSeconds: 5.4,
+      bossLassoRange: 28.0,
+      bossLassoPullSpeed: 10.5,
+      bossLassoDurationSeconds: 2.4,
+      bossLassoDamage: 15,
       bossScore: 2500,
       finalResetMs: 4200,
       roundTransitionMs: 2200
@@ -629,6 +1313,11 @@
     const difficultyStatusElement = document.getElementById('difficultyStatus');
     const armorStatusElement = document.getElementById('armorStatus');
     const bossStatusElement = document.getElementById('bossStatus');
+    const bossHealthBarElement = document.getElementById('bossHealthBar');
+    const bossHealthFillElement = document.getElementById('bossHealthFill');
+    const playerHealthTextElement = document.getElementById('playerHealthText');
+    const playerHealthFillElement = document.getElementById('playerHealthFill');
+    const jumpBoostStatusElement = document.getElementById('jumpBoostStatus');
     const sprintStatusElement = document.getElementById('sprintStatus');
     const sprintTextElement = document.getElementById('sprintText');
     const sprintFillElement = document.getElementById('sprintFill');
@@ -638,7 +1327,13 @@
     const overlay = document.getElementById('overlay');
     const overlayTitle = document.getElementById('overlayTitle');
     const overlayMessage = document.getElementById('overlayMessage');
+    const statusMessageElement = document.getElementById('statusMessage');
     const backToMenu = document.getElementById('backToMenu');
+    const damageFlashElement = document.getElementById('damageFlash');
+    const criticalHealthBorderElement = document.getElementById('criticalHealthBorder');
+    const equippedWeaponIconElement = document.getElementById('equippedWeaponIcon');
+    const equippedWeaponNameElement = document.getElementById('equippedWeaponName');
+    const pauseSettingsButton = document.getElementById('pauseSettingsButton');
     backToMenu.addEventListener('click', (event) => event.stopPropagation());
 
     // =========================================================
@@ -676,12 +1371,27 @@
     // =========================================================
     const platformMode = new URLSearchParams(window.location.search).get('platform') || 'pc';
     const mobileMode = platformMode === 'android';
+    const xboxMode = platformMode === 'xbox';
+    const gamepadInspectMode = ['xbox', 'playstation', 'nintendo'].includes(platformMode);
     let mobilePaused = mobileMode;
     let mobileMoveX = 0;
     let mobileMoveY = 0;
     let mobileSprintHeld = false;
     let mobileCrouchHeld = false;
     const mobileLookSensitivityBase = 0.00315;
+    let xboxPaused = xboxMode;
+    let xboxMoveX = 0;
+    let xboxMoveY = 0;
+    let xboxSprintHeld = false;
+    let xboxCrouchHeld = false;
+    let xboxConnected = false;
+    let xboxGamepadIndex = null;
+    const xboxPreviousButtons = new Array(17).fill(false);
+    let universalInspectUpWasPressed = false;
+    const xboxLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+    const xboxLookSpeedBase = 2.15;
+    const xboxMoveDeadzone = 0.16;
+    const xboxLookDeadzone = 0.12;
 
     // =========================================================
     // CONFIGURACIÓN PERSISTENTE: SENSIBILIDAD + DIFICULTAD
@@ -725,6 +1435,12 @@
     const mobileLookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
     document.body.classList.toggle('mobile-mode', mobileMode);
+    document.body.classList.toggle('gamepad-mode', xboxMode);
+    const gamepadStatusElement = document.getElementById('gamepadStatus');
+    if (xboxMode) {
+      document.getElementById('statusMessage').textContent = 'Xbox · A saltar · B agacharse · L3 sprint · LB/RB armas · X recargar · ↑ inspeccionar · RT disparar · LT apuntar · Menu pausa';
+      document.getElementById('overlayMessage').textContent = 'Conecta tu mando Xbox y presiona A o Menu para jugar';
+    }
 
     const settingsButton = document.getElementById('settingsButton');
     const settingsModal = document.getElementById('settingsModal');
@@ -735,6 +1451,14 @@
     const difficultyRange = document.getElementById('difficultyRange');
     const difficultyValue = document.getElementById('difficultyValue');
     const settingsDifficultyInfo = document.getElementById('settingsDifficultyInfo');
+    const masterVolumeRange = document.getElementById('masterVolumeRange');
+    const masterVolumeValue = document.getElementById('masterVolumeValue');
+    const sfxVolumeRange = document.getElementById('sfxVolumeRange');
+    const sfxVolumeValue = document.getElementById('sfxVolumeValue');
+    const musicVolumeRange = document.getElementById('musicVolumeRange');
+    const musicVolumeValue = document.getElementById('musicVolumeValue');
+    const ambientVolumeRange = document.getElementById('ambientVolumeRange');
+    const ambientVolumeValue = document.getElementById('ambientVolumeValue');
     let resumeAfterSettings = false;
 
     function refreshSettingsUI() {
@@ -742,6 +1466,14 @@
       difficultyRange.value = String(userDifficultyPercent);
       sensitivityValue.textContent = `${userSensitivityPercent}%`;
       difficultyValue.textContent = `${userDifficultyPercent}%`;
+      masterVolumeRange.value = String(gameAudio.settings.master);
+      masterVolumeValue.textContent = `${gameAudio.settings.master}%`;
+      sfxVolumeRange.value = String(gameAudio.settings.sfx);
+      sfxVolumeValue.textContent = `${gameAudio.settings.sfx}%`;
+      musicVolumeRange.value = String(gameAudio.settings.music);
+      musicVolumeValue.textContent = `${gameAudio.settings.music}%`;
+      ambientVolumeRange.value = String(gameAudio.settings.ambient);
+      ambientVolumeValue.textContent = `${gameAudio.settings.ambient}%`;
       settingsDifficultyInfo.textContent = userDifficultyPercent === 100
         ? '100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.'
         : `${userDifficultyPercent}% aplica un multiplicador ×${(userDifficultyPercent / 100).toFixed(2)} adicional sobre la dificultad de la ronda.`;
@@ -750,6 +1482,12 @@
     function applySettingsFromControls() {
       userSensitivityPercent = clampSetting(sensitivityRange.value, 10, 100, 5);
       userDifficultyPercent = clampSetting(difficultyRange.value, 100, 200, 25);
+      gameAudio.setSettings({
+        master: clampSetting(masterVolumeRange.value, 0, 100, 5),
+        sfx: clampSetting(sfxVolumeRange.value, 0, 100, 5),
+        music: clampSetting(musicVolumeRange.value, 0, 100, 5),
+        ambient: clampSetting(ambientVolumeRange.value, 0, 100, 5)
+      });
       controls.pointerSpeed = 0.9 * (userSensitivityPercent / 25);
       saveGameSettings();
       refreshSettingsUI();
@@ -765,8 +1503,11 @@
       primaryButtonHeld = false;
       mobileSprintHeld = false;
       mobileCrouchHeld = false;
+      xboxSprintHeld = false;
+      xboxCrouchHeld = false;
       if (typeof setSniperZoom === 'function') setSniperZoom(false);
       if (mobileMode) mobilePaused = true;
+      else if (xboxMode) xboxPaused = true;
       else if (controls.isLocked) controls.unlock();
       refreshSettingsUI();
       settingsModal.classList.add('open');
@@ -781,6 +1522,9 @@
         if (mobileMode) {
           mobilePaused = false;
           overlay.classList.add('hidden');
+        } else if (xboxMode) {
+          xboxPaused = false;
+          overlay.classList.add('hidden');
         } else {
           controls.lock();
         }
@@ -789,16 +1533,26 @@
     }
 
     settingsButton.addEventListener('click', openSettings);
+    pauseSettingsButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openSettings(event);
+    });
     settingsClose.addEventListener('click', closeSettings);
     settingsModal.addEventListener('click', (event) => {
       if (event.target === settingsModal) closeSettings(event);
     });
     sensitivityRange.addEventListener('input', applySettingsFromControls);
     difficultyRange.addEventListener('input', applySettingsFromControls);
+    masterVolumeRange.addEventListener('input', applySettingsFromControls);
+    sfxVolumeRange.addEventListener('input', applySettingsFromControls);
+    musicVolumeRange.addEventListener('input', applySettingsFromControls);
+    ambientVolumeRange.addEventListener('input', applySettingsFromControls);
     settingsReset.addEventListener('click', (event) => {
       event.preventDefault(); event.stopPropagation();
       userSensitivityPercent = 25;
       userDifficultyPercent = 100;
+      gameAudio.setSettings({ ...AUDIO_DEFAULTS });
       controls.pointerSpeed = 0.9;
       saveGameSettings();
       refreshSettingsUI();
@@ -808,9 +1562,9 @@
 
 
     function isGameplayActive() {
-      return mobileMode
-        ? gameStarted && !mobilePaused && !gameOver && !roundTransition
-        : controls.isLocked;
+      if (mobileMode) return gameStarted && !mobilePaused && !gameOver && !roundTransition;
+      if (xboxMode) return gameStarted && !xboxPaused && !gameOver && !roundTransition;
+      return controls.isLocked;
     }
 
     function rotateMobileView(deltaX, deltaY, sensitivityScale = 1) {
@@ -827,6 +1581,152 @@
       );
       camera.quaternion.setFromEuler(mobileLookEuler);
     }
+
+    function applyDeadzone(value, deadzone) {
+      const abs = Math.abs(value || 0);
+      if (abs <= deadzone) return 0;
+      return Math.sign(value) * ((abs - deadzone) / (1 - deadzone));
+    }
+
+    function getXboxGamepad() {
+      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      if (xboxGamepadIndex !== null && pads[xboxGamepadIndex]?.connected) return pads[xboxGamepadIndex];
+      for (const pad of pads) {
+        if (!pad || !pad.connected) continue;
+        const id = String(pad.id || '').toLowerCase();
+        if (pad.mapping === 'standard' || id.includes('xbox') || id.includes('xinput')) {
+          xboxGamepadIndex = pad.index;
+          return pad;
+        }
+      }
+      return null;
+    }
+
+    function xboxButtonPressed(pad, index, threshold = 0.5) {
+      const button = pad?.buttons?.[index];
+      return !!button && (button.pressed || button.value > threshold);
+    }
+
+    function startOrResumeFromXbox() {
+      if (!xboxMode || roundTransition) return;
+      overlay.click();
+    }
+
+    function updateXboxController(delta) {
+      if (!xboxMode) return;
+      const pad = getXboxGamepad();
+      if (!pad) {
+        xboxConnected = false;
+        xboxMoveX = xboxMoveY = 0;
+        xboxSprintHeld = xboxCrouchHeld = false;
+        primaryButtonHeld = false;
+        if (typeof setSniperZoom === 'function') setSniperZoom(false);
+        if (gamepadStatusElement) gamepadStatusElement.textContent = '🎮 Xbox: conecta el mando y presiona un botón';
+        return;
+      }
+      if (!xboxConnected) {
+        xboxConnected = true;
+        if (gamepadStatusElement) gamepadStatusElement.textContent = '🎮 Xbox conectado · L3 = sprint · LB/RB = armas · ↑ inspeccionar';
+      }
+
+      const pressed = (index, threshold = 0.5) => xboxButtonPressed(pad, index, threshold);
+      const justPressed = (index, threshold = 0.5) => {
+        const now = pressed(index, threshold);
+        const before = xboxPreviousButtons[index] || false;
+        return now && !before;
+      };
+
+      if ((justPressed(0) || justPressed(9)) && (!isGameplayActive() || gameOver)) {
+        startOrResumeFromXbox();
+        for (let i = 0; i < xboxPreviousButtons.length; i++) {
+          xboxPreviousButtons[i] = pressed(i, i === 6 || i === 7 ? 0.18 : 0.5);
+        }
+        return;
+      }
+
+      if (isGameplayActive()) {
+        xboxMoveX = applyDeadzone(pad.axes?.[0] || 0, xboxMoveDeadzone);
+        xboxMoveY = -applyDeadzone(pad.axes?.[1] || 0, xboxMoveDeadzone);
+
+        const lookX = applyDeadzone(pad.axes?.[2] || 0, xboxLookDeadzone);
+        const lookY = applyDeadzone(pad.axes?.[3] || 0, xboxLookDeadzone);
+        if (lookX || lookY) {
+          xboxLookEuler.setFromQuaternion(camera.quaternion);
+          const zoomFactor = (typeof sniperZoomed !== 'undefined' && sniperZoomed) ? 0.38 : 1;
+          const speed = xboxLookSpeedBase * (userSensitivityPercent / 25) * zoomFactor;
+          xboxLookEuler.y -= lookX * speed * delta;
+          xboxLookEuler.x -= lookY * speed * delta;
+          xboxLookEuler.x = THREE.MathUtils.clamp(xboxLookEuler.x, -Math.PI / 2 + 0.10, Math.PI / 2 - 0.10);
+          camera.quaternion.setFromEuler(xboxLookEuler);
+        }
+
+        xboxSprintHeld = pressed(10); // L3 = sprint, mantener
+        xboxCrouchHeld = pressed(1); // B = agacharse, mantener
+        if (justPressed(1)) tryStartSlide();
+
+        const fireHeld = pressed(7, 0.18); // RT
+        if (fireHeld && !xboxPreviousButtons[7]) primaryAttack();
+        primaryButtonHeld = fireHeld;
+
+        if (activeWeapon === 'sniper') setSniperZoom(pressed(6, 0.18)); // LT
+        else setSniperZoom(false);
+
+        if (justPressed(0)) tryPlayerJump(); // A = salto / doble salto con boost
+        if (justPressed(4)) cycleWeapon(-1); // LB = arma anterior
+        if (justPressed(5)) cycleWeapon(1);  // RB = arma siguiente
+        if (justPressed(2)) reloadCurrentWeapon();
+        // D-Pad arriba = inspeccionar arma.
+        if (justPressed(12)) inspectWeapon(); // D-Pad arriba = inspeccionar
+
+        if (justPressed(9)) { // Menu
+          primaryButtonHeld = false;
+          xboxSprintHeld = false;
+          xboxCrouchHeld = false;
+          setSniperZoom(false);
+          xboxPaused = true;
+          showOverlay('PAUSA', 'Presiona A o Menu para continuar jugando');
+        }
+      } else {
+        xboxMoveX = xboxMoveY = 0;
+        xboxSprintHeld = xboxCrouchHeld = false;
+        primaryButtonHeld = false;
+      }
+
+      for (let i = 0; i < xboxPreviousButtons.length; i++) {
+        xboxPreviousButtons[i] = pressed(i, i === 6 || i === 7 ? 0.18 : 0.5);
+      }
+    }
+
+
+    function updateUniversalGamepadInspection() {
+      // Xbox ya se procesa en updateXboxController(). Este bloque deja preparado
+      // D-Pad arriba para PlayStation/Nintendo cuando esos esquemas se habiliten.
+      if (!gamepadInspectMode || xboxMode) return;
+      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      let pad = null;
+      for (const candidate of pads) {
+        if (candidate?.connected) { pad = candidate; break; }
+      }
+      const upPressed = !!pad?.buttons?.[12] && (pad.buttons[12].pressed || pad.buttons[12].value > 0.5);
+      if (upPressed && !universalInspectUpWasPressed && isGameplayActive()) {
+        inspectWeapon();
+      }
+      universalInspectUpWasPressed = upPressed;
+    }
+
+    window.addEventListener('gamepadconnected', (event) => {
+      if (!xboxMode) return;
+      xboxGamepadIndex = event.gamepad.index;
+      xboxConnected = true;
+      if (gamepadStatusElement) gamepadStatusElement.textContent = `🎮 Xbox conectado: ${event.gamepad.id}`;
+    });
+
+    window.addEventListener('gamepaddisconnected', (event) => {
+      if (!xboxMode || event.gamepad.index !== xboxGamepadIndex) return;
+      xboxGamepadIndex = null;
+      xboxConnected = false;
+      if (gamepadStatusElement) gamepadStatusElement.textContent = '🎮 Xbox desconectado · vuelve a conectarlo';
+    });
 
     // =========================================================
     // ILUMINACIÓN
@@ -856,6 +1756,8 @@
     const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x8a542b });
     const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0x7f2f20 });
     const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xd59a6f });
+    const eliteEnemyMaterial = new THREE.MeshLambertMaterial({ color: 0x3f2b24, emissive: 0x160c08 });
+    const eliteEnemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xb77c55, emissive: 0x1d0f08 });
     const enemyDarkMaterial = new THREE.MeshLambertMaterial({ color: 0x2b1a12 });
 
     // Materiales de los obstáculos armados.
@@ -922,6 +1824,15 @@
     const armorPickups = [];
     let finalBoss = null;
     let bossActive = false;
+    let doubleJumpPickup = null;
+    let doubleJumpActive = false;
+    let jumpCount = 0;
+    const bossLassoRaycaster = new THREE.Raycaster();
+    const bossLassoStart = new THREE.Vector3();
+    const bossLassoEnd = new THREE.Vector3();
+    const bossLassoVector = new THREE.Vector3();
+    const bossLassoMid = new THREE.Vector3();
+    const bossLassoYAxis = new THREE.Vector3(0, 1, 0);
 
     function addBoxCollider(x, z, width, depth, padding = 0) {
       staticColliders.push({
@@ -1504,11 +2415,43 @@
     let sprintExhausted = false;
     let crouchActive = false;
     let currentPlayerHeight = CONFIG.playerHeight;
+    const SLIDE_DURATION = 1.0;
+    const SLIDE_SPEED_MULTIPLIER = 2.05;
+    const SLIDE_COOLDOWN_SECONDS = 0.55;
+    let slideActive = false;
+    let slideRemaining = 0;
+    let slideCooldownRemaining = 0;
+    const slideDirection = new THREE.Vector3();
+
+    function tryStartSlide() {
+      if (!isGameplayActive() || gameOver || roundTransition || slideActive) return false;
+      if (!onGround || slideCooldownRemaining > 0 || sprintExhausted || sprintEnergy <= 0.15) return false;
+      const sprintPressed = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld || xboxSprintHeld;
+      const movingForward = keys.KeyW || mobileMoveY > 0.45 || xboxMoveY > 0.45;
+      if (!sprintPressed || !movingForward) return false;
+      camera.getWorldDirection(slideDirection);
+      slideDirection.y = 0;
+      if (slideDirection.lengthSq() < 0.0001) return false;
+      slideDirection.normalize();
+      slideActive = true;
+      slideRemaining = SLIDE_DURATION;
+      slideCooldownRemaining = SLIDE_DURATION + SLIDE_COOLDOWN_SECONDS;
+      sprintEnergy = Math.max(0, sprintEnergy - 0.35);
+      crouchActive = true;
+      playerViewmodelSliding = true;
+      gameAudio.slide(getCurrentFootstepSurface());
+      updateSprintHUD();
+      return true;
+    }
 
     function updateSprintHUD() {
       const pct = THREE.MathUtils.clamp(sprintEnergy / CONFIG.sprintMaxSeconds, 0, 1);
       sprintFillElement.style.transform = `scaleX(${pct})`;
-      if (crouchActive) {
+      if (slideActive) {
+        sprintTextElement.textContent = `BARRIDA · ${slideRemaining.toFixed(1)} s · Sprint ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s`;
+        sprintStatusElement.style.color = '#f0f7ff';
+        sprintFillElement.style.background = '#b8d8ff';
+      } else if (crouchActive) {
         sprintTextElement.textContent = `AGACHADO · Velocidad ×${CONFIG.crouchSpeedMultiplier.toFixed(2)} · Sprint ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s`;
         sprintStatusElement.style.color = '#d8f7ff';
         sprintFillElement.style.background = '#a9d6df';
@@ -1517,7 +2460,8 @@
         sprintStatusElement.style.color = '#ffe28a';
         sprintFillElement.style.background = '#ffe28a';
       } else {
-        sprintTextElement.textContent = `Sprint: ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s · SHIFT ×${CONFIG.sprintMultiplier.toFixed(1)}`;
+        const sprintControlLabel = xboxMode ? 'L3' : mobileMode ? 'SPRINT' : 'SHIFT';
+        sprintTextElement.textContent = `Sprint: ${sprintEnergy.toFixed(1)}/${CONFIG.sprintMaxSeconds.toFixed(0)} s · ${sprintControlLabel} ×${CONFIG.sprintMultiplier.toFixed(1)}`;
         sprintStatusElement.style.color = '#b9f4ff';
         sprintFillElement.style.background = '#8fe9ff';
       }
@@ -1528,6 +2472,10 @@
       sprintExhausted = false;
       crouchActive = false;
       currentPlayerHeight = CONFIG.playerHeight;
+      slideActive = false;
+      slideRemaining = 0;
+      slideCooldownRemaining = 0;
+      playerViewmodelSliding = false;
       updateSprintHUD();
     }
 
@@ -1551,6 +2499,53 @@
       return Math.max(CONFIG.maxEnemies, Math.ceil(CONFIG.maxEnemies * getRoundMultiplier()));
     }
 
+    let playerHealth = CONFIG.playerMaxHealth;
+    let playerDamageCooldown = 0;
+
+    function triggerDamageFeedback() {
+      if (!damageFlashElement) return;
+      damageFlashElement.classList.remove('hit');
+      void damageFlashElement.offsetWidth;
+      damageFlashElement.classList.add('hit');
+    }
+
+    function updatePlayerHealthHUD() {
+      const ratio = THREE.MathUtils.clamp(playerHealth / CONFIG.playerMaxHealth, 0, 1);
+      playerHealthTextElement.textContent = `Vida: ${Math.ceil(playerHealth)} / ${CONFIG.playerMaxHealth}`;
+      playerHealthFillElement.style.width = `${ratio * 100}%`;
+      playerHealthFillElement.style.background = ratio > 0.60 ? '#55e176' : ratio > 0.30 ? '#ffd45b' : '#ff5656';
+      criticalHealthBorderElement?.classList.toggle('active', playerHealth > 0 && playerHealth <= 20);
+    }
+
+    function resetPlayerHealth() {
+      playerHealth = CONFIG.playerMaxHealth;
+      playerDamageCooldown = 0;
+      updatePlayerHealthHUD();
+    }
+
+    function damagePlayer(amount, reason = 'Recibiste demasiado daño.', useContactCooldown = false) {
+      if (gameOver || roundTransition || amount <= 0) return false;
+      if (useContactCooldown && playerDamageCooldown > 0) return false;
+      if (useContactCooldown) playerDamageCooldown = CONFIG.enemyContactCooldown;
+      playerHealth = Math.max(0, playerHealth - amount);
+      triggerDamageFeedback();
+      gameAudio.damage();
+      updatePlayerHealthHUD();
+      if (playerHealth <= 0) {
+        endGame(reason);
+      }
+      return true;
+    }
+
+    function getHostileProjectileDamage(projectile) {
+      if (Number.isFinite(projectile?.damage)) return projectile.damage;
+      if (projectile?.effect === 'slow') return 0;
+      const reason = String(projectile?.reason || '').toLowerCase();
+      if (reason.includes('escopeta')) return 12;
+      if (reason.includes('forajido') || reason.includes('revólver')) return 20;
+      return CONFIG.turretDamage;
+    }
+
     function getArmorCapacity(level = armorLevel) {
       if (level <= 0) return 0;
       return CONFIG.armorBaseHits + (level - 1) * CONFIG.armorHitsPerLevel;
@@ -1572,10 +2567,15 @@
     function updateBossHUD() {
       if (!bossActive || !finalBoss) {
         bossStatusElement.style.display = 'none';
+        bossHealthBarElement.style.display = 'none';
         return;
       }
       bossStatusElement.style.display = 'block';
+      bossHealthBarElement.style.display = 'block';
       bossStatusElement.textContent = `VAQUERO A CABALLO · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
+      const bossHealthRatio = THREE.MathUtils.clamp(finalBoss.health / finalBoss.maxHealth, 0, 1);
+      bossHealthFillElement.style.width = `${bossHealthRatio * 100}%`;
+      bossHealthFillElement.style.background = bossHealthRatio > 0.55 ? '#ff6b55' : bossHealthRatio > 0.25 ? '#ffae45' : '#ff3b3b';
     }
 
     function updateRoundHUD() {
@@ -1596,6 +2596,7 @@
     function absorbProjectileWithArmor() {
       if (armorLevel <= 0 || armorHitsRemaining <= 0) return false;
       armorHitsRemaining -= 1;
+      gameAudio.armor();
       if (armorHitsRemaining <= 0) {
         armorHitsRemaining = 0;
         armorLevel = 0;
@@ -1617,6 +2618,94 @@
         if (!circleIntersectsWorld(x, z, 1.0)) return { x, z };
       }
       return { x: 0, z: -8 };
+    }
+
+
+    function updateDoubleJumpHUD() {
+      if (!jumpBoostStatusElement) return;
+      if (doubleJumpActive && bossActive) {
+        jumpBoostStatusElement.textContent = 'Doble salto: ACTIVO · 2 saltos';
+        jumpBoostStatusElement.style.color = '#79f6ff';
+      } else if (bossActive && doubleJumpPickup) {
+        jumpBoostStatusElement.textContent = 'Doble salto: BOOST disponible en la arena';
+        jumpBoostStatusElement.style.color = '#ffe178';
+      } else if (bossActive) {
+        jumpBoostStatusElement.textContent = 'Doble salto: busca el boost';
+        jumpBoostStatusElement.style.color = '#d8e9ff';
+      } else {
+        jumpBoostStatusElement.textContent = 'Doble salto: solo en ronda del jefe';
+        jumpBoostStatusElement.style.color = '#b8c6d8';
+      }
+    }
+
+    function clearDoubleJumpPickup() {
+      if (doubleJumpPickup?.group) scene.remove(doubleJumpPickup.group);
+      doubleJumpPickup = null;
+      updateDoubleJumpHUD();
+    }
+
+    function resetDoubleJumpBoost() {
+      clearDoubleJumpPickup();
+      doubleJumpActive = false;
+      jumpCount = 0;
+      updateDoubleJumpHUD();
+    }
+
+    function spawnDoubleJumpBoost() {
+      clearDoubleJumpPickup();
+      doubleJumpActive = false;
+      jumpCount = 0;
+
+      const { x, z } = findPickupPosition();
+      const group = new THREE.Group();
+      group.position.set(x, 1.05, z);
+
+      const glowMaterial = new THREE.MeshLambertMaterial({
+        color: 0x65edff,
+        emissive: 0x127aa0,
+        emissiveIntensity: 1.35
+      });
+      const accentMaterial = new THREE.MeshLambertMaterial({
+        color: 0xf4fdff,
+        emissive: 0x4bdfff,
+        emissiveIntensity: 1.8
+      });
+
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 12), glowMaterial);
+      orb.castShadow = true;
+      group.add(orb);
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.075, 8, 22), accentMaterial);
+      ring.rotation.x = Math.PI / 2;
+      group.add(ring);
+
+      // Dos flechas ascendentes representan visualmente el doble salto.
+      for (let i = 0; i < 2; i++) {
+        const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.34, 5), accentMaterial);
+        arrow.position.set(0, 0.22 + i * 0.34, 0);
+        group.add(arrow);
+      }
+
+      scene.add(group);
+      doubleJumpPickup = { group, bob: Math.random() * Math.PI * 2 };
+      updateDoubleJumpHUD();
+    }
+
+    function updateDoubleJumpBoost(delta, elapsedTime) {
+      if (!doubleJumpPickup || !bossActive || gameOver) return;
+      const group = doubleJumpPickup.group;
+      group.rotation.y += delta * 2.4;
+      group.position.y = 1.05 + Math.sin(elapsedTime * 3.0 + doubleJumpPickup.bob) * 0.18;
+
+      const distance = Math.hypot(camera.position.x - group.position.x, camera.position.z - group.position.z);
+      if (distance <= 1.25) {
+        scene.remove(group);
+        doubleJumpPickup = null;
+        doubleJumpActive = true;
+          gameAudio.pickup();
+        jumpCount = onGround ? 0 : Math.max(1, jumpCount);
+        updateDoubleJumpHUD();
+      }
     }
 
     function spawnArmorPickup(type) {
@@ -1673,6 +2762,7 @@
             armorHitsRemaining = getArmorCapacity(armorLevel);
           } else if (armorLevel > 0) {
             armorLevel = Math.min(CONFIG.armorMaxLevel, armorLevel + 1);
+          gameAudio.pickup();
             armorHitsRemaining = getArmorCapacity(armorLevel);
           }
           scene.remove(pickup.group);
@@ -1699,6 +2789,7 @@
     const projectilePath = new THREE.Line3();
 
     function fireTurret(turret) {
+      gameAudio.hostile('turret');
       // IMPORTANTE: se toma una instantánea de la posición EXACTA del
       // jugador en el momento del disparo. La bala no te sigue después.
       turretTarget.copy(camera.position);
@@ -1783,8 +2874,8 @@
         if (hitPlayer) {
           removeTurretProjectile(i);
           if (!absorbProjectileWithArmor()) {
-            endGame(projectile.reason || 'Una torreta te alcanzó.');
-            return;
+            damagePlayer(getHostileProjectileDamage(projectile), projectile.reason || 'Una torreta te alcanzó.');
+            if (gameOver) return;
           }
           continue;
         }
@@ -1807,7 +2898,8 @@
     function spawnHostileProjectile(origin, direction, speed, {
       scale = 1,
       material = turretProjectileMaterial,
-      reason = 'Un disparo enemigo te alcanzó.'
+      reason = 'Un disparo enemigo te alcanzó.',
+      damage = null
     } = {}) {
       const projectile = new THREE.Mesh(turretProjectileGeometry, material);
       projectile.scale.setScalar(scale);
@@ -1818,13 +2910,15 @@
         mesh: projectile,
         velocity: direction.clone().normalize().multiplyScalar(speed),
         life: CONFIG.turretProjectileMaxLife,
-        reason
+        reason,
+        damage
       });
     }
 
     function fireEnemyRevolver(enemy) {
       if (!enemy?.revolverMuzzle || gameOver || bossActive) return;
       enemy.revolverMuzzle.getWorldPosition(turretMuzzlePosition);
+      gameAudio.hostile('revolver');
       turretTarget.copy(camera.position);
       turretTarget.y -= 0.12;
       turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
@@ -1832,11 +2926,11 @@
         turretMuzzlePosition,
         turretDirection,
         CONFIG.enemyRevolverProjectileSpeed * getRoundMultiplier(),
-        { scale: 0.58, reason: 'Un forajido te alcanzó con su revólver.' }
+        { scale: 0.58, reason: enemy.isElite ? 'Un pistolero veterano te alcanzó.' : 'Un forajido te alcanzó con su revólver.', damage: enemy.isElite ? 18 : 14 }
       );
       enemy.fireAnimRemaining = CONFIG.enemyFireAnimationSeconds;
       enemy.muzzleFlash.visible = true;
-      enemy.shotTimer += CONFIG.enemyRevolverShotSeconds;
+      enemy.shotTimer += CONFIG.enemyRevolverShotSeconds * (enemy.isElite ? 0.70 : 1);
     }
 
     // =========================================================
@@ -2074,6 +3168,36 @@
     revolverMuzzle.position.set(0.36, -0.22, -1.58);
     revolverGroup.add(revolverMuzzle);
 
+
+    // Contenedores independientes para las animaciones del viewmodel.
+    // El arma conserva sus propias animaciones (recarga, cerrojo, espada, etc.)
+    // mientras el contenedor maneja equipar/caminar/correr/agacharse sin acumular offsets.
+    function createStableViewmodelRoot(group) {
+      const root = new THREE.Group();
+      camera.remove(group);
+      group.visible = true;
+      root.add(group);
+      camera.add(root);
+      root.position.set(0, 0, 0);
+      root.rotation.set(0, 0, 0);
+      root.visible = false;
+      return root;
+    }
+
+    const pistolViewmodelRoot = createStableViewmodelRoot(weaponGroup);
+    const sniperViewmodelRoot = createStableViewmodelRoot(sniperGroup);
+    const swordViewmodelRoot = createStableViewmodelRoot(swordGroup);
+    const machineGunViewmodelRoot = createStableViewmodelRoot(machineGunGroup);
+    const revolverViewmodelRoot = createStableViewmodelRoot(revolverGroup);
+
+    const viewmodelGroups = {
+      pistol: pistolViewmodelRoot,
+      sniper: sniperViewmodelRoot,
+      sword: swordViewmodelRoot,
+      machinegun: machineGunViewmodelRoot,
+      revolver: revolverViewmodelRoot,
+    };
+
     // =========================================================
     // ENEMIGOS
     // =========================================================
@@ -2111,6 +3235,41 @@
       return true;
     }
 
+    function attachEntityHealthBar(entity) {
+      if (!entity?.group || entity.isBoss) return;
+      const holder = new THREE.Group();
+      holder.position.set(0, 2.35, 0);
+
+      const bg = new THREE.Sprite(new THREE.SpriteMaterial({
+        color: 0x151515, transparent: true, opacity: 0.88, depthTest: false, depthWrite: false
+      }));
+      bg.scale.set(1.55, 0.16, 1);
+      bg.renderOrder = 50;
+
+      const fill = new THREE.Sprite(new THREE.SpriteMaterial({
+        color: 0x55e176, depthTest: false, depthWrite: false
+      }));
+      fill.center.set(0, 0.5);
+      fill.position.set(-0.72, 0, 0.01);
+      fill.scale.set(1.44, 0.10, 1);
+      fill.renderOrder = 51;
+
+      holder.add(bg, fill);
+      entity.group.add(holder);
+      entity.healthBar = holder;
+      entity.healthFill = fill;
+      entity.healthFillBaseWidth = 1.44;
+      updateEntityHealthBar(entity);
+    }
+
+    function updateEntityHealthBar(entity) {
+      if (!entity?.healthFill) return;
+      const ratio = THREE.MathUtils.clamp(entity.health / entity.maxHealth, 0, 1);
+      entity.healthFill.scale.x = Math.max(0.001, entity.healthFillBaseWidth * ratio);
+      entity.healthFill.material.color.setHex(ratio > 0.60 ? 0x55e176 : ratio > 0.30 ? 0xffd45b : 0xff5656);
+      entity.healthBar.visible = ratio > 0 && ratio < 1 ? true : ratio > 0;
+    }
+
     function spawnEnemy() {
       if (enemies.length >= getMaxEnemies() || gameOver) return;
 
@@ -2142,16 +3301,19 @@
 
       if (!found) return;
 
+      const forceElite = currentRound >= CONFIG.eliteStartRound && defeatedEnemies === 0 && !enemies.some((enemy) => enemy.isElite);
+      const isElite = currentRound >= CONFIG.eliteStartRound && (forceElite || Math.random() < CONFIG.eliteSpawnChance);
       const group = new THREE.Group();
       group.position.set(spawnX, 0, spawnZ);
+      if (isElite) group.scale.setScalar(1.08);
 
-      const body = new THREE.Mesh(enemyBodyGeometry, enemyMaterial);
+      const body = new THREE.Mesh(enemyBodyGeometry, isElite ? eliteEnemyMaterial : enemyMaterial);
       body.position.set(0, 1.02, 0);
       body.castShadow = true;
       body.receiveShadow = true;
       group.add(body);
 
-      const head = new THREE.Mesh(enemyHeadGeometry, enemyHeadMaterial);
+      const head = new THREE.Mesh(enemyHeadGeometry, isElite ? eliteEnemyHeadMaterial : enemyHeadMaterial);
       head.position.set(0, 1.78, 0.04);
       head.castShadow = true;
       group.add(head);
@@ -2189,7 +3351,7 @@
       gunArmPivot.position.set(-0.47, 1.36, 0.08);
       group.add(gunArmPivot);
 
-      const gunArm = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.11, 0.62, 8), enemyHeadMaterial);
+      const gunArm = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.11, 0.62, 8), isElite ? eliteEnemyHeadMaterial : enemyHeadMaterial);
       gunArm.rotation.x = Math.PI / 2;
       gunArm.position.z = 0.28;
       gunArm.castShadow = true;
@@ -2223,23 +3385,27 @@
       muzzleFlash.visible = false;
       revolver.add(muzzleFlash);
 
+      const enemyHealth = isElite ? CONFIG.eliteEnemyHealth : CONFIG.normalEnemyHealth;
       const enemy = {
         group,
         body,
         head,
         hitMeshes: [body, head, hatBrim, hatTop, bandana, ...legs],
-        speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier(),
-        radius: CONFIG.enemyRadius,
-        health: 1,
-        maxHealth: 1,
+        speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier() * (isElite ? CONFIG.eliteSpeedMultiplier : 1),
+        radius: CONFIG.enemyRadius * (isElite ? 1.06 : 1),
+        health: enemyHealth,
+        maxHealth: enemyHealth,
+        isElite,
         isBoss: false,
         bobOffset: Math.random() * Math.PI * 2,
         gunArmPivot,
         revolverMuzzle: enemyRevolverMuzzle,
         muzzleFlash,
-        shotTimer: randomRange(1.4, CONFIG.enemyRevolverShotSeconds),
+        shotTimer: randomRange(1.4, isElite ? CONFIG.enemyRevolverShotSeconds * 0.70 : CONFIG.enemyRevolverShotSeconds),
         fireAnimRemaining: 0
       };
+
+      attachEntityHealthBar(enemy);
 
       for (const mesh of enemy.hitMeshes) {
         mesh.userData.enemyRef = enemy;
@@ -2248,6 +3414,7 @@
       enemyHitMeshes.push(...enemy.hitMeshes);
       enemies.push(enemy);
       scene.add(group);
+      gameAudio.enemySpawn();
       updateEnemyCount();
     }
 
@@ -2344,8 +3511,13 @@
         );
 
         if (updatedDistance < CONFIG.playerRadius + (enemy.radius || CONFIG.enemyRadius) + 0.12) {
-          endGame();
-          break;
+          const contactDamage = enemy.isBoss ? (CONFIG.bossContactDamage ?? CONFIG.enemyContactDamage + 20) : CONFIG.enemyContactDamage;
+          damagePlayer(contactDamage, enemy.isBoss ? 'El jefe te arrolló.' : 'Un enemigo te alcanzó.', true);
+          if (distance > 0.0001 && !enemy.isBoss) {
+            enemy.group.position.x -= (dx / distance) * 0.55;
+            enemy.group.position.z -= (dz / distance) * 0.55;
+          }
+          if (gameOver) break;
         }
       }
     }
@@ -2370,6 +3542,32 @@
     let defeatedEnemies = 0;
     let lastShotTime = 0;
     let weaponFlashTimer = null;
+
+    let viewmodelBobTime = 0;
+    let weaponEquipProgress = 1;
+    let weaponHolsterProgress = 1;
+    let holsteredWeapon = null;
+    let playerViewmodelMoving = false;
+    let playerViewmodelSprinting = false;
+    let playerViewmodelCrouching = false;
+    let viewmodelWasAirborne = false;
+    let viewmodelLandingKick = 0;
+    let viewmodelRecoil = 0;
+    let playerViewmodelSliding = false;
+    let inspectingWeapon = false;
+    let inspectProgress = 0;
+    const inspectDuration = 1.45;
+
+    function setVisibleWeaponGroups(activeName, holsterName = null) {
+      for (const [name, group] of Object.entries(viewmodelGroups)) {
+        group.visible = name === activeName || name === holsterName;
+      }
+    }
+
+    function triggerViewmodelRecoil(amount) {
+      // Retroceso desactivado: no modifica cámara ni viewmodel.
+      viewmodelRecoil = 0;
+    }
     let victoryTimer = null;
     let roundTransition = false;
     let sniperZoomed = false;
@@ -2437,6 +3635,45 @@
         `Derrotados: ${defeatedEnemies} / ${CONFIG.enemiesToWin}`;
     }
 
+
+    function isWeaponBusyForInspection() {
+      if (sniperAction !== 'idle') return true;
+      if (machineGunReloading) return true;
+      if (typeof revolverReloading !== 'undefined' && revolverReloading) return true;
+      if (swordSwingRemaining > 0) return true;
+      return false;
+    }
+
+    function inspectWeapon() {
+      if (!isGameplayActive() || gameOver || roundTransition) return;
+      if (inspectingWeapon || holsteredWeapon || weaponEquipProgress < 0.92) return;
+      if (isWeaponBusyForInspection()) return;
+
+      setSniperZoom(false);
+      primaryButtonHeld = false;
+      inspectingWeapon = true;
+      gameAudio.inspect();
+      inspectProgress = 0;
+      updateWeaponStatus();
+    }
+
+    function updateEquippedWeaponCard() {
+      if (!equippedWeaponIconElement || !equippedWeaponNameElement) return;
+      equippedWeaponNameElement.textContent = WEAPON_LABELS[activeWeapon] || activeWeapon;
+
+      const common = 'fill="#d8e1ea" stroke="#647789" stroke-width="2" stroke-linejoin="round"';
+      const dark = 'fill="#28323b" stroke="#647789" stroke-width="2" stroke-linejoin="round"';
+      const wood = 'fill="#7c5435" stroke="#5b3b25" stroke-width="2"';
+      const icons = {
+        pistol: `<g ${common}><rect x="48" y="21" width="76" height="18" rx="4"/><rect x="92" y="37" width="22" height="25" rx="3" transform="rotate(12 103 49)"/></g><rect x="119" y="26" width="26" height="7" rx="2" ${dark}/><circle cx="66" cy="45" r="8" fill="none" stroke="#8da0b2" stroke-width="3"/>`,
+        sniper: `<rect x="17" y="30" width="128" height="12" rx="4" ${common}/><rect x="111" y="27" width="53" height="5" rx="2" ${dark}/><rect x="26" y="41" width="31" height="16" rx="3" ${wood}/><rect x="75" y="42" width="14" height="21" rx="2" ${dark}/><rect x="55" y="17" width="55" height="9" rx="4" ${dark}/><circle cx="64" cy="21.5" r="8" fill="#202b35" stroke="#718598" stroke-width="2"/><circle cx="101" cy="21.5" r="8" fill="#202b35" stroke="#718598" stroke-width="2"/>`,
+        sword: `<path d="M38 55 L128 14 L137 23 L50 62 Z" ${common}/><rect x="30" y="50" width="34" height="7" rx="3" fill="#c5a05a"/><rect x="20" y="55" width="27" height="10" rx="4" ${wood}/><circle cx="18" cy="61" r="6" fill="#c5a05a"/>`,
+        machinegun: `<rect x="34" y="25" width="92" height="18" rx="4" ${common}/><rect x="120" y="30" width="43" height="7" rx="3" ${dark}/><rect x="68" y="43" width="17" height="24" rx="2" transform="rotate(-8 76 55)" ${dark}/><rect x="38" y="42" width="22" height="16" rx="3" ${dark}/><rect x="20" y="29" width="23" height="8" rx="2" ${dark}/><rect x="48" y="18" width="55" height="5" rx="2" fill="#52606d"/>`,
+        revolver: `<rect x="51" y="26" width="67" height="15" rx="5" ${common}/><rect x="112" y="30" width="44" height="6" rx="3" ${dark}/><circle cx="83" cy="35" r="13" fill="#58616a" stroke="#8393a0" stroke-width="2"/><rect x="79" y="43" width="23" height="23" rx="4" transform="rotate(14 90 54)" ${wood}/><path d="M57 23 L66 16 L75 24" fill="#2a3138" stroke="#647789" stroke-width="2"/>`
+      };
+      equippedWeaponIconElement.innerHTML = icons[activeWeapon] || icons.pistol;
+    }
+
     function updateWeaponStatus() {
       const extra = activeWeapon === 'sniper'
         ? ' · Clic derecho: zoom'
@@ -2449,8 +3686,9 @@
               : '';
 
       weaponStatusElement.textContent =
-        `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}`;
+        `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}${inspectingWeapon ? ' · INSPECCIONANDO' : ''}`;
       updateAmmoHUD();
+      updateEquippedWeaponCard();
     }
 
     function updateAmmoHUD() {
@@ -2525,20 +3763,31 @@
       if (!WEAPON_ORDER.includes(name)) return;
 
       setSniperZoom(false);
+      inspectingWeapon = false;
+      inspectProgress = 0;
+      holsteredWeapon = activeWeapon && activeWeapon !== name ? activeWeapon : null;
       activeWeapon = name;
-      weaponGroup.visible = name === 'pistol';
-      sniperGroup.visible = name === 'sniper';
-      swordGroup.visible = name === 'sword';
-      machineGunGroup.visible = name === 'machinegun';
-      revolverGroup.visible = name === 'revolver';
+      gameAudio.equip();
+      weaponEquipProgress = 0;
+      weaponHolsterProgress = 0;
+      viewmodelRecoil = 0;
+      setVisibleWeaponGroups(activeWeapon, holsteredWeapon);
+
+      const newRoot = viewmodelGroups[activeWeapon];
+      if (newRoot) {
+        newRoot.position.set(0, -0.48, 0.28);
+        newRoot.rotation.set(-0.10, 0, 0.30);
+      }
+
       lastShotTime = 0;
       updateWeaponStatus();
     }
 
-    function cycleWeapon() {
-      if (!isGameplayActive() || gameOver) return;
+    function cycleWeapon(direction = 1) {
+      if (!isGameplayActive() || gameOver || inspectingWeapon) return;
       const index = WEAPON_ORDER.indexOf(activeWeapon);
-      equipWeapon(WEAPON_ORDER[(index + 1) % WEAPON_ORDER.length]);
+      const nextIndex = (index + direction + WEAPON_ORDER.length) % WEAPON_ORDER.length;
+      equipWeapon(WEAPON_ORDER[nextIndex]);
     }
 
     function flashFirearm(material, baseColor) {
@@ -2606,7 +3855,10 @@
     function registerEnemyDefeat(enemy) {
       if (!enemy || gameOver) return;
 
-      enemy.health = Math.max(0, (enemy.health ?? 1) - 1);
+      const hitDamage = activeWeapon === 'sniper' ? 3 : activeWeapon === 'sword' ? 2 : activeWeapon === 'revolver' ? 2 : 1;
+      enemy.health = Math.max(0, (enemy.health ?? 1) - hitDamage);
+      gameAudio.enemyHit();
+      updateEntityHealthBar(enemy);
 
       if (enemy.isBoss) {
         updateBossHUD();
@@ -2620,6 +3872,7 @@
       }
 
       if (enemy.health > 0) return;
+      gameAudio.enemyDeath();
       removeEnemy(enemy);
       setScore(score + CONFIG.pointsPerEnemy);
       setDefeatedEnemies(defeatedEnemies + 1);
@@ -2644,6 +3897,8 @@
       const now = performance.now();
       if (now - lastShotTime < CONFIG.shootCooldownMs) return;
       lastShotTime = now;
+      triggerViewmodelRecoil(0.50);
+      gameAudio.gun('pistol');
 
       flashFirearm(weaponMaterial, 0x2d3436);
       const hit = getFirstWeaponIntersection(CONFIG.shootDistance);
@@ -2662,6 +3917,7 @@
     function startSniperMagazineReload() {
       if (sniperAction === 'magazine') return;
       setSniperZoom(false);
+      gameAudio.reload('sniper');
       sniperAction = 'magazine';
       sniperActionRemaining = CONFIG.sniperMagazineReloadSeconds;
       updateAmmoHUD();
@@ -2678,6 +3934,8 @@
       if (now - lastShotTime < CONFIG.sniperCooldownMs) return;
       lastShotTime = now;
       sniperAmmo -= 1;
+      triggerViewmodelRecoil(1.32);
+      gameAudio.gun('sniper');
 
       flashFirearm(sniperBodyMaterial, 0x314238);
       const hit = getFirstWeaponIntersection(CONFIG.sniperDistance);
@@ -2706,6 +3964,7 @@
       if (machineGunMagazineAmmo >= CONFIG.machineGunMagazineSize) return;
       if (machineGunReserveAmmo <= 0) return;
 
+      gameAudio.reload('machinegun');
       machineGunReloading = true;
       machineGunReloadRemaining = CONFIG.machineGunReloadSeconds;
       updateAmmoHUD();
@@ -2723,6 +3982,8 @@
       if (now - lastShotTime < CONFIG.machineGunFireIntervalMs) return;
       lastShotTime = now;
       machineGunMagazineAmmo -= 1;
+      triggerViewmodelRecoil(0.24);
+      gameAudio.gun('machinegun');
 
       flashFirearm(machineGunBodyMaterial, 0x3b4147);
       const hit = getFirstWeaponIntersection(CONFIG.machineGunDistance);
@@ -2749,6 +4010,7 @@
       if (revolverReloading) return;
       if (revolverCylinderAmmo >= CONFIG.revolverCylinderSize) return;
       if (revolverReserveAmmo <= 0) return;
+      gameAudio.reload('revolver');
       revolverReloading = true;
       revolverReloadRemaining = CONFIG.revolverReloadSeconds;
       updateAmmoHUD();
@@ -2764,6 +4026,8 @@
       if (now - lastShotTime < CONFIG.revolverCooldownMs) return;
       lastShotTime = now;
       revolverCylinderAmmo -= 1;
+      triggerViewmodelRecoil(0.96);
+      gameAudio.gun('revolver');
       revolverKickRemaining = revolverKickDuration;
       revolverCylinder.rotation.z += Math.PI / 3;
       flashFirearm(revolverMetalMaterial, 0x303236);
@@ -2782,7 +4046,7 @@
     }
 
     function reloadCurrentWeapon() {
-      if (!isGameplayActive() || gameOver) return;
+      if (!isGameplayActive() || gameOver || inspectingWeapon) return;
       if (activeWeapon === 'sniper') {
         if (sniperAmmo < CONFIG.sniperMagazineSize && sniperAction === 'idle') {
           startSniperMagazineReload();
@@ -2826,6 +4090,7 @@
             }
             sniperAction = 'idle';
             sniperActionRemaining = 0;
+            gameAudio.reloadFinish();
           }
           updateAmmoHUD();
         }
@@ -2845,6 +4110,7 @@
           machineGunMagazineAmmo += loaded;
           machineGunReserveAmmo -= loaded;
           machineGunReloading = false;
+          gameAudio.reloadFinish();
           machineGunGroup.position.set(0, 0, 0);
           machineGunGroup.rotation.set(0, 0, 0);
           machineGunMagazine.position.set(0.34, -0.48, -0.78);
@@ -2865,6 +4131,7 @@
           revolverCylinderAmmo += loaded;
           revolverReserveAmmo -= loaded;
           revolverReloading = false;
+          gameAudio.reloadFinish();
           revolverGroup.position.set(0, 0, 0);
           revolverGroup.rotation.set(0, 0, 0);
           revolverCylinder.rotation.y = 0;
@@ -2889,6 +4156,7 @@
       lastShotTime = now;
 
       swordSwingRemaining = swordSwingDuration;
+      gameAudio.sword();
       swordBladeMaterial.emissive.setHex(0x5b879d);
 
       const hit = getFirstWeaponIntersection(CONFIG.swordRange);
@@ -2915,8 +4183,175 @@
       }
     }
 
+
+    function updateViewmodelAnimations(delta) {
+      weaponEquipProgress = Math.min(1, weaponEquipProgress + delta * 7.5);
+
+      const viewmodelAirborne = !onGround;
+      if (viewmodelWasAirborne && !viewmodelAirborne) {
+        viewmodelLandingKick = 1;
+      }
+      viewmodelWasAirborne = viewmodelAirborne;
+      viewmodelLandingKick = Math.max(0, viewmodelLandingKick - delta * 5.5);
+      viewmodelRecoil = 0;
+
+      if (inspectingWeapon) {
+        inspectProgress = Math.min(inspectDuration, inspectProgress + delta);
+        if (inspectProgress >= inspectDuration) {
+          inspectingWeapon = false;
+          inspectProgress = 0;
+          updateWeaponStatus();
+        }
+      }
+
+      if (holsteredWeapon) {
+        weaponHolsterProgress = Math.min(1, weaponHolsterProgress + delta * 9.0);
+        if (weaponHolsterProgress >= 1) {
+          const oldRoot = viewmodelGroups[holsteredWeapon];
+          if (oldRoot) {
+            oldRoot.visible = false;
+            oldRoot.position.set(0, 0, 0);
+            oldRoot.rotation.set(0, 0, 0);
+          }
+          holsteredWeapon = null;
+        }
+      }
+
+      const bobSpeed = playerViewmodelSprinting ? 15.0 : playerViewmodelCrouching ? 6.5 : 9.5;
+      if (playerViewmodelMoving) {
+        viewmodelBobTime += delta * bobSpeed;
+      } else {
+        viewmodelBobTime += delta * 2.5;
+      }
+
+      for (const [name, root] of Object.entries(viewmodelGroups)) {
+        if (!root.visible) continue;
+
+        const active = name === activeWeapon;
+        const holstering = name === holsteredWeapon;
+        if (!active && !holstering) continue;
+
+        let targetX = 0;
+        let targetY = 0;
+        let targetZ = 0;
+        let targetRX = 0;
+        let targetRY = 0;
+        let targetRZ = 0;
+
+        // Caminar: bob pequeño y estable, siempre calculado desde cero.
+        if (active && !inspectingWeapon && playerViewmodelMoving && !playerViewmodelSprinting) {
+          const amp = playerViewmodelCrouching ? 0.009 : 0.018;
+          targetX += Math.cos(viewmodelBobTime * 0.5) * amp;
+          targetY += Math.abs(Math.sin(viewmodelBobTime)) * amp * 0.65;
+          targetRZ += Math.sin(viewmodelBobTime) * amp * 0.35;
+          targetRX += Math.abs(Math.sin(viewmodelBobTime)) * amp * 0.9;
+        }
+
+        // Sprint: arma baja e inclinada, con bob más fuerte.
+        if (active && !inspectingWeapon && playerViewmodelSprinting) {
+          targetX += 0.045 + Math.cos(viewmodelBobTime * 0.55) * 0.020;
+          targetY += -0.10 + Math.abs(Math.sin(viewmodelBobTime)) * 0.018;
+          targetZ += 0.12;
+          targetRX += -0.22;
+          targetRY += 0.10;
+          targetRZ += -0.28 + Math.sin(viewmodelBobTime) * 0.025;
+        }
+
+        // Barrida: viewmodel bajo y ladeado durante un segundo.
+        if (active && !inspectingWeapon && playerViewmodelSliding) {
+          const slideT = THREE.MathUtils.clamp(1 - slideRemaining / SLIDE_DURATION, 0, 1);
+          const settle = Math.sin(Math.PI * slideT);
+          targetX += 0.055;
+          targetY -= 0.19 + 0.055 * settle;
+          targetZ += 0.10;
+          targetRX -= 0.18;
+          targetRY += 0.05;
+          targetRZ += 0.26 - 0.08 * settle;
+        }
+
+        // Agachado: el arma baja ligeramente y se mueve menos.
+        if (active && !inspectingWeapon && playerViewmodelCrouching && !playerViewmodelSliding) {
+          targetY -= 0.10;
+          targetZ += 0.035;
+          targetRX -= 0.035;
+        }
+
+        // Salto: el arma acompaña el impulso vertical y vuelve con un pequeño impacto al aterrizar.
+        if (active && !inspectingWeapon && viewmodelAirborne) {
+          const verticalRatio = THREE.MathUtils.clamp(verticalVelocity / CONFIG.jumpSpeed, -1, 1);
+          const ascending = Math.max(0, verticalRatio);
+          const falling = Math.max(0, -verticalRatio);
+          targetY += -0.055 - ascending * 0.070 + falling * 0.025;
+          targetZ += 0.070 + ascending * 0.025;
+          targetRX += -0.105 + ascending * 0.040 - falling * 0.020;
+          targetRZ += 0.035 * Math.sin(viewmodelBobTime * 0.7);
+        }
+
+        if (active && !inspectingWeapon && viewmodelLandingKick > 0) {
+          const kick = viewmodelLandingKick * viewmodelLandingKick;
+          targetY -= 0.055 * kick;
+          targetZ += 0.035 * kick;
+          targetRX += 0.085 * kick;
+        }
+
+        // Inspección: acerca y rota el arma sin modificar el modelo interno.
+        if (active && inspectingWeapon) {
+          const t = THREE.MathUtils.clamp(inspectProgress / inspectDuration, 0, 1);
+          const lift = Math.sin(Math.PI * t);
+          const turn = Math.sin(Math.PI * t) * Math.sin(Math.PI * Math.min(1, t * 1.25));
+          targetX += -0.13 * lift;
+          targetY += 0.12 * lift;
+          targetZ += -0.10 * lift;
+
+          if (name === 'sword') {
+            targetRX += 0.22 * lift;
+            targetRY += 1.05 * turn;
+            targetRZ += 0.38 * Math.sin(t * Math.PI * 2) * lift;
+          } else if (name === 'sniper' || name === 'machinegun') {
+            targetRX += 0.16 * lift;
+            targetRY += 0.72 * turn;
+            targetRZ += -0.16 * lift + 0.10 * Math.sin(t * Math.PI * 2) * lift;
+          } else {
+            // Pistola y revólver: giro más marcado para ver laterales/cilindro.
+            targetRX += 0.12 * lift;
+            targetRY += 1.00 * turn;
+            targetRZ += 0.20 * Math.sin(t * Math.PI * 2) * lift;
+          }
+        }
+
+        // Equipar: entra desde abajo, sin afectar el transform interno del arma.
+        if (active && weaponEquipProgress < 1) {
+          const t = 1 - weaponEquipProgress;
+          const eased = t * t;
+          targetY -= 0.48 * eased;
+          targetZ += 0.28 * eased;
+          targetRX -= 0.10 * eased;
+          targetRZ += 0.30 * eased;
+        }
+
+        // Desequipar: el arma anterior sale hacia abajo y luego se oculta.
+        if (holstering) {
+          const t = weaponHolsterProgress;
+          const eased = t * t;
+          targetY -= 0.52 * eased;
+          targetZ += 0.26 * eased;
+          targetRY += 0.08 * eased;
+          targetRZ -= 0.32 * eased;
+        }
+
+        const smooth = holstering ? 24 : 18;
+        root.position.x = THREE.MathUtils.damp(root.position.x, targetX, smooth, delta);
+        root.position.y = THREE.MathUtils.damp(root.position.y, targetY, smooth, delta);
+        root.position.z = THREE.MathUtils.damp(root.position.z, targetZ, smooth, delta);
+        root.rotation.x = THREE.MathUtils.damp(root.rotation.x, targetRX, smooth, delta);
+        root.rotation.y = THREE.MathUtils.damp(root.rotation.y, targetRY, smooth, delta);
+        root.rotation.z = THREE.MathUtils.damp(root.rotation.z, targetRZ, smooth, delta);
+      }
+    }
+
     function primaryAttack() {
       if (!isGameplayActive() || gameOver) return;
+      if (weaponEquipProgress < 0.65 || holsteredWeapon || inspectingWeapon) return;
 
       if (activeWeapon === 'sniper') {
         shootSniper();
@@ -2935,6 +4370,8 @@
       clearEnemies();
       clearArmorPickups();
       bossActive = true;
+      gameAudio.bossIntro();
+      if (isGameplayActive()) gameAudio.setMusic('boss');
 
       const group = new THREE.Group();
       group.position.set(0, 0, -30);
@@ -3021,17 +4458,35 @@
       shotgunFlash.visible = false;
       shotgunPivot.add(shotgunFlash);
 
+      // Lazo funcional: sale de la mano derecha del vaquero y puede arrastrar al jugador.
+      const lassoAnchor = new THREE.Object3D();
+      lassoAnchor.position.set(0.78, 1.62, 0.24);
+      rider.add(lassoAnchor);
+      const lassoMaterial = new THREE.MeshLambertMaterial({ color: 0xc99a55, emissive: 0x2a1708 });
+      const lassoRope = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1, 8), lassoMaterial);
+      lassoRope.visible = false;
+      lassoRope.castShadow = true;
+      scene.add(lassoRope);
+      const lassoRing = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.045, 8, 20), lassoMaterial);
+      lassoRing.visible = false;
+      lassoRing.rotation.x = Math.PI / 2;
+      scene.add(lassoRing);
+
       const boss = {
         group, body, head, horseBody, horseHead, horseLegs,
         shotgunPivot, shotgunMuzzle, shotgunFlash,
+        lassoAnchor, lassoRope, lassoRing,
         hitMeshes: [body, head, hatBrim, hatTop, horseBody, horseHead, shotgunStock, shotgunBarrelA, shotgunBarrelB],
         radius: 2.35,
         speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier * (userDifficultyPercent / 100),
         health: CONFIG.bossMaxHealth,
         maxHealth: CONFIG.bossMaxHealth,
         isBoss: true,
-        bossShotTimer: 1.6,
+        bossShotTimer: 1.05,
         shotgunRecoil: 0,
+        lassoTimer: 3.2,
+        lassoActive: false,
+        lassoRemaining: 0,
         bobOffset: 0
       };
 
@@ -3046,7 +4501,94 @@
       updateRoundHUD();
     }
 
+    function setBossLassoVisible(boss, visible) {
+      gameAudio.hostile('lasso');
+      if (!boss) return;
+      if (boss.lassoRope) boss.lassoRope.visible = visible;
+      if (boss.lassoRing) boss.lassoRing.visible = visible;
+    }
+
+    function updateBossLassoVisual(boss) {
+      if (!boss?.lassoAnchor || !boss?.lassoRope || !boss?.lassoRing) return;
+      boss.lassoAnchor.getWorldPosition(bossLassoStart);
+      bossLassoEnd.copy(camera.position);
+      bossLassoEnd.y = Math.max(0.85, camera.position.y - 0.32);
+      bossLassoVector.subVectors(bossLassoEnd, bossLassoStart);
+      const length = bossLassoVector.length();
+      if (length <= 0.01) return;
+      bossLassoMid.copy(bossLassoStart).add(bossLassoEnd).multiplyScalar(0.5);
+      boss.lassoRope.position.copy(bossLassoMid);
+      boss.lassoRope.scale.set(1, length, 1);
+      boss.lassoRope.quaternion.setFromUnitVectors(bossLassoYAxis, bossLassoVector.clone().normalize());
+      boss.lassoRing.position.copy(bossLassoEnd);
+      boss.lassoRing.lookAt(camera.position.x, camera.position.y + 1, camera.position.z + 0.01);
+    }
+
+    function releaseBossLasso(boss) {
+      if (!boss) return;
+      boss.lassoActive = false;
+      boss.lassoRemaining = 0;
+      boss.lassoTimer = CONFIG.bossLassoCooldownSeconds;
+      setBossLassoVisible(boss, false);
+      if (statusMessageElement) {
+        statusMessageElement.textContent = xboxMode
+          ? 'Xbox · A saltar · B agacharse · L3 sprint · LB/RB armas · X recargar · ↑ inspeccionar · RT disparar · LT apuntar · Menu pausa'
+          : mobileMode ? 'Controles táctiles activos' : 'ESC: pausa';
+      }
+    }
+
+    function tryBossLasso(boss) {
+      if (!boss?.lassoAnchor || boss.lassoActive) return;
+      boss.lassoAnchor.getWorldPosition(bossLassoStart);
+      bossLassoEnd.copy(camera.position);
+      bossLassoVector.subVectors(bossLassoEnd, bossLassoStart);
+      const distance = bossLassoVector.length();
+      if (distance > CONFIG.bossLassoRange || distance < 3.0) {
+        boss.lassoTimer = 1.0;
+        return;
+      }
+
+      bossLassoRaycaster.set(bossLassoStart, bossLassoVector.clone().normalize());
+      bossLassoRaycaster.far = distance;
+      const blocker = bossLassoRaycaster.intersectObjects(shotBlockers, false)[0];
+      if (blocker && blocker.distance < distance - 0.65) {
+        boss.lassoTimer = 1.2;
+        return;
+      }
+
+      boss.lassoActive = true;
+      boss.lassoRemaining = CONFIG.bossLassoDurationSeconds;
+      setBossLassoVisible(boss, true);
+      updateBossLassoVisual(boss);
+      damagePlayer(CONFIG.bossLassoDamage, 'El lazo del vaquero te golpeó.');
+      statusMessageElement.textContent = '🪢 ¡ATRAPADO! El vaquero te está arrastrando hacia el caballo.';
+    }
+
+    function updateBossLasso(boss, delta) {
+      if (!boss) return;
+      if (!boss.lassoActive) {
+        boss.lassoTimer -= delta;
+        if (boss.lassoTimer <= 0) tryBossLasso(boss);
+        return;
+      }
+
+      boss.lassoRemaining = Math.max(0, boss.lassoRemaining - delta);
+      updateBossLassoVisual(boss);
+      const dx = boss.group.position.x - camera.position.x;
+      const dz = boss.group.position.z - camera.position.z;
+      const distance = Math.hypot(dx, dz);
+      if (distance > 0.001) {
+        const pull = CONFIG.bossLassoPullSpeed * delta;
+        movePlayerWithCollision((dx / distance) * pull, (dz / distance) * pull);
+      }
+
+      if (boss.lassoRemaining <= 0 || distance < 2.8 || gameOver) {
+        releaseBossLasso(boss);
+      }
+    }
+
     function fireBossShotgun(boss) {
+      gameAudio.hostile('shotgun');
       if (!boss?.shotgunMuzzle) return;
       boss.shotgunMuzzle.getWorldPosition(turretMuzzlePosition);
       turretTarget.copy(camera.position);
@@ -3061,7 +4603,7 @@
           turretMuzzlePosition,
           dir,
           CONFIG.bossShotgunProjectileSpeed * (userDifficultyPercent / 100),
-          { scale: 0.72, reason: 'La escopeta del jefe te alcanzó.' }
+          { scale: 0.72, reason: 'La escopeta del jefe te alcanzó.', damage: CONFIG.bossShotgunPelletDamage }
         );
       }
       boss.shotgunFlash.visible = true;
@@ -3069,8 +4611,16 @@
     }
 
     function updateFinalBoss(delta) {
+      if (bossActive && finalBoss) {
+        horseAudioTimer -= delta;
+        if (horseAudioTimer <= 0) {
+          gameAudio.horse();
+          horseAudioTimer = 0.36;
+        }
+      }
       if (!bossActive || !finalBoss || gameOver) return;
       finalBoss.shotgunPivot.lookAt(camera.position);
+      updateBossLasso(finalBoss, delta);
       finalBoss.bossShotTimer -= delta;
       if (finalBoss.bossShotTimer <= 0) {
         fireBossShotgun(finalBoss);
@@ -3102,6 +4652,9 @@
         const mi = enemyHitMeshes.indexOf(mesh);
         if (mi !== -1) enemyHitMeshes.splice(mi, 1);
       }
+      setBossLassoVisible(boss, false);
+      if (boss.lassoRope) scene.remove(boss.lassoRope);
+      if (boss.lassoRing) scene.remove(boss.lassoRing);
       scene.remove(boss.group);
       finalBoss = null;
       bossActive = false;
@@ -3111,11 +4664,14 @@
 
     function defeatFinalBoss() {
       if (!finalBoss || roundTransition) return;
+      gameAudio.roundWin();
       setScore(score + CONFIG.bossScore);
       clearFinalBoss();
       clearTurretProjectiles();
       clearPlayerProjectiles();
       clearArmorPickups();
+      doubleJumpActive = false;
+      clearDoubleJumpPickup();
       setSniperZoom(false);
       gameOver = true;
       roundTransition = true;
@@ -3152,12 +4708,16 @@
       gameOver = false;
       roundTransition = false;
       resetSprintState();
+      resetPlayerHealth();
       for (const key of Object.keys(keys)) keys[key] = false;
+      resetDoubleJumpBoost();
       createFinalBoss();
+      spawnDoubleJumpBoost();
     }
 
     function winRound() {
       if (gameOver || roundTransition || bossActive) return;
+      gameAudio.roundWin();
 
       roundTransition = true;
       gameOver = true;
@@ -3189,7 +4749,7 @@
           startFinalBossRound();
           showOverlay(
             `RONDA ${CONFIG.bossRound} · JEFE FINAL`,
-            `Un vaquero gigante montado a caballo entra al pueblo. Movimiento al 150%, ${CONFIG.bossMaxHealth} puntos de vida y una escopeta funcional de perdigones. Haz clic para luchar.`
+            `Un vaquero gigante montado a caballo entra al pueblo. Movimiento al 220%, ${CONFIG.bossMaxHealth} puntos de vida, escopeta de perdigones más letal y un lazo que puede atraparte y arrastrarte. Busca el boost de doble salto en la arena. Haz clic para luchar.`
           );
         } else {
           startNextRound();
@@ -3209,6 +4769,7 @@
       clearTurretProjectiles();
       clearPlayerProjectiles();
       clearArmorPickups();
+      resetDoubleJumpBoost();
       resetTurrets();
       setSniperZoom(false);
       setDefeatedEnemies(0);
@@ -3230,6 +4791,9 @@
       bossActive = false;
       finalBoss = null;
       resetSprintState();
+      resetPlayerHealth();
+      footstepAudioTimer = 0;
+      audioWasAirborne = false;
 
       for (const key of Object.keys(keys)) keys[key] = false;
 
@@ -3249,8 +4813,7 @@
       KeyD: false,
       ShiftLeft: false,
       ShiftRight: false,
-      ControlLeft: false,
-      ControlRight: false
+      KeyC: false
     };
 
     const forwardVector = new THREE.Vector3();
@@ -3259,6 +4822,64 @@
 
     let verticalVelocity = 0;
     let onGround = true;
+
+
+
+    let footstepAudioTimer = 0;
+    let audioWasAirborne = false;
+    let horseAudioTimer = 0;
+
+    function getCurrentFootstepSurface() {
+      const x = camera.position.x;
+      const z = camera.position.z;
+      if (Math.abs(x) < 7 && Math.abs(z) < 33) return 'sand';
+      if (x < -18 && z > 10) return 'wood';
+      if (x > 20 && z < -8) return 'metal';
+      if (x > 24 && z > 18) return 'plastic';
+      if (x < -26 && z < -18) return 'glass';
+      return 'sand';
+    }
+
+    function updateMovementAudio(delta, isMoving, sprintActive, crouching) {
+      footstepAudioTimer -= delta;
+      if (onGround && audioWasAirborne) gameAudio.land(getCurrentFootstepSurface());
+      audioWasAirborne = !onGround;
+      if (!isMoving || !onGround || slideActive) {
+        footstepAudioTimer = Math.min(footstepAudioTimer, 0.08);
+        return;
+      }
+      if (footstepAudioTimer <= 0) {
+        const intensity = sprintActive ? 1.25 : crouching ? 0.62 : 0.92;
+        gameAudio.footstep(getCurrentFootstepSurface(), intensity);
+        footstepAudioTimer = sprintActive ? 0.26 : crouching ? 0.62 : 0.40;
+      }
+    }
+
+    function tryPlayerJump() {
+      if (!isGameplayActive() || gameOver || roundTransition) return false;
+      if (slideActive) return false;
+      const crouchedNow = keys.KeyC || mobileCrouchHeld || xboxCrouchHeld;
+      if (crouchedNow) return false;
+
+      const maxJumps = (bossActive && doubleJumpActive) ? 2 : 1;
+      if (onGround) {
+        currentPlayerHeight = CONFIG.playerHeight;
+        camera.position.y = CONFIG.playerHeight;
+        verticalVelocity = CONFIG.jumpSpeed;
+        onGround = false;
+        jumpCount = 1;
+        gameAudio.jump(false);
+        return true;
+      }
+
+      if (jumpCount < maxJumps) {
+        verticalVelocity = CONFIG.jumpSpeed * 0.93;
+        jumpCount += 1;
+        gameAudio.jump(true);
+        return true;
+      }
+      return false;
+    }
 
     function movePlayerWithCollision(dx, dz) {
       // Resolver X y Z por separado permite deslizarse junto a paredes.
@@ -3288,6 +4909,10 @@
         forwardInput += mobileMoveY;
         rightInput += mobileMoveX;
       }
+      if (xboxMode) {
+        forwardInput += xboxMoveY;
+        rightInput += xboxMoveX;
+      }
       camera.getWorldDirection(forwardVector);
       forwardVector.y = 0;
 
@@ -3302,9 +4927,17 @@
       moveVector.addScaledVector(rightVector, rightInput);
 
       const isMoving = moveVector.lengthSq() > 0;
-      crouchActive = keys.ControlLeft || keys.ControlRight || mobileCrouchHeld;
-      const sprintHeld = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld;
-      let sprintActive = sprintHeld && !crouchActive && isMoving && sprintEnergy > 0 && !sprintExhausted;
+      slideCooldownRemaining = Math.max(0, slideCooldownRemaining - delta);
+      if (slideActive) {
+        slideRemaining = Math.max(0, slideRemaining - delta);
+        if (slideRemaining <= 0) {
+          slideActive = false;
+          playerViewmodelSliding = false;
+        }
+      }
+      crouchActive = slideActive || keys.KeyC || mobileCrouchHeld || xboxCrouchHeld;
+      const sprintHeld = keys.ShiftLeft || keys.ShiftRight || mobileSprintHeld || xboxSprintHeld;
+      let sprintActive = sprintHeld && !slideActive && !crouchActive && isMoving && sprintEnergy > 0 && !sprintExhausted;
 
       if (sprintActive) {
         sprintEnergy = Math.max(0, sprintEnergy - delta);
@@ -3313,7 +4946,7 @@
           sprintExhausted = true;
           sprintActive = false;
         }
-      } else if ((!sprintHeld || crouchActive) && sprintEnergy < CONFIG.sprintMaxSeconds) {
+      } else if (!slideActive && (!sprintHeld || crouchActive) && sprintEnergy < CONFIG.sprintMaxSeconds) {
         const regenRate = CONFIG.sprintMaxSeconds / CONFIG.sprintFullRegenSeconds;
         sprintEnergy = Math.min(CONFIG.sprintMaxSeconds, sprintEnergy + regenRate * delta);
         if (sprintEnergy >= CONFIG.sprintMaxSeconds - 0.001) {
@@ -3322,17 +4955,25 @@
         }
       }
 
-      if (isMoving) {
+      if (slideActive) {
+        const slidePhase = THREE.MathUtils.clamp(slideRemaining / SLIDE_DURATION, 0, 1);
+        const slideSpeed = CONFIG.playerSpeed * SLIDE_SPEED_MULTIPLIER * (0.72 + 0.28 * slidePhase);
+        movePlayerWithCollision(slideDirection.x * slideSpeed * delta, slideDirection.z * slideSpeed * delta);
+      } else if (isMoving) {
         const sprintFactor = sprintActive ? CONFIG.sprintMultiplier : 1;
         const crouchFactor = crouchActive ? CONFIG.crouchSpeedMultiplier : 1;
         moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * delta);
         movePlayerWithCollision(moveVector.x, moveVector.z);
       }
 
+      playerViewmodelMoving = isMoving || slideActive;
+      playerViewmodelSprinting = sprintActive;
+      playerViewmodelCrouching = crouchActive;
+      playerViewmodelSliding = slideActive;
       updateSprintHUD();
 
-      // Altura de cámara: Ctrl baja al jugador y al soltarlo vuelve suavemente.
-      const targetPlayerHeight = crouchActive ? CONFIG.crouchHeight : CONFIG.playerHeight;
+      // Altura de cámara: C baja al jugador y al soltarla vuelve suavemente.
+      const targetPlayerHeight = slideActive ? CONFIG.crouchHeight * 0.88 : (crouchActive ? CONFIG.crouchHeight : CONFIG.playerHeight);
 
       if (onGround) {
         currentPlayerHeight = THREE.MathUtils.damp(
@@ -3353,8 +4994,10 @@
           camera.position.y = targetPlayerHeight;
           verticalVelocity = 0;
           onGround = true;
+          jumpCount = 0;
         }
       }
+      updateMovementAudio(delta, isMoving || slideActive, sprintActive, crouchActive);
     }
 
     // =========================================================
@@ -3369,6 +5012,7 @@
       overlayTitle.textContent = title;
       overlayMessage.textContent = message;
       overlay.classList.remove('hidden');
+      if (gameAudio.ctx) gameAudio.setMusic('pause');
     }
 
     function resetGame() {
@@ -3379,6 +5023,7 @@
       armorHitsRemaining = 0;
       clearFinalBoss();
       clearArmorPickups();
+      resetDoubleJumpBoost();
       setSniperZoom(false);
       clearEnemies();
       clearTurretProjectiles();
@@ -3388,6 +5033,24 @@
       setDefeatedEnemies(0);
       resetWeaponAmmo();
       equipWeapon('pistol');
+      holsteredWeapon = null;
+      weaponEquipProgress = 1;
+      weaponHolsterProgress = 1;
+      for (const root of Object.values(viewmodelGroups)) {
+        root.position.set(0, 0, 0);
+        root.rotation.set(0, 0, 0);
+      }
+      setVisibleWeaponGroups('pistol');
+      viewmodelBobTime = 0;
+      inspectingWeapon = false;
+      inspectProgress = 0;
+      playerViewmodelMoving = false;
+      playerViewmodelSprinting = false;
+      playerViewmodelCrouching = false;
+      viewmodelWasAirborne = false;
+      viewmodelLandingKick = 0;
+      viewmodelRecoil = 0;
+      playerViewmodelSliding = false;
       swordSwingRemaining = 0;
       swordGroup.rotation.set(-0.25, 0.18, -0.32);
       swordGroup.position.set(0.42, -0.30, -0.72);
@@ -3402,6 +5065,7 @@
       gameOver = false;
       gameStarted = true;
       resetSprintState();
+      resetPlayerHealth();
 
       for (const key of Object.keys(keys)) {
         keys[key] = false;
@@ -3418,13 +5082,16 @@
       if (gameOver) return;
 
       gameOver = true;
+      gameAudio.gameOver();
+      gameAudio.setMusic('pause');
       setSniperZoom(false);
+      if (finalBoss) setBossLassoVisible(finalBoss, false);
       clearTurretProjectiles();
       clearPlayerProjectiles();
       showOverlay(
         'GAME OVER',
         `${reason} ${bossActive ? 'Jefe final' : `Ronda: ${currentRound}`} · Puntaje final: ${score} · ` +
-        `Chaleco: ${armorLevel > 0 ? `Nv.${armorLevel} (${armorHitsRemaining}/${getArmorCapacity()})` : 'sin protección'}. Haz clic para reiniciar.`
+        `Vida: ${Math.ceil(playerHealth)}/${CONFIG.playerMaxHealth} · Chaleco: ${armorLevel > 0 ? `Nv.${armorLevel} (${armorHitsRemaining}/${getArmorCapacity()})` : 'sin protección'}. Haz clic para reiniciar.`
       );
 
       if (controls.isLocked) {
@@ -3582,28 +5249,34 @@
       setupFullScreenTouchLook();
       bindFireAimButton();
       bindHoldButton('sprintTouch', () => { mobileSprintHeld = true; }, () => { mobileSprintHeld = false; });
-      bindHoldButton('crouchTouch', () => { mobileCrouchHeld = true; }, () => { mobileCrouchHeld = false; });
+      bindHoldButton('crouchTouch', () => { mobileCrouchHeld = true; tryStartSlide(); }, () => { mobileCrouchHeld = false; });
       bindHoldButton('zoomTouch', () => { if (activeWeapon === 'sniper') setSniperZoom(true); }, () => setSniperZoom(false));
 
       document.getElementById('jumpTouch').addEventListener('pointerdown', (event) => {
         event.preventDefault(); event.stopPropagation();
-        if (isGameplayActive() && !gameOver && onGround && !mobileCrouchHeld) {
-          currentPlayerHeight = CONFIG.playerHeight; camera.position.y = CONFIG.playerHeight;
-          verticalVelocity = CONFIG.jumpSpeed; onGround = false;
-        }
+        tryPlayerJump();
       });
       document.getElementById('weaponTouch').addEventListener('pointerdown', (event) => { event.preventDefault(); event.stopPropagation(); cycleWeapon(); });
       document.getElementById('reloadTouch').addEventListener('pointerdown', (event) => { event.preventDefault(); event.stopPropagation(); reloadCurrentWeapon(); });
+      document.getElementById('inspectTouch').addEventListener('pointerdown', (event) => { event.preventDefault(); event.stopPropagation(); inspectWeapon(); });
       document.getElementById('pauseTouch').addEventListener('pointerdown', (event) => {
         event.preventDefault(); event.stopPropagation();
         primaryButtonHeld = false; mobileSprintHeld = false; mobileCrouchHeld = false; setSniperZoom(false);
+        gameAudio.setMusic('pause');
         mobilePaused = true; showOverlay('PAUSA', 'Toca la pantalla para continuar jugando');
       });
     }
 
     setupMobileControls();
+    document.addEventListener('click', (event) => {
+      if (event.target.closest('#settingsButton, #pauseSettingsButton, #resumeGameButton, #backToMenu, #settingsReset, #settingsClose, .controlsDetails summary')) {
+        gameAudio.ui();
+      }
+    }, true);
 
-    overlay.addEventListener('click', () => {
+    overlay.addEventListener('click', (event) => {
+      gameAudio.ensure();
+      if (event.target.closest('.controlsDetails, #backToMenu, #pauseSettingsButton')) return;
       if (roundTransition) return;
 
       if (gameOver) {
@@ -3615,6 +5288,7 @@
         armorHitsRemaining = 0;
         bossActive = false;
         finalBoss = null;
+        resetDoubleJumpBoost();
         clearArmorPickups();
         setScore(0);
         setDefeatedEnemies(0);
@@ -3627,21 +5301,27 @@
         }
       }
 
+      gameAudio.setMusic(bossActive ? 'boss' : 'none');
+
       if (mobileMode) {
         mobilePaused = false;
+        overlay.classList.add('hidden');
+      } else if (xboxMode) {
+        xboxPaused = false;
         overlay.classList.add('hidden');
       } else {
         controls.lock();
       }
     });
 
-    controls.addEventListener('lock', () => { if (!mobileMode) overlay.classList.add('hidden'); });
+    controls.addEventListener('lock', () => { if (!mobileMode && !xboxMode) overlay.classList.add('hidden'); gameAudio.ensure(); gameAudio.setMusic(bossActive ? 'boss' : 'none'); });
 
     controls.addEventListener('unlock', () => {
-      if (mobileMode) return;
+      if (mobileMode || xboxMode) return;
       primaryButtonHeld = false;
       setSniperZoom(false);
       if (!gameOver) {
+        gameAudio.setMusic('pause');
         showOverlay('PAUSA', 'Haz clic para continuar jugando');
       }
     });
@@ -3653,13 +5333,11 @@
 
       if (event.code === 'Space') {
         event.preventDefault();
+        if (!event.repeat) tryPlayerJump();
+      }
 
-        if (isGameplayActive() && !gameOver && onGround && !keys.ControlLeft && !keys.ControlRight) {
-          currentPlayerHeight = CONFIG.playerHeight;
-          camera.position.y = CONFIG.playerHeight;
-          verticalVelocity = CONFIG.jumpSpeed;
-          onGround = false;
-        }
+      if (event.code === 'KeyC' && !event.repeat) {
+        tryStartSlide();
       }
 
       // La tecla 3 alterna Pistola -> Francotirador -> Espada -> Metralleta -> Revólver.
@@ -3672,6 +5350,11 @@
         event.preventDefault();
         reloadCurrentWeapon();
       }
+
+      if (event.code === 'KeyF' && !event.repeat) {
+        event.preventDefault();
+        inspectWeapon();
+      }
     });
 
     document.addEventListener('keyup', (event) => {
@@ -3681,7 +5364,7 @@
     });
 
     document.addEventListener('mousedown', (event) => {
-      if (mobileMode) return;
+      if (mobileMode || xboxMode) return;
       if (event.button === 0) {
         primaryButtonHeld = true;
         primaryAttack();
@@ -3695,7 +5378,7 @@
     });
 
     document.addEventListener('mouseup', (event) => {
-      if (mobileMode) return;
+      if (mobileMode || xboxMode) return;
       if (event.button === 0) {
         primaryButtonHeld = false;
       }
@@ -3727,6 +5410,8 @@
       const delta = Math.min((currentTime - previousTime) / 1000, 0.05);
       previousTime = currentTime;
       elapsedTime += delta;
+      updateXboxController(delta);
+      updateUniversalGamepadInspection();
       updateDust(delta);
       updateWesternAmbience(delta, elapsedTime);
 
@@ -3735,11 +5420,13 @@
         updateEnemies(delta, elapsedTime);
         updateFinalBoss(delta);
         updateArmorPickups(delta, elapsedTime);
+        updateDoubleJumpBoost(delta, elapsedTime);
         updateTurrets(delta);
         updateTurretProjectiles(delta);
         updatePlayerProjectiles(delta);
         updateSwordAnimation(delta);
         updateFirearmAnimations(delta);
+        updateViewmodelAnimations(delta);
 
         // Fuego automático de metralleta mientras se mantiene clic izquierdo.
         if (primaryButtonHeld && activeWeapon === 'machinegun') {
@@ -3762,6 +5449,8 @@
     updateArmorHUD();
     updateBossHUD();
     updateSprintHUD();
+    updateDoubleJumpHUD();
+    setVisibleWeaponGroups('pistol');
     updateWeaponStatus();
     updateAmmoHUD();
     requestAnimationFrame(animate);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Town - Defusual</title>
+  <title>Zombiland - Defusual</title>
 
   <!--
     Three.js cargado por CDN mediante Import Map.
@@ -641,8 +641,8 @@
     <div id="score">Puntaje: 0</div>
     <div id="enemyCount">Enemigos en mapa: 0</div>
     <div id="defeatedCount">Derrotados: 0 / 5</div>
-    <div id="turretStatus">Torretas: disparo cada 5 s</div>
-    <div id="weaponStatus">Arma: Pistola · [3] cambiar</div>
+    <div id="turretStatus">Infección: infectados comunes</div>
+    <div id="weaponStatus">Arma: Escopeta · [3] cambiar</div>
     <div id="ammoStatus">Munición: ∞</div>
     <div id="roundStatus">Ronda: 1</div>
     <div id="difficultyStatus">Dificultad: +0% (×1.00)</div>
@@ -650,7 +650,7 @@
     <div id="playerHealthStatus"><span id="playerHealthText">Vida: 100 / 100</span><span id="playerHealthTrack"><span id="playerHealthFill"></span></span></div>
     <div id="bossStatus">Jefe: --</div>
     <div id="bossHealthBar"><span id="bossHealthFill"></span></div>
-    <div id="jumpBoostStatus">Doble salto: solo en ronda del jefe</div>
+    <div id="jumpBoostStatus" style="display:none">Doble salto: boost disponible en la ronda del Tank</div>
     <div id="sprintStatus"><span id="sprintText">Sprint: 6.0/6 s · SHIFT ×1.7</span><span id="sprintBar"><span id="sprintFill"></span></span></div>
     <div id="crosshair"></div>
     <div id="scopeOverlay"></div>
@@ -662,7 +662,7 @@
   <div id="equippedWeaponCard" aria-label="Arma equipada">
     <div class="weapon-card-kicker">Arma equipada</div>
     <svg id="equippedWeaponIcon" viewBox="0 0 180 70" aria-hidden="true"></svg>
-    <div id="equippedWeaponName">Pistola</div>
+    <div id="equippedWeaponName">Escopeta</div>
   </div>
   <div id="damageFlash" aria-hidden="true"></div>
   <div id="criticalHealthBorder" aria-hidden="true"></div>
@@ -730,12 +730,12 @@
 
   <div id="overlay">
     <div id="panel">
-      <h1 id="overlayTitle">TOWN · Defusual</h1>
+      <h1 id="overlayTitle">ZOMBILAND · Defusual</h1>
       <p id="overlayMessage">Haz clic o toca la pantalla para jugar</p>
 
       <div class="pauseActions">
         <button id="resumeGameButton" type="button">▶ Continuar</button>
-        <a id="backToMenu" href="../../main.index.html">↩ Cambiar mundo</a>
+        <a id="backToMenu" href="main.index.html">↩ Cambiar mundo</a>
         <button id="pauseSettingsButton" type="button">⚙ Configuración</button>
       </div>
 
@@ -754,14 +754,14 @@
         <div><span class="key">3</span> — Cambiar arma</div>
         <div><span class="key">R</span> — Recargar arma actual</div>
         <div><span class="key">F</span> — Inspeccionar arma</div>
-        <div><span class="key">Clic derecho</span> — Zoom del francotirador</div>
-        <div><span class="key">Metralleta</span> — Mantén clic para fuego automático</div>
-        <div><span class="key">Espada</span> — Ataque de alcance extendido</div>
-        <div><span class="key">Torretas</span> — Apuntan a tu posición</div>
-        <div><span class="key">Cada 5 s</span> — Lanzan un proyectil</div>
+        <div><span class="key">Clic derecho</span> — Zoom del francotirador · con Cuchillo: BACKSTAB instantáneo a corta distancia</div>
+        <div><span class="key">Arsenal Zombiland</span> — Escopeta · Metralleta · Francotirador · RPG · Cuchillo</div>
+        <div><span class="key">RPG</span> — Explosión de área · en el aire mantén C y dispara al suelo para ROCKET JUMP (-10 HP)</div>
+        <div><span class="key">Cuchillo</span> — clic izq. corte · clic der. backstab instantáneo</div>
+        
         <div><span class="key">Ronda 3+</span> — Recoge el chaleco y sus mejoras</div>
         <div><span class="key">Ronda 4+</span> — Aparece un enemigo élite más resistente</div>
-        <div><span class="key">Jefe final</span> — Tras alcanzar +125% de dificultad</div>
+        <div><span class="key">R8 Tank</span> — más rápido que tu velocidad normal · boost de gravedad baja en la arena</div>
         </div>
       </details>
     </div>
@@ -1039,7 +1039,9 @@
           ? { f: 1200, q: 0.7, g: 0.075 }
           : this.theme === 'west'
             ? { f: 780, q: 0.4, g: 0.060 }
-            : { f: 520, q: 0.5, g: 0.045 };
+            : this.theme === 'zombiland'
+              ? { f: 360, q: 1.1, g: 0.075 }
+              : { f: 520, q: 0.5, g: 0.045 };
         filter.frequency.value = cfg.f;
         filter.Q.value = cfg.q;
         gain.gain.value = cfg.g;
@@ -1065,7 +1067,7 @@
       musicTick() {
         if (!this.ctx || this.musicMode === 'none') return;
         const mode = this.musicMode;
-        const themeShift = this.theme === 'winter' ? 5 : this.theme === 'west' ? -2 : 0;
+        const themeShift = this.theme === 'winter' ? 5 : this.theme === 'west' ? -2 : this.theme === 'zombiland' ? -5 : 0;
         if (mode === 'boss') {
           const seq = [55, 55, 62, 58, 55, 65, 62, 58];
           const f = 440 * Math.pow(2, ((seq[this.musicStep % seq.length] + themeShift) - 69) / 12);
@@ -1104,6 +1106,8 @@
       }
 
       sword() { this.noise(0.18, 0.055, 4500, this.sfx, 0, 0, 700); this.tone(780, 0.12, 0.025, 'sine', this.sfx, 0, 0, 410); }
+      rpgFire() { this.noise(0.34, 0.095, 1500, this.sfx, 0, 0, 120); this.tone(92, 0.28, 0.075, 'sawtooth', this.sfx, 0, 0, 48); }
+      rpgExplosion() { this.noise(0.55, 0.16, 900, this.sfx, 0, 0, 55); this.tone(52, 0.40, 0.12, 'sawtooth', this.sfx, 0, 0, 32); }
       reload(kind = 'gun') {
         this.noise(0.10, 0.035, kind === 'sniper' ? 3900 : 3200, this.sfx, 0, 0, 700);
         this.tone(kind === 'sniper' ? 420 : 520, 0.055, 0.018, 'triangle', this.sfx, 0.035, 0, 310);
@@ -1162,6 +1166,9 @@
           this.tone(115, 0.12, 0.018, 'sawtooth', this.sfx, 0, 0, 82);
         } else if (this.theme === 'west') {
           this.tone(360, 0.055, 0.013, 'triangle', this.sfx, 0, 0, 290);
+        } else if (this.theme === 'zombiland') {
+          this.tone(78 + Math.random() * 32, 0.28, 0.026, 'sawtooth', this.sfx, 0, (Math.random()-.5)*.7, 45);
+          this.noise(0.12, 0.018, 620, this.sfx, 0.02, 0, 55);
         } else {
           this.tone(150, 0.07, 0.012, 'square', this.sfx, 0, 0, 120);
         }
@@ -1183,7 +1190,7 @@
       }
     }
 
-    const gameAudio = new DefusualAudio('town');
+    const gameAudio = new DefusualAudio('zombiland');
 
     // =========================================================
     // CONFIGURACIÓN GENERAL
@@ -1194,7 +1201,7 @@
       playerRadius: 0.45,
       playerMaxHealth: 100,
       turretDamage: 25,
-      enemyContactDamage: 22,
+      enemyContactDamage: 10,
       enemyContactCooldown: 0.75,
       normalEnemyHealth: 2,
       eliteStartRound: 4,
@@ -1211,11 +1218,11 @@
       jumpSpeed: 8.5,
       gravity: 24.0,
       enemyRadius: 0.55,
-      enemySpeedMin: 1.2,
-      enemySpeedMax: 2.0,
-      enemySpawnSeconds: 3.0,
-      initialEnemies: 2,
-      maxEnemies: 7,
+      enemySpeedMin: 2.35,
+      enemySpeedMax: 3.40,
+      enemySpawnSeconds: 0.78,
+      initialEnemies: 3,
+      maxEnemies: 8,
       shootCooldownMs: 120,
       shootDistance: 80,
 
@@ -1236,8 +1243,32 @@
       machineGunDistance: 85,
       machineGunProjectileSpeed: 72.0,
 
-      swordCooldownMs: 430,
-      swordRange: 5.5,
+      // Arsenal exclusivo de Zombiland.
+      shotgunTotalAmmo: 30,
+      shotgunTubeSize: 6,
+      shotgunCooldownMs: 900,
+      shotgunDistance: 58,
+      shotgunProjectileSpeed: 62.0,
+      shotgunPellets: 8,
+      shotgunSpread: 0.055,
+      shotgunPumpBackSeconds: 0.17,
+      shotgunPumpForwardSeconds: 0.18,
+      shotgunShellReloadSeconds: 0.48,
+
+      rpgTotalAmmo: 6,
+      rpgMagazineSize: 1,
+      rpgCooldownMs: 1050,
+      rpgReloadSeconds: 2.15,
+      rpgProjectileSpeed: 28.0,
+      rpgExplosionRadius: 6.4,
+      rpgDamage: 8,
+      rocketJumpSelfDamage: 10,
+      rocketJumpRadius: 3.4,
+      rocketJumpVerticalImpulse: 15.2,
+      rocketJumpHorizontalImpulse: 5.2,
+
+      swordCooldownMs: 320,
+      swordRange: 3.2,
       pointsPerEnemy: 100,
       enemiesToWin: 3,
 
@@ -1255,7 +1286,7 @@
       // Progresión lineal: +25 puntos porcentuales por ronda hasta +125%.
       difficultyStep: 0.25,
       maxDifficultyBonus: 1.25,
-      finalNormalRound: 6,
+      finalNormalRound: 7,
 
       // Chaleco antibalas: nivel 1 = 3 impactos; cada nivel suma 2; máximo 3.
       armorStartRound: 3,
@@ -1264,14 +1295,16 @@
       armorHitsPerLevel: 2,
       armorPickupRadius: 1.15,
 
-      // Jefe final.
-      bossScale: 3.0,
-      bossMovementMultiplier: 2.05,
-      bossContactDamage: 50,
-      bossMaxHealth: 24,
-      bossShotSeconds: 1.45,
-      bossProjectileDamage: 40,
-      bossScore: 2500,
+      // Jefe final de Zombiland: infectado gigante tipo Tank.
+      bossScale: 3.15,
+      bossMovementMultiplier: 3.35,
+      bossContactDamage: 17,
+      bossMaxHealth: 80,
+      bossPunchCooldown: 1.05,
+      bossThrowSeconds: 2.55,
+      bossRockDamage: 24,
+      bossSummonSeconds: 5.8,
+      bossScore: 4000,
       finalResetMs: 4200,
       roundTransitionMs: 2200
     };
@@ -1314,8 +1347,8 @@
     // ESCENA, CÁMARA Y RENDERER
     // =========================================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x9fb3c8);
-    scene.fog = new THREE.Fog(0x9fb3c8, 45, 105);
+    scene.background = new THREE.Color(0x26332d);
+    scene.fog = new THREE.Fog(0x26332d, 28, 88);
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -1721,10 +1754,10 @@
     // =========================================================
     // ILUMINACIÓN
     // =========================================================
-    const ambientLight = new THREE.HemisphereLight(0xe9f3ff, 0x39422b, 2.0);
+    const ambientLight = new THREE.HemisphereLight(0xb8d0c0, 0x17221b, 1.25);
     scene.add(ambientLight);
 
-    const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+    const sun = new THREE.DirectionalLight(0xd8e0c6, 1.35);
     sun.position.set(25, 45, 15);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -1737,15 +1770,27 @@
     // =========================================================
     // MATERIALES
     // =========================================================
-    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0x30343b });
-    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0x666a70 });
-    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x6b432a });
-    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x397a3c });
-    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x7a6a51 });
-    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0xc62828 });
-    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xe53935 });
-    const eliteEnemyMaterial = new THREE.MeshLambertMaterial({ color: 0xef6c00, emissive: 0x2b1200 });
-    const eliteEnemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0xffa726, emissive: 0x2b1500 });
+    const asphaltMaterial = new THREE.MeshLambertMaterial({ color: 0x242a28 });
+    const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0x4c5550 });
+    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x43392f });
+    const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x29392d });
+    const coverMaterial = new THREE.MeshLambertMaterial({ color: 0x53584b });
+    const enemyMaterial = new THREE.MeshLambertMaterial({ color: 0x6b806d });
+    const enemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x899787 });
+    const eliteEnemyMaterial = new THREE.MeshLambertMaterial({ color: 0x7b8b67, emissive: 0x111a0d });
+    const eliteEnemyHeadMaterial = new THREE.MeshLambertMaterial({ color: 0x9cad7f, emissive: 0x12190e });
+    const spitterBodyMaterial = new THREE.MeshLambertMaterial({ color: 0xa6b87b });
+    const spitterAcidMaterial = new THREE.MeshLambertMaterial({ color: 0x82ff36, emissive: 0x2f6a10, emissiveIntensity: 0.85, transparent: true, opacity: 0.86 });
+    const hunterBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x30383a });
+    const hunterAccentMaterial = new THREE.MeshLambertMaterial({ color: 0x8f2323 });
+    const smokerBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x667263 });
+    const smokerTongueMaterial = new THREE.LineBasicMaterial({ color: 0x9e5d62, transparent: true, opacity: 0.9 });
+    const parasiteMaterial = new THREE.MeshLambertMaterial({ color: 0x7f3328, emissive: 0x220805 });
+    const chargerBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x727968 });
+    const chargerArmMaterial = new THREE.MeshLambertMaterial({ color: 0x895145 });
+    const toxicMaterial = new THREE.MeshLambertMaterial({ color: 0x4aff41, emissive: 0x134a0c, emissiveIntensity: 0.75, transparent: true, opacity: 0.66 });
+    const fireMaterial = new THREE.MeshLambertMaterial({ color: 0xff7a25, emissive: 0x7d2106, emissiveIntensity: 1.2, transparent: true, opacity: 0.9 });
+
 
     // Materiales de los obstáculos armados.
     const turretBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x3b434b });
@@ -1801,6 +1846,7 @@
     let bossActive = false;
     let doubleJumpPickup = null;
     let doubleJumpActive = false;
+    let lowGravityActive = false;
     let jumpCount = 0;
 
     function addBoxCollider(x, z, width, depth, padding = 0) {
@@ -2028,6 +2074,25 @@
     }
 
     function createCity() {
+      // MURALLA PERIMETRAL CERRADA: Zombiland ya no es un mapa abierto.
+      const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x414944 });
+      const wallSpecs = [
+        [0, -49.25, 98.5, 1.5, 5.5],
+        [0,  49.25, 98.5, 1.5, 5.5],
+        [-49.25, 0, 1.5, 98.5, 5.5],
+        [ 49.25, 0, 1.5, 98.5, 5.5]
+      ];
+      for (const [x, z, width, depth, height] of wallSpecs) {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), wallMaterial);
+        wall.position.set(x, height / 2, z);
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        wall.userData.blockShot = true;
+        scene.add(wall);
+        addBoxCollider(x, z, width, depth, 0.02);
+        shotBlockers.push(wall);
+      }
+
       // Banquetas decorativas perimetrales.
       addSidewalk(0, -47, 92, 5);
       addSidewalk(0, 47, 92, 5);
@@ -2118,19 +2183,7 @@
 
       // Obstáculos armados. Estas torretas apuntan a la posición actual
       // del jugador y lanzan un proyectil real cada cinco segundos.
-      const turretPositions = [
-        [-15, -16],
-        [15, -17],
-        [-16, 16],
-        [16, 17],
-        [0, -32]
-      ];
-
-      for (const [x, z] of turretPositions) {
-        if (!circleIntersectsWorld(x, z, 1.3)) {
-          addTurret(x, z);
-        }
-      }
+      const turretPositions = []; // Zombiland se centra en infectados especiales, sin torretas estáticas.
 
       // Árboles procedurales. Se rechazan posiciones que choquen con
       // otros objetos o con la zona inicial del jugador.
@@ -2154,10 +2207,60 @@
 
     createCity();
 
+
+    function addWreckedCar(x, z, rotation = 0, color = 0x46515a) {
+      const car = new THREE.Group();
+      car.position.set(x, 0, z);
+      car.rotation.y = rotation;
+      const bodyMat = new THREE.MeshLambertMaterial({ color });
+      const darkMat = new THREE.MeshLambertMaterial({ color: 0x161b1d });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.65, 1.45), bodyMat);
+      body.position.y = 0.63; body.castShadow = true; body.receiveShadow = true; body.userData.blockShot = true; car.add(body);
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.62, 1.25), new THREE.MeshLambertMaterial({ color: 0x333d42 }));
+      cabin.position.set(-0.15, 1.12, 0); cabin.castShadow = true; cabin.userData.blockShot = true; car.add(cabin);
+      for (const sx of [-0.9, 0.9]) for (const sz of [-0.78, 0.78]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.31,0.31,0.18,10), darkMat);
+        wheel.rotation.x=Math.PI/2; wheel.position.set(sx,0.31,sz); car.add(wheel);
+      }
+      scene.add(car); addBoxCollider(x,z,3.2,1.8,0.05); shotBlockers.push(body,cabin);
+    }
+
+    function addToxicPool(x, z, radius = 1.8) {
+      const pool = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius*1.08, 0.05, 22), toxicMaterial.clone());
+      pool.position.set(x,0.035,z); pool.scale.z = 0.68; pool.receiveShadow = true; scene.add(pool);
+      pool.userData.zombieDecor = true;
+    }
+
+    function addStreetFire(x, z) {
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,0.95,12), new THREE.MeshLambertMaterial({color:0x34393b}));
+      barrel.position.set(x,0.48,z); barrel.castShadow=true; barrel.userData.blockShot=true; scene.add(barrel); addCircleCollider(x,z,.5); shotBlockers.push(barrel);
+      const flame = new THREE.Mesh(new THREE.ConeGeometry(0.32,0.85,10), fireMaterial.clone());
+      flame.position.set(x,1.25,z); scene.add(flame); flame.userData.apocalypseFlame=true;
+    }
+
+    function addDebrisPile(x,z,rotation=0) {
+      const grp=new THREE.Group(); grp.position.set(x,0,z); grp.rotation.y=rotation;
+      const mat=new THREE.MeshLambertMaterial({color:0x55534c});
+      for(let i=0;i<4;i++){
+        const b=new THREE.Mesh(new THREE.BoxGeometry(0.7+Math.random()*0.7,0.22+Math.random()*0.32,0.55+Math.random()*0.7),mat);
+        b.position.set((i-1.5)*0.35,0.18+i*0.04,(Math.random()-.5)*0.4); b.rotation.set((Math.random()-.5)*.4,(Math.random()-.5)*.5,(Math.random()-.5)*.35); b.castShadow=true; grp.add(b);
+      }
+      scene.add(grp);
+    }
+
+    function createApocalypseDecor() {
+      [[-8,-4,.25],[11,7,-.5],[-17,15,.7],[18,-15,-.8],[2,-27,.12]].forEach(([x,z,r],i)=>addWreckedCar(x,z,r,[0x46515a,0x6b4d43,0x3f4f44,0x5d5551,0x394853][i]));
+      [[-4,15,2.1],[15,1,1.7],[-18,-10,1.55],[6,-18,1.3]].forEach(v=>addToxicPool(...v));
+      [[-12,-3],[13,18],[-3,-20],[21,-1]].forEach(v=>addStreetFire(...v));
+      [[-6,5,.4],[7,12,-.2],[-14,-19,.8],[18,8,.1],[0,27,.7]].forEach(v=>addDebrisPile(...v));
+    }
+    createApocalypseDecor();
+
     // =========================================================
     // RONDAS, CHALECO Y ESCALADO DE DIFICULTAD
     // =========================================================
     let currentRound = 1;
+    let roundSpawnedCount = 0;
     let armorLevel = 0;
     let armorHitsRemaining = 0;
 
@@ -2245,16 +2348,71 @@
       return CONFIG.enemySpawnSeconds / getRoundMultiplier();
     }
 
+    const ZOMBILAND_ROUND_COUNTS = { 1: 8, 2: 11, 3: 11, 4: 11, 5: 16, 6: 14, 7: 27, 8: 1 };
+    const ZOMBILAND_ROUND_NAMES = {
+      1: '8 Infectados comunes',
+      2: '11 Spitters',
+      3: '11 Hunters',
+      4: '11 Smokers',
+      5: '16 Parásitos',
+      6: '14 Chargers',
+      7: '27 infectados mixtos: todos los tipos',
+      8: 'JEFE FINAL: Tank'
+    };
+    const ZOMBILAND_MIXED_SEQUENCE = [
+      'common', 'spitter', 'hunter', 'smoker', 'parasite',
+      'charger', 'common', 'spitter', 'hunter', 'charger'
+    ];
+
+    function getRoundTargetCount(round = currentRound) {
+      return ZOMBILAND_ROUND_COUNTS[round] ?? 3;
+    }
+
+    function getRoundInfectedType(round = currentRound) {
+      if (round === 7) return ZOMBILAND_MIXED_SEQUENCE[roundSpawnedCount % ZOMBILAND_MIXED_SEQUENCE.length];
+      return round === 2 ? 'spitter'
+        : round === 3 ? 'hunter'
+        : round === 4 ? 'smoker'
+        : round === 5 ? 'parasite'
+        : round === 6 ? 'charger'
+        : 'common';
+    }
+
     function getInitialEnemyCount() {
-      return Math.max(1, Math.ceil(CONFIG.initialEnemies * getRoundMultiplier()));
+      return currentRound === 8 ? 0 : Math.min(6, getRoundTargetCount());
     }
 
     function getMaxEnemies() {
-      return Math.max(CONFIG.maxEnemies, Math.ceil(CONFIG.maxEnemies * getRoundMultiplier()));
+      return currentRound === 8 ? 9 : Math.min(12, getRoundTargetCount());
     }
 
     let playerHealth = CONFIG.playerMaxHealth;
     let playerDamageCooldown = 0;
+
+    let bleedRemaining = 0;
+    let bleedTickTimer = 0;
+    let knockdownRemaining = 0;
+    const BLEED_DURATION = 2.7;
+    const BLEED_TICK_SECONDS = 0.45;
+
+    function applyZombieBleed(duration = BLEED_DURATION) {
+      bleedRemaining = Math.max(bleedRemaining, duration);
+      bleedTickTimer = Math.min(bleedTickTimer || BLEED_TICK_SECONDS, BLEED_TICK_SECONDS);
+      triggerDamageFeedback();
+    }
+
+    function updateZombieStatusEffects(delta) {
+      if (bleedRemaining > 0 && !gameOver) {
+        bleedRemaining = Math.max(0, bleedRemaining - delta);
+        bleedTickTimer -= delta;
+        if (bleedTickTimer <= 0) {
+          bleedTickTimer += BLEED_TICK_SECONDS;
+          damagePlayer(1, 'El sangrado de los infectados terminó contigo.');
+        }
+      }
+      knockdownRemaining = Math.max(0, knockdownRemaining - delta);
+      if (typeof updateRoundHUD === 'function') updateRoundHUD();
+    }
 
     function triggerDamageFeedback() {
       if (!damageFlashElement) return;
@@ -2326,7 +2484,7 @@
       }
       bossStatusElement.style.display = 'block';
       bossHealthBarElement.style.display = 'block';
-      bossStatusElement.textContent = `JEFE FINAL · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
+      bossStatusElement.textContent = `TANK · Vida ${finalBoss.health}/${finalBoss.maxHealth}`;
       const bossHealthRatio = THREE.MathUtils.clamp(finalBoss.health / finalBoss.maxHealth, 0, 1);
       bossHealthFillElement.style.width = `${bossHealthRatio * 100}%`;
       bossHealthFillElement.style.background = bossHealthRatio > 0.55 ? '#ff6b55' : bossHealthRatio > 0.25 ? '#ffae45' : '#ff3b3b';
@@ -2335,14 +2493,12 @@
     function updateRoundHUD() {
       const bonus = getRoundDifficultyBonus();
       const multiplier = getRoundMultiplier();
-      const projectileSpeed = CONFIG.turretProjectileSpeed * multiplier;
       const spawnInterval = getEnemySpawnInterval();
-
-      roundStatusElement.textContent = bossActive ? 'Ronda: JEFE FINAL' : `Ronda: ${currentRound}`;
+      roundStatusElement.textContent = `Ronda: ${currentRound} / 8`;
       difficultyStatusElement.textContent =
-        `Dificultad ronda: +${Math.round(bonus * 100)}% · Ajuste: ${userDifficultyPercent}% · Total ×${multiplier.toFixed(2)} · Spawn: ${spawnInterval.toFixed(2)} s`;
-      turretStatusElement.textContent =
-        `Torretas: cada ${CONFIG.turretShotSeconds.toFixed(0)} s · bala ${projectileSpeed.toFixed(1)} u/s`;
+        `Dificultad ronda: +${Math.round(bonus * 100)}% · Ajuste: ${userDifficultyPercent}% · Total ×${multiplier.toFixed(2)}`;
+      const bleedText = bleedRemaining > 0 ? ` · SANGRADO ${bleedRemaining.toFixed(1)} s` : '';
+      turretStatusElement.textContent = `Infección: ${ZOMBILAND_ROUND_NAMES[currentRound] || 'Oleada'}${bleedText}`;
       updateArmorHUD();
       updateBossHUD();
     }
@@ -2378,10 +2534,10 @@
     function updateDoubleJumpHUD() {
       if (!jumpBoostStatusElement) return;
       if (doubleJumpActive && bossActive) {
-        jumpBoostStatusElement.textContent = 'Doble salto: ACTIVO · 2 saltos';
+        jumpBoostStatusElement.textContent = lowGravityActive ? 'BOOST ACTIVO · doble salto + gravedad baja' : 'Doble salto: ACTIVO · 2 saltos';
         jumpBoostStatusElement.style.color = '#79f6ff';
       } else if (bossActive && doubleJumpPickup) {
-        jumpBoostStatusElement.textContent = 'Doble salto: BOOST disponible en la arena';
+        jumpBoostStatusElement.textContent = 'BOOST DE GRAVEDAD disponible · doble salto + salto alto';
         jumpBoostStatusElement.style.color = '#ffe178';
       } else if (bossActive) {
         jumpBoostStatusElement.textContent = 'Doble salto: busca el boost';
@@ -2401,6 +2557,7 @@
     function resetDoubleJumpBoost() {
       clearDoubleJumpPickup();
       doubleJumpActive = false;
+      lowGravityActive = false;
       jumpCount = 0;
       updateDoubleJumpHUD();
     }
@@ -2408,6 +2565,7 @@
     function spawnDoubleJumpBoost() {
       clearDoubleJumpPickup();
       doubleJumpActive = false;
+      lowGravityActive = false;
       jumpCount = 0;
 
       const { x, z } = findPickupPosition();
@@ -2456,7 +2614,8 @@
         scene.remove(group);
         doubleJumpPickup = null;
         doubleJumpActive = true;
-          gameAudio.pickup();
+        lowGravityActive = true;
+        gameAudio.pickup();
         jumpCount = onGround ? 0 : Math.max(1, jumpCount);
         updateDoubleJumpHUD();
       }
@@ -2568,7 +2727,7 @@
           CONFIG.turretProjectileSpeed * getRoundMultiplier() * 1.20
         ),
         life: CONFIG.turretProjectileMaxLife,
-        damage: CONFIG.bossProjectileDamage,
+        damage: CONFIG.bossRockDamage,
         reason: 'La torreta del jefe te alcanzó.'
       });
     }
@@ -2625,7 +2784,7 @@
         projectilePath.closestPointToPoint(camera.position, true, closestPointOnProjectilePath);
 
         const hitPlayer = closestPointOnProjectilePath.distanceTo(camera.position) <
-          CONFIG.playerRadius + CONFIG.turretProjectileRadius;
+          CONFIG.playerRadius + (projectile.hitRadius ?? CONFIG.turretProjectileRadius);
 
         if (hitPlayer) {
           removeTurretProjectile(i);
@@ -2642,7 +2801,7 @@
           circleIntersectsWorld(
             mesh.position.x,
             mesh.position.z,
-            CONFIG.turretProjectileRadius
+            projectile.hitRadius ?? CONFIG.turretProjectileRadius
           ) ||
           projectile.life <= 0
         ) {
@@ -2765,33 +2924,33 @@
     const swordHandleMaterial = new THREE.MeshLambertMaterial({ color: 0x34251f });
 
     const swordBlade = configureFirstPersonMesh(
-      new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 1.36), swordBladeMaterial),
+      new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.045, 0.62), swordBladeMaterial),
       swordBladeMaterial
     );
-    swordBlade.position.set(0, 0, -0.75);
+    swordBlade.position.set(0, 0, -0.36);
     swordGroup.add(swordBlade);
 
     const swordTip = configureFirstPersonMesh(
-      new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.26, 4), swordBladeMaterial),
+      new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.16, 4), swordBladeMaterial),
       swordBladeMaterial
     );
     swordTip.rotation.x = -Math.PI / 2;
-    swordTip.position.set(0, 0, -1.56);
+    swordTip.position.set(0, 0, -0.75);
     swordGroup.add(swordTip);
 
     const swordGuard = configureFirstPersonMesh(
-      new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.07, 0.10), swordGuardMaterial),
+      new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.06, 0.09), swordGuardMaterial),
       swordGuardMaterial
     );
     swordGuard.position.set(0, 0, -0.03);
     swordGroup.add(swordGuard);
 
     const swordHandle = configureFirstPersonMesh(
-      new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.43, 10), swordHandleMaterial),
+      new THREE.Mesh(new THREE.CylinderGeometry(0.050, 0.050, 0.30, 10), swordHandleMaterial),
       swordHandleMaterial
     );
     swordHandle.rotation.x = Math.PI / 2;
-    swordHandle.position.set(0, 0, 0.22);
+    swordHandle.position.set(0, 0, 0.15);
     swordGroup.add(swordHandle);
 
     // -------------------------
@@ -2841,6 +3000,48 @@
     machineGunGroup.add(machineGunMuzzle);
 
 
+    // -------------------------
+    // Escopeta pump-action
+    // -------------------------
+    const shotgunGroup = new THREE.Group();
+    camera.add(shotgunGroup);
+    shotgunGroup.visible = false;
+    const shotgunBodyMaterial = new THREE.MeshLambertMaterial({ color: 0x343a40 });
+    const shotgunMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x171b1f });
+    const shotgunWoodMaterial = new THREE.MeshLambertMaterial({ color: 0x765033 });
+    const shotgunReceiver = configureFirstPersonMesh(new THREE.Mesh(new THREE.BoxGeometry(0.34,0.25,0.92), shotgunBodyMaterial), shotgunBodyMaterial);
+    shotgunReceiver.position.set(0.34,-0.29,-0.86); shotgunGroup.add(shotgunReceiver);
+    const shotgunStock = configureFirstPersonMesh(new THREE.Mesh(new THREE.BoxGeometry(0.27,0.30,0.55), shotgunWoodMaterial), shotgunWoodMaterial);
+    shotgunStock.position.set(0.34,-0.36,-0.22); shotgunStock.rotation.x=-0.16; shotgunGroup.add(shotgunStock);
+    const shotgunBarrel = configureFirstPersonMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,1.36,12), shotgunMetalMaterial), shotgunMetalMaterial);
+    shotgunBarrel.rotation.x=Math.PI/2; shotgunBarrel.position.set(0.34,-0.24,-1.76); shotgunGroup.add(shotgunBarrel);
+    const shotgunTube = configureFirstPersonMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.043,0.043,1.02,10), shotgunMetalMaterial), shotgunMetalMaterial);
+    shotgunTube.rotation.x=Math.PI/2; shotgunTube.position.set(0.34,-0.35,-1.60); shotgunGroup.add(shotgunTube);
+    const shotgunPump = configureFirstPersonMesh(new THREE.Mesh(new THREE.BoxGeometry(0.28,0.20,0.48), shotgunWoodMaterial), shotgunWoodMaterial);
+    shotgunPump.position.set(0.34,-0.34,-1.38); shotgunGroup.add(shotgunPump);
+    const shotgunPumpBaseZ = shotgunPump.position.z;
+    const shotgunMuzzle = new THREE.Object3D(); shotgunMuzzle.position.set(0.34,-0.24,-2.48); shotgunGroup.add(shotgunMuzzle);
+
+    // -------------------------
+    // RPG
+    // -------------------------
+    const rpgGroup = new THREE.Group();
+    camera.add(rpgGroup);
+    rpgGroup.visible = false;
+    const rpgTubeMaterial = new THREE.MeshLambertMaterial({ color: 0x4f5b42 });
+    const rpgMetalMaterial = new THREE.MeshLambertMaterial({ color: 0x22282a });
+    const rpgGripMaterial = new THREE.MeshLambertMaterial({ color: 0x33383d });
+    const rpgTube = configureFirstPersonMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.16,1.65,12), rpgTubeMaterial), rpgTubeMaterial);
+    rpgTube.rotation.x=Math.PI/2; rpgTube.position.set(0.36,-0.24,-1.10); rpgGroup.add(rpgTube);
+    const rpgFront = configureFirstPersonMesh(new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.14,0.34,12), rpgMetalMaterial), rpgMetalMaterial);
+    rpgFront.rotation.x=Math.PI/2; rpgFront.position.set(0.36,-0.24,-1.98); rpgGroup.add(rpgFront);
+    const rpgGrip = configureFirstPersonMesh(new THREE.Mesh(new THREE.BoxGeometry(0.14,0.34,0.18), rpgGripMaterial), rpgGripMaterial);
+    rpgGrip.position.set(0.36,-0.46,-0.78); rpgGrip.rotation.x=-0.18; rpgGroup.add(rpgGrip);
+    const rpgSight = configureFirstPersonMesh(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.12,0.26), rpgMetalMaterial), rpgMetalMaterial);
+    rpgSight.position.set(0.36,-0.08,-1.18); rpgGroup.add(rpgSight);
+    const rpgMuzzle = new THREE.Object3D(); rpgMuzzle.position.set(0.36,-0.24,-2.20); rpgGroup.add(rpgMuzzle);
+
+
     // Contenedores independientes para las animaciones del viewmodel.
     // El arma conserva sus propias animaciones (recarga, cerrojo, espada, etc.)
     // mientras el contenedor maneja equipar/caminar/correr/agacharse sin acumular offsets.
@@ -2860,12 +3061,16 @@
     const sniperViewmodelRoot = createStableViewmodelRoot(sniperGroup);
     const swordViewmodelRoot = createStableViewmodelRoot(swordGroup);
     const machineGunViewmodelRoot = createStableViewmodelRoot(machineGunGroup);
+    const shotgunViewmodelRoot = createStableViewmodelRoot(shotgunGroup);
+    const rpgViewmodelRoot = createStableViewmodelRoot(rpgGroup);
 
     const viewmodelGroups = {
       pistol: pistolViewmodelRoot,
       sniper: sniperViewmodelRoot,
       sword: swordViewmodelRoot,
       machinegun: machineGunViewmodelRoot,
+      shotgun: shotgunViewmodelRoot,
+      rpg: rpgViewmodelRoot,
     };
 
     // =========================================================
@@ -2876,6 +3081,77 @@
 
     const enemies = [];
     const enemyHitMeshes = [];
+
+    const acidProjectiles = [];
+    const acidPools = [];
+    const specialRaycaster = new THREE.Raycaster();
+    const specialRayOrigin = new THREE.Vector3();
+    const specialRayDirection = new THREE.Vector3();
+    let activeSmokerPull = null;
+
+    function hasClearInfectedLine(enemy) {
+      specialRayOrigin.set(enemy.group.position.x, enemy.group.position.y + 1.25, enemy.group.position.z);
+      specialRayDirection.copy(camera.position).sub(specialRayOrigin);
+      const distance = specialRayDirection.length();
+      if (distance < 0.01) return true;
+      specialRayDirection.normalize();
+      specialRaycaster.set(specialRayOrigin, specialRayDirection);
+      specialRaycaster.far = distance;
+      return specialRaycaster.intersectObjects(shotBlockers, false).length === 0;
+    }
+
+    function createAcidPool(x, z) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(2.05, 2.35, 0.07, 24), spitterAcidMaterial.clone());
+      mesh.position.set(x, 0.055, z);
+      mesh.scale.z = 0.72;
+      scene.add(mesh);
+      acidPools.push({ mesh, life: 5.2, tick: 0.15 });
+    }
+
+    function fireSpitterAcid(enemy) {
+      const origin = new THREE.Vector3(enemy.group.position.x, enemy.group.position.y + 1.55, enemy.group.position.z);
+      const target = camera.position.clone();
+      const velocity = target.sub(origin).normalize().multiplyScalar(10.5 * getRoundMultiplier());
+      velocity.y += 1.6;
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), spitterAcidMaterial.clone());
+      mesh.position.copy(origin); scene.add(mesh);
+      acidProjectiles.push({ mesh, velocity, life: 4.0 });
+      gameAudio.tone(250, .12, .018, 'sawtooth', gameAudio.sfx, 0, 0, 120);
+    }
+
+    function clearZombieSpecialEffects() {
+      for (const p of acidProjectiles) scene.remove(p.mesh);
+      acidProjectiles.length = 0;
+      for (const p of acidPools) scene.remove(p.mesh);
+      acidPools.length = 0;
+      if (activeSmokerPull?.tongueLine) scene.remove(activeSmokerPull.tongueLine);
+      activeSmokerPull = null;
+      bleedRemaining = 0; bleedTickTimer = 0; knockdownRemaining = 0;
+    }
+
+    function updateZombieProjectiles(delta) {
+      for (let i = acidProjectiles.length - 1; i >= 0; i--) {
+        const p = acidProjectiles[i];
+        p.life -= delta;
+        p.velocity.y -= 7.0 * delta;
+        p.mesh.position.addScaledVector(p.velocity, delta);
+        const nearPlayer = p.mesh.position.distanceTo(camera.position) < 0.75;
+        if (nearPlayer || p.mesh.position.y <= 0.12 || p.life <= 0) {
+          createAcidPool(p.mesh.position.x, p.mesh.position.z);
+          scene.remove(p.mesh); acidProjectiles.splice(i,1);
+        }
+      }
+      for (let i = acidPools.length - 1; i >= 0; i--) {
+        const pool = acidPools[i]; pool.life -= delta; pool.tick -= delta;
+        pool.mesh.material.opacity = Math.min(.72, Math.max(0, pool.life / 2.2));
+        const dx = camera.position.x - pool.mesh.position.x, dz = camera.position.z - pool.mesh.position.z;
+        if (dx*dx + dz*dz < 5.0 && pool.tick <= 0) {
+          pool.tick = 0.42;
+          damagePlayer(4, 'El ácido de un Spitter te consumió.');
+        }
+        if (pool.life <= 0) { scene.remove(pool.mesh); acidPools.splice(i,1); }
+      }
+    }
 
     function updateEnemyCount() {
       enemyCountElement.textContent = `Enemigos en mapa: ${enemies.length}`;
@@ -2936,95 +3212,89 @@
       entity.healthBar.visible = ratio > 0 && ratio < 1 ? true : ratio > 0;
     }
 
-    function spawnEnemy() {
-      if (enemies.length >= getMaxEnemies() || gameOver) return;
+    function buildZombilandEnemyModel(type, enemy) {
+      const group = enemy.group;
+      const hitMeshes = enemy.hitMeshes;
+      const addHit = (mesh) => { mesh.castShadow = true; mesh.receiveShadow = true; group.add(mesh); hitMeshes.push(mesh); mesh.userData.enemyRef = enemy; return mesh; };
 
-      let spawnX = 0;
-      let spawnZ = 0;
-      let found = false;
-
-      for (let attempt = 0; attempt < 80; attempt++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = randomRange(22, 42);
-
-        spawnX = THREE.MathUtils.clamp(
-          camera.position.x + Math.cos(angle) * distance,
-          -CONFIG.mapHalfSize + 3,
-          CONFIG.mapHalfSize - 3
-        );
-
-        spawnZ = THREE.MathUtils.clamp(
-          camera.position.z + Math.sin(angle) * distance,
-          -CONFIG.mapHalfSize + 3,
-          CONFIG.mapHalfSize - 3
-        );
-
-        if (isSpawnPositionValid(spawnX, spawnZ)) {
-          found = true;
-          break;
-        }
+      if (type === 'spitter') {
+        const torso = addHit(new THREE.Mesh(new THREE.CylinderGeometry(.38,.48,1.45,10), spitterBodyMaterial)); torso.position.y=.82;
+        const head = addHit(new THREE.Mesh(new THREE.SphereGeometry(.34,10,8), enemyHeadMaterial)); head.position.y=1.78;
+        const sac = addHit(new THREE.Mesh(new THREE.SphereGeometry(.30,10,8), spitterAcidMaterial)); sac.position.set(0,1.43,.28);
+        const jaw = addHit(new THREE.Mesh(new THREE.BoxGeometry(.32,.16,.32), new THREE.MeshLambertMaterial({color:0x44533b}))); jaw.position.set(0,1.66,.30);
+      } else if (type === 'hunter') {
+        const torso = addHit(new THREE.Mesh(new THREE.BoxGeometry(.72,1.1,.48), hunterBodyMaterial)); torso.position.y=.78; torso.rotation.x=.18;
+        const head = addHit(new THREE.Mesh(new THREE.SphereGeometry(.31,10,8), hunterBodyMaterial)); head.position.set(0,1.55,.08);
+        const hood = new THREE.Mesh(new THREE.ConeGeometry(.43,.5,10,true), hunterAccentMaterial); hood.rotation.x=Math.PI; hood.position.set(0,1.72,.02); group.add(hood);
+        for(const sx of [-.28,.28]){const arm=addHit(new THREE.Mesh(new THREE.BoxGeometry(.18,.72,.18),hunterBodyMaterial));arm.position.set(sx,.78,.18);arm.rotation.x=-.55;}
+        group.scale.setScalar(.95);
+      } else if (type === 'smoker') {
+        const torso = addHit(new THREE.Mesh(new THREE.CylinderGeometry(.38,.48,1.5,10), smokerBodyMaterial)); torso.position.y=.83;
+        const head = addHit(new THREE.Mesh(new THREE.SphereGeometry(.35,10,8), enemyHeadMaterial)); head.position.y=1.8;
+        const growth = addHit(new THREE.Mesh(new THREE.SphereGeometry(.28,9,7), new THREE.MeshLambertMaterial({color:0x825f59}))); growth.position.set(.28,1.57,.04);
+        enemy.mouthOffset = new THREE.Vector3(0,1.70,.32);
+      } else if (type === 'parasite') {
+        const body=addHit(new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),parasiteMaterial)); body.position.y=.34;
+        const eyeMat=new THREE.MeshLambertMaterial({color:0xffe3a0,emissive:0x5a2b00});
+        for(const sx of [-.12,.12]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.055,7,6),eyeMat);eye.position.set(sx,.40,.30);group.add(eye);}
+        for(let i=0;i<6;i++){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.025,.035,.48,6),parasiteMaterial);leg.position.set(Math.cos(i*Math.PI/3)*.29,.21,Math.sin(i*Math.PI/3)*.29);leg.rotation.z=Math.PI/2.8;leg.rotation.y=-i*Math.PI/3;group.add(leg);}
+      } else if (type === 'charger') {
+        const torso=addHit(new THREE.Mesh(new THREE.BoxGeometry(1.05,1.55,.72),chargerBodyMaterial));torso.position.y=.95;
+        const head=addHit(new THREE.Mesh(new THREE.SphereGeometry(.38,10,8),enemyHeadMaterial));head.position.set(-.12,1.95,0);
+        const giantArm=addHit(new THREE.Mesh(new THREE.CylinderGeometry(.42,.58,1.75,10),chargerArmMaterial));giantArm.position.set(.72,1.0,.04);giantArm.rotation.z=-.18;
+        const smallArm=addHit(new THREE.Mesh(new THREE.CylinderGeometry(.12,.16,.9,8),chargerBodyMaterial));smallArm.position.set(-.58,1.05,0);smallArm.rotation.z=.3;
+        group.scale.setScalar(1.12);
+      } else {
+        const torso=addHit(new THREE.Mesh(new THREE.CylinderGeometry(.42,.48,1.3,10),enemyMaterial));torso.position.y=.75;
+        const head=addHit(new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),enemyHeadMaterial));head.position.y=1.58;
+        const armMat=new THREE.MeshLambertMaterial({color:0x718273});
+        for(const sx of [-.43,.43]){const arm=addHit(new THREE.Mesh(new THREE.BoxGeometry(.17,.72,.17),armMat));arm.position.set(sx,.92,.24);arm.rotation.x=-.72;}
       }
+    }
 
-      if (!found) return;
+    function spawnEnemy(forcedType = null, summoned = false) {
+      if ((!summoned && roundSpawnedCount >= getRoundTargetCount()) || enemies.length >= getMaxEnemies() || gameOver) return;
+      const type = forcedType || getRoundInfectedType();
+      let spawnX=0, spawnZ=0, found=false;
+      for(let attempt=0; attempt<100; attempt++){
+        const angle=Math.random()*Math.PI*2;
+        const distance=randomRange(20,40);
+        spawnX=THREE.MathUtils.clamp(camera.position.x+Math.cos(angle)*distance,-CONFIG.mapHalfSize+3,CONFIG.mapHalfSize-3);
+        spawnZ=THREE.MathUtils.clamp(camera.position.z+Math.sin(angle)*distance,-CONFIG.mapHalfSize+3,CONFIG.mapHalfSize-3);
+        if(isSpawnPositionValid(spawnX,spawnZ)){found=true;break;}
+      }
+      if(!found) return;
 
-      const forceElite = currentRound >= CONFIG.eliteStartRound && defeatedEnemies === 0 && !enemies.some((enemy) => enemy.isElite);
-      const isElite = currentRound >= CONFIG.eliteStartRound && (forceElite || Math.random() < CONFIG.eliteSpawnChance);
-      const group = new THREE.Group();
-      group.position.set(spawnX, 0, spawnZ);
-      if (isElite) group.scale.setScalar(1.10);
-
-      const body = new THREE.Mesh(enemyBodyGeometry, isElite ? eliteEnemyMaterial : enemyMaterial);
-      body.position.y = 0.70;
-      body.castShadow = true;
-      body.receiveShadow = true;
-      group.add(body);
-
-      const head = new THREE.Mesh(enemyHeadGeometry, isElite ? eliteEnemyHeadMaterial : enemyHeadMaterial);
-      head.position.y = 1.55;
-      head.castShadow = true;
-      group.add(head);
-
-      const enemyHealth = isElite ? CONFIG.eliteEnemyHealth : CONFIG.normalEnemyHealth;
-      const enemy = {
-        group,
-        body,
-        head,
-        hitMeshes: [body, head],
-        speed: randomRange(CONFIG.enemySpeedMin, CONFIG.enemySpeedMax) * getRoundMultiplier() * (isElite ? CONFIG.eliteSpeedMultiplier : 1),
-        radius: CONFIG.enemyRadius * (isElite ? 1.08 : 1),
-        health: enemyHealth,
-        maxHealth: enemyHealth,
-        isElite,
-        isBoss: false,
-        bobOffset: Math.random() * Math.PI * 2
+      const group=new THREE.Group(); group.position.set(spawnX,0,spawnZ);
+      const healthByType={common:2,spitter:3,hunter:3,smoker:4,parasite:1,charger:6};
+      const speedByType={common:1.18,spitter:.98,hunter:1.38,smoker:.94,parasite:1.82,charger:.96};
+      const radiusByType={common:.55,spitter:.58,hunter:.52,smoker:.58,parasite:.34,charger:.88};
+      const enemy={
+        group, hitMeshes:[], type, health:healthByType[type], maxHealth:healthByType[type],
+        speed:randomRange(CONFIG.enemySpeedMin,CONFIG.enemySpeedMax)*getRoundMultiplier()*speedByType[type],
+        radius:radiusByType[type], isElite:type!=='common', isBoss:false, bobOffset:Math.random()*Math.PI*2,
+        attackTimer:0.55+Math.random()*0.65, leapCooldown:0.75+Math.random()*0.75, leaping:false, leapVelocityY:0, leapDirection:new THREE.Vector3(),
+        tongueCooldown:0.95+Math.random()*0.85, pulling:false, pullRemaining:0,
+        attached:false, attachRemaining:0, attachTick:.42,
+        chargeCooldown:0.85+Math.random()*0.80, charging:false, chargeRemaining:0, chargeDirection:new THREE.Vector3(), hasHitCharge:false,
+        reactionDelay:0.08+Math.random()*0.12
       };
-
+      buildZombilandEnemyModel(type,enemy);
       attachEntityHealthBar(enemy);
-
-      body.userData.enemyRef = enemy;
-      head.userData.enemyRef = enemy;
-
-      enemyHitMeshes.push(body, head);
-      enemies.push(enemy);
-      scene.add(group);
-      gameAudio.enemySpawn();
-      updateEnemyCount();
+      for(const mesh of enemy.hitMeshes) enemyHitMeshes.push(mesh);
+      enemies.push(enemy); scene.add(group); if (!summoned) roundSpawnedCount += 1; gameAudio.enemySpawn(); updateEnemyCount();
     }
 
     function removeEnemy(enemy) {
       const enemyIndex = enemies.indexOf(enemy);
-      if (enemyIndex !== -1) {
-        enemies.splice(enemyIndex, 1);
-      }
-
+      if (enemyIndex !== -1) enemies.splice(enemyIndex, 1);
       for (const mesh of enemy.hitMeshes) {
         const meshIndex = enemyHitMeshes.indexOf(mesh);
-        if (meshIndex !== -1) {
-          enemyHitMeshes.splice(meshIndex, 1);
-        }
+        if (meshIndex !== -1) enemyHitMeshes.splice(meshIndex, 1);
       }
-
-      scene.remove(enemy.group);
+      if (enemy.tongueLine) scene.remove(enemy.tongueLine);
+      if (activeSmokerPull === enemy) activeSmokerPull = null;
+      if (enemy.group?.parent) enemy.group.parent.remove(enemy.group);
       updateEnemyCount();
     }
 
@@ -3038,61 +3308,126 @@
     function moveEnemyWithCollision(enemy, dx, dz) {
       const group = enemy.group;
       const radius = enemy.radius || CONFIG.enemyRadius;
+      let moved = false;
 
       const candidateX = group.position.x + dx;
       if (!circleIntersectsWorld(candidateX, group.position.z, radius)) {
         group.position.x = candidateX;
+        moved = true;
       }
 
       const candidateZ = group.position.z + dz;
       if (!circleIntersectsWorld(group.position.x, candidateZ, radius)) {
         group.position.z = candidateZ;
+        moved = true;
+      }
+
+      // Si chocan con un obstáculo prueban una desviación lateral corta.
+      if (!moved && (Math.abs(dx) + Math.abs(dz)) > 0.0001) {
+        const len = Math.hypot(dx, dz) || 1;
+        const sx = -dz / len * Math.max(Math.abs(dx), Math.abs(dz), 0.05);
+        const sz =  dx / len * Math.max(Math.abs(dx), Math.abs(dz), 0.05);
+        const side = enemy.bobOffset % 2 > 1 ? 1 : -1;
+        const nx = group.position.x + sx * side;
+        const nz = group.position.z + sz * side;
+        if (!circleIntersectsWorld(nx, nz, radius)) {
+          group.position.x = nx;
+          group.position.z = nz;
+        }
       }
     }
 
+    function startSmokerPull(enemy) {
+      if (activeSmokerPull || !hasClearInfectedLine(enemy)) return;
+      activeSmokerPull = enemy; enemy.pulling = true; enemy.pullRemaining = 2.65; enemy.tongueCooldown = 3.7;
+      const geom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+      enemy.tongueLine = new THREE.Line(geom, smokerTongueMaterial); scene.add(enemy.tongueLine);
+      damagePlayer(7, 'La lengua de un Smoker te atrapó.');
+    }
+
+    function updateSmokerTongue(enemy, delta) {
+      if (!enemy.pulling) return;
+      enemy.pullRemaining -= delta;
+      const mouth = enemy.group.position.clone().add(enemy.mouthOffset || new THREE.Vector3(0,1.7,.3));
+      const arr = enemy.tongueLine.geometry.attributes.position.array;
+      arr[0]=mouth.x; arr[1]=mouth.y; arr[2]=mouth.z; arr[3]=camera.position.x; arr[4]=camera.position.y-.18; arr[5]=camera.position.z;
+      enemy.tongueLine.geometry.attributes.position.needsUpdate=true;
+      const pull = enemy.group.position.clone().sub(camera.position); pull.y=0;
+      const dist=pull.length();
+      if(dist>1.4){pull.normalize(); const pullStep=Math.min(dist-1.2,6.8*delta); const nx=camera.position.x+pull.x*pullStep, nz=camera.position.z+pull.z*pullStep; if(!circleIntersectsWorld(nx,nz,CONFIG.playerRadius)){camera.position.x=nx;camera.position.z=nz;}}
+      if(enemy.pullRemaining<=0 || dist<1.35 || !hasClearInfectedLine(enemy)){
+        enemy.pulling=false; if(enemy.tongueLine){scene.remove(enemy.tongueLine);enemy.tongueLine=null;} if(activeSmokerPull===enemy)activeSmokerPull=null;
+      }
+    }
+
+    function attachParasite(enemy) {
+      enemy.attached=true; enemy.attachRemaining=4.0; enemy.attachTick=.48;
+      for(const mesh of enemy.hitMeshes){const idx=enemyHitMeshes.indexOf(mesh); if(idx!==-1) enemyHitMeshes.splice(idx,1);}
+      if(enemy.group.parent) enemy.group.parent.remove(enemy.group);
+      camera.add(enemy.group); enemy.group.position.set((Math.random()>.5?.42:-.42),-.36,-1.05); enemy.group.rotation.set(.2,0,(Math.random()-.5)*.5); enemy.group.scale.setScalar(.68);
+      if (enemy.healthBar) enemy.healthBar.visible = false;
+      damagePlayer(4,'Un parásito se aferró a ti.');
+    }
+
+    function finishParasite(enemy) {
+      enemy.health=0; registerEnemyDefeat(enemy);
+    }
+
     function updateEnemies(delta, elapsedTime) {
-      const playerX = camera.position.x;
-      const playerZ = camera.position.z;
-
-      for (const enemy of enemies) {
-        const ex = enemy.group.position.x;
-        const ez = enemy.group.position.z;
-        const dx = playerX - ex;
-        const dz = playerZ - ez;
-        const distance = Math.hypot(dx, dz);
-
-        if (distance > 0.0001) {
-          const step = enemy.speed * delta;
-          moveEnemyWithCollision(
-            enemy,
-            (dx / distance) * step,
-            (dz / distance) * step
-          );
-
-          // El enemigo mira hacia el jugador.
-          enemy.group.rotation.y = Math.atan2(dx, dz);
+      const playerX=camera.position.x, playerZ=camera.position.z;
+      const list=[...enemies];
+      for(const enemy of list){
+        if(!enemies.includes(enemy)) continue;
+        if(enemy.isBoss) continue;
+        if(enemy.attached){
+          enemy.attachRemaining-=delta; enemy.attachTick-=delta; enemy.group.rotation.z+=delta*2.8; enemy.group.position.y=-.36+Math.sin(elapsedTime*8+enemy.bobOffset)*.04;
+          if(enemy.attachTick<=0){enemy.attachTick=.48; damagePlayer(2,'El parásito siguió drenándote.');}
+          if(enemy.attachRemaining<=0){finishParasite(enemy);} continue;
         }
 
-        // Pequeño movimiento vertical para hacerlo más visible.
-        if (!enemy.isBoss) {
-          enemy.group.position.y = Math.sin(elapsedTime * 3 + enemy.bobOffset) * 0.045;
+        let ex=enemy.group.position.x, ez=enemy.group.position.z;
+        let dx=playerX-ex, dz=playerZ-ez, distance=Math.hypot(dx,dz);
+        enemy.group.rotation.y=Math.atan2(dx,dz);
+        enemy.attackTimer-=delta; enemy.leapCooldown-=delta; enemy.tongueCooldown-=delta; enemy.chargeCooldown-=delta; enemy.reactionDelay=Math.max(0,(enemy.reactionDelay||0)-delta);
+
+        if(enemy.type==='spitter'){
+          if(enemy.reactionDelay<=0 && distance>7 && distance<30 && enemy.attackTimer<=0 && hasClearInfectedLine(enemy)){fireSpitterAcid(enemy);enemy.attackTimer=1.9+Math.random()*0.65;}
+          if(distance>8 && distance>0.001){const step=enemy.speed*.50*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          enemy.group.position.y=Math.sin(elapsedTime*2.4+enemy.bobOffset)*.025;
+        } else if(enemy.type==='hunter'){
+          if(enemy.reactionDelay<=0 && !enemy.leaping && enemy.leapCooldown<=0 && distance>3.5 && distance<21){enemy.leaping=true;enemy.leapVelocityY=9.3;enemy.leapDirection.set(dx,0,dz).normalize();enemy.leapCooldown=2.1+Math.random()*0.7;}
+          if(enemy.leaping){
+            enemy.leapVelocityY-=18*delta; enemy.group.position.y+=enemy.leapVelocityY*delta; moveEnemyWithCollision(enemy,enemy.leapDirection.x*11.8*delta,enemy.leapDirection.z*11.8*delta);
+            const d=Math.hypot(camera.position.x-enemy.group.position.x,camera.position.z-enemy.group.position.z);
+            if(d<1.0 && enemy.group.position.y<1.5){damagePlayer(24,'Un Hunter te derribó.');knockdownRemaining=Math.max(knockdownRemaining,1.15);applyZombieBleed();enemy.leaping=false;enemy.group.position.y=0;}
+            if(enemy.group.position.y<=0){enemy.group.position.y=0;enemy.leaping=false;}
+          } else if(distance>0.001){const step=enemy.speed*.72*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+        } else if(enemy.type==='smoker'){
+          if(enemy.reactionDelay<=0 && !enemy.pulling && !activeSmokerPull && enemy.tongueCooldown<=0 && distance>4 && distance<28) startSmokerPull(enemy);
+          updateSmokerTongue(enemy,delta);
+          if(!enemy.pulling && distance>9 && distance>0.001){const step=enemy.speed*.45*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          enemy.group.position.y=Math.sin(elapsedTime*2+enemy.bobOffset)*.02;
+        } else if(enemy.type==='charger'){
+          if(enemy.reactionDelay<=0 && !enemy.charging && enemy.chargeCooldown<=0 && distance>5 && distance<30 && hasClearInfectedLine(enemy)){enemy.charging=true;enemy.chargeRemaining=1.15;enemy.hasHitCharge=false;enemy.chargeDirection.set(dx,0,dz).normalize();enemy.chargeCooldown=2.8;}
+          if(enemy.charging){
+            enemy.chargeRemaining-=delta; moveEnemyWithCollision(enemy,enemy.chargeDirection.x*17.0*delta,enemy.chargeDirection.z*17.0*delta);
+            const d=Math.hypot(camera.position.x-enemy.group.position.x,camera.position.z-enemy.group.position.z);
+            if(d<1.25 && !enemy.hasHitCharge){enemy.hasHitCharge=true;damagePlayer(38,'Un Charger te embistió con su brazo gigante.');knockdownRemaining=Math.max(knockdownRemaining,1.45);applyZombieBleed();const away=camera.position.clone().sub(enemy.group.position);away.y=0;if(away.lengthSq()>0){away.normalize();const nx=camera.position.x+away.x*2.2,nz=camera.position.z+away.z*2.2;if(!circleIntersectsWorld(nx,nz,CONFIG.playerRadius)){camera.position.x=nx;camera.position.z=nz;}}}
+            if(enemy.chargeRemaining<=0) enemy.charging=false;
+          } else if(distance>0.001){const step=enemy.speed*.55*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+        } else {
+          if(distance>0.001){const factor=enemy.type==='parasite'?1.2:1;const step=enemy.speed*factor*delta;moveEnemyWithCollision(enemy,dx/distance*step,dz/distance*step);}
+          enemy.group.position.y=enemy.type==='parasite'?Math.abs(Math.sin(elapsedTime*5+enemy.bobOffset))*.12:Math.sin(elapsedTime*3+enemy.bobOffset)*.035;
         }
 
-        // Contacto enemigo-jugador = Game Over.
-        const updatedDistance = Math.hypot(
-          playerX - enemy.group.position.x,
-          playerZ - enemy.group.position.z
-        );
-
-        if (updatedDistance < CONFIG.playerRadius + (enemy.radius || CONFIG.enemyRadius) + 0.12) {
-          const contactDamage = enemy.isBoss ? (CONFIG.bossContactDamage ?? CONFIG.enemyContactDamage + 20) : CONFIG.enemyContactDamage;
-          damagePlayer(contactDamage, enemy.isBoss ? 'El jefe te arrolló.' : 'Un enemigo te alcanzó.', true);
-          if (distance > 0.0001 && !enemy.isBoss) {
-            enemy.group.position.x -= (dx / distance) * 0.55;
-            enemy.group.position.z -= (dz / distance) * 0.55;
-          }
-          if (gameOver) break;
-        }
+        ex=enemy.group.position.x; ez=enemy.group.position.z; const updatedDistance=Math.hypot(playerX-ex,playerZ-ez);
+        if(enemy.type==='parasite' && updatedDistance<.85){attachParasite(enemy);continue;}
+        if(enemy.type==='common' && updatedDistance<CONFIG.playerRadius+enemy.radius+.12){
+          if(damagePlayer(CONFIG.enemyContactDamage,'Un infectado te mordió.',true)){applyZombieBleed();}
+          if(distance>.001){enemy.group.position.x-=dx/distance*.45;enemy.group.position.z-=dz/distance*.45;}
+        } else if(enemy.type==='spitter' && updatedDistance<1.0){damagePlayer(8,'Un Spitter te golpeó.',true);}
+        else if(enemy.type==='smoker' && !enemy.pulling && updatedDistance<1.0){damagePlayer(10,'Un Smoker te golpeó.',true);}
+        else if(enemy.type==='hunter' && !enemy.leaping && updatedDistance<.9){damagePlayer(12,'Un Hunter te arañó.',true);}
       }
     }
 
@@ -3102,15 +3437,16 @@
     const raycaster = new THREE.Raycaster();
     const centerScreen = new THREE.Vector2(0, 0);
 
-    const WEAPON_ORDER = ['pistol', 'sniper', 'sword', 'machinegun'];
+    const WEAPON_ORDER = ['shotgun', 'machinegun', 'sniper', 'rpg', 'sword'];
     const WEAPON_LABELS = {
-      pistol: 'Pistola',
+      shotgun: 'Escopeta',
+      machinegun: 'Metralleta',
       sniper: 'Francotirador',
-      sword: 'Espada',
-      machinegun: 'Metralleta'
+      rpg: 'RPG',
+      sword: 'Cuchillo'
     };
 
-    let activeWeapon = 'pistol';
+    let activeWeapon = 'shotgun';
     let score = 0;
     let defeatedEnemies = 0;
     let lastShotTime = 0;
@@ -3158,6 +3494,18 @@
     let machineGunReloadRemaining = 0;
     let primaryButtonHeld = false;
 
+    let shotgunTubeAmmo = CONFIG.shotgunTubeSize;
+    let shotgunReserveAmmo = CONFIG.shotgunTotalAmmo - CONFIG.shotgunTubeSize;
+    let shotgunAction = 'idle'; // idle | pumpBack | pumpForward | reload
+    let shotgunActionRemaining = 0;
+
+    let rpgAmmo = CONFIG.rpgMagazineSize;
+    let rpgReserveAmmo = CONFIG.rpgTotalAmmo - CONFIG.rpgMagazineSize;
+    let rpgReloading = false;
+    let rpgReloadRemaining = 0;
+    const rpgProjectiles = [];
+
+
     // Balas visuales del jugador. El Raycaster decide el impacto exacto;
     // las esferas permiten ver el proyectil viajando por el escenario.
     const playerProjectiles = [];
@@ -3181,6 +3529,10 @@
       emissive: 0xff5a00,
       emissiveIntensity: 1.45
     });
+    const shotgunProjectileMaterial = new THREE.MeshLambertMaterial({ color: 0xffe1a3, emissive: 0xff7b25, emissiveIntensity: 1.25 });
+    const rpgProjectileMaterial = new THREE.MeshLambertMaterial({ color: 0x6f7a55, emissive: 0xff7a22, emissiveIntensity: 0.55 });
+    const rpgExplosionMaterial = new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.78, depthTest: false });
+
     const playerShotOrigin = new THREE.Vector3();
     const playerShotDirection = new THREE.Vector3();
 
@@ -3191,14 +3543,15 @@
 
     function setDefeatedEnemies(value) {
       defeatedEnemies = value;
-      defeatedCountElement.textContent =
-        `Derrotados: ${defeatedEnemies} / ${CONFIG.enemiesToWin}`;
+      defeatedCountElement.textContent = currentRound === 8 ? 'Objetivo: eliminar al Tank' : `Derrotados: ${defeatedEnemies} / ${getRoundTargetCount()}`;
     }
 
 
     function isWeaponBusyForInspection() {
       if (sniperAction !== 'idle') return true;
       if (machineGunReloading) return true;
+      if (shotgunAction !== 'idle') return true;
+      if (rpgReloading) return true;
       if (typeof revolverReloading !== 'undefined' && revolverReloading) return true;
       if (swordSwingRemaining > 0) return true;
       return false;
@@ -3225,47 +3578,45 @@
       const dark = 'fill="#28323b" stroke="#647789" stroke-width="2" stroke-linejoin="round"';
       const wood = 'fill="#7c5435" stroke="#5b3b25" stroke-width="2"';
       const icons = {
-        pistol: `<g ${common}><rect x="48" y="21" width="76" height="18" rx="4"/><rect x="92" y="37" width="22" height="25" rx="3" transform="rotate(12 103 49)"/></g><rect x="119" y="26" width="26" height="7" rx="2" ${dark}/><circle cx="66" cy="45" r="8" fill="none" stroke="#8da0b2" stroke-width="3"/>`,
-        sniper: `<rect x="17" y="30" width="128" height="12" rx="4" ${common}/><rect x="111" y="27" width="53" height="5" rx="2" ${dark}/><rect x="26" y="41" width="31" height="16" rx="3" ${wood}/><rect x="75" y="42" width="14" height="21" rx="2" ${dark}/><rect x="55" y="17" width="55" height="9" rx="4" ${dark}/><circle cx="64" cy="21.5" r="8" fill="#202b35" stroke="#718598" stroke-width="2"/><circle cx="101" cy="21.5" r="8" fill="#202b35" stroke="#718598" stroke-width="2"/>`,
-        sword: `<path d="M38 55 L128 14 L137 23 L50 62 Z" ${common}/><rect x="30" y="50" width="34" height="7" rx="3" fill="#c5a05a"/><rect x="20" y="55" width="27" height="10" rx="4" ${wood}/><circle cx="18" cy="61" r="6" fill="#c5a05a"/>`,
-        machinegun: `<rect x="34" y="25" width="92" height="18" rx="4" ${common}/><rect x="120" y="30" width="43" height="7" rx="3" ${dark}/><rect x="68" y="43" width="17" height="24" rx="2" transform="rotate(-8 76 55)" ${dark}/><rect x="38" y="42" width="22" height="16" rx="3" ${dark}/><rect x="20" y="29" width="23" height="8" rx="2" ${dark}/><rect x="48" y="18" width="55" height="5" rx="2" fill="#52606d"/>`,
-        revolver: `<rect x="51" y="26" width="67" height="15" rx="5" ${common}/><rect x="112" y="30" width="44" height="6" rx="3" ${dark}/><circle cx="83" cy="35" r="13" fill="#58616a" stroke="#8393a0" stroke-width="2"/><rect x="79" y="43" width="23" height="23" rx="4" transform="rotate(14 90 54)" ${wood}/><path d="M57 23 L66 16 L75 24" fill="#2a3138" stroke="#647789" stroke-width="2"/>`
+        shotgun: `<rect x="24" y="29" width="101" height="15" rx="4" ${common}/><rect x="119" y="31" width="47" height="6" rx="3" ${dark}/><rect x="72" y="43" width="34" height="12" rx="3" ${wood}/><rect x="18" y="25" width="25" height="23" rx="4" ${wood}/><rect x="104" y="42" width="55" height="4" rx="2" ${dark}/>`,
+        machinegun: `<rect x="34" y="25" width="92" height="18" rx="4" ${common}/><rect x="120" y="30" width="43" height="7" rx="3" ${dark}/><rect x="68" y="43" width="17" height="24" rx="2" transform="rotate(-8 76 55)" ${dark}/><rect x="38" y="42" width="22" height="16" rx="3" ${dark}/><rect x="20" y="29" width="23" height="8" rx="2" ${dark}/>`,
+        sniper: `<rect x="17" y="30" width="128" height="12" rx="4" ${common}/><rect x="111" y="27" width="53" height="5" rx="2" ${dark}/><rect x="26" y="41" width="31" height="16" rx="3" ${wood}/><rect x="55" y="17" width="55" height="9" rx="4" ${dark}/><circle cx="64" cy="21.5" r="8" fill="#202b35"/><circle cx="101" cy="21.5" r="8" fill="#202b35"/>`,
+        rpg: `<rect x="24" y="26" width="122" height="18" rx="9" fill="#667453" stroke="#3b4634" stroke-width="2"/><rect x="135" y="23" width="25" height="24" rx="6" ${dark}/><rect x="70" y="43" width="14" height="22" rx="3" ${dark}/><rect x="83" y="18" width="10" height="13" rx="2" ${dark}/>`,
+        sword: `<path d="M45 52 L120 22 L128 29 L55 59 Z" ${common}/><rect x="35" y="51" width="28" height="6" rx="3" fill="#c5a05a"/><rect x="23" y="54" width="27" height="9" rx="4" ${dark}/>`
       };
-      equippedWeaponIconElement.innerHTML = icons[activeWeapon] || icons.pistol;
+      equippedWeaponIconElement.innerHTML = icons[activeWeapon] || icons.shotgun;
     }
 
     function updateWeaponStatus() {
       const extra = activeWeapon === 'sniper'
         ? ' · Clic derecho: zoom'
         : activeWeapon === 'sword'
-          ? ` · Alcance: ${CONFIG.swordRange.toFixed(1)} m`
+          ? ` · Cuchillo · alcance ${CONFIG.swordRange.toFixed(1)} m`
           : activeWeapon === 'machinegun'
             ? ' · Mantén clic: automático'
-            : '';
-
-      weaponStatusElement.textContent =
-        `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}${inspectingWeapon ? ' · INSPECCIONANDO' : ''}`;
+            : activeWeapon === 'shotgun'
+              ? ' · Pump-action · 8 perdigones'
+              : activeWeapon === 'rpg'
+                ? ' · Explosión de área'
+                : '';
+      weaponStatusElement.textContent = `Arma: ${WEAPON_LABELS[activeWeapon]} · [3] cambiar${extra}${inspectingWeapon ? ' · INSPECCIONANDO' : ''}`;
       updateAmmoHUD();
       updateEquippedWeaponCard();
     }
 
     function updateAmmoHUD() {
       if (activeWeapon === 'sniper') {
-        const state = sniperAction === 'bolt'
-          ? ' · RECARGANDO CERROJO'
-          : sniperAction === 'magazine'
-            ? ' · RECARGANDO CARGADOR'
-            : '';
-        ammoStatusElement.textContent =
-          `Francotirador: ${sniperAmmo} / ${CONFIG.sniperMagazineSize}${state}`;
+        const state = sniperAction === 'bolt' ? ' · CERROJO' : sniperAction === 'magazine' ? ' · RECARGANDO' : '';
+        ammoStatusElement.textContent = `Francotirador: ${sniperAmmo} / ${CONFIG.sniperMagazineSize}${state}`;
       } else if (activeWeapon === 'machinegun') {
-        const state = machineGunReloading ? ' · RECARGANDO' : '';
-        ammoStatusElement.textContent =
-          `Metralleta: ${machineGunMagazineAmmo} / ${CONFIG.machineGunMagazineSize} · Reserva: ${machineGunReserveAmmo}${state}`;
-      } else if (activeWeapon === 'sword') {
-        ammoStatusElement.textContent = 'Espada: sin munición';
+        ammoStatusElement.textContent = `Metralleta: ${machineGunMagazineAmmo} / ${CONFIG.machineGunMagazineSize} · Reserva: ${machineGunReserveAmmo}${machineGunReloading ? ' · RECARGANDO' : ''}`;
+      } else if (activeWeapon === 'shotgun') {
+        const state = shotgunAction === 'pumpBack' || shotgunAction === 'pumpForward' ? ' · BOMBEANDO' : shotgunAction === 'reload' ? ' · CARGANDO' : '';
+        ammoStatusElement.textContent = `Escopeta: ${shotgunTubeAmmo} / ${CONFIG.shotgunTubeSize} · Reserva: ${shotgunReserveAmmo}${state}`;
+      } else if (activeWeapon === 'rpg') {
+        ammoStatusElement.textContent = `RPG: ${rpgAmmo} / ${CONFIG.rpgMagazineSize} · Reserva: ${rpgReserveAmmo}${rpgReloading ? ' · RECARGANDO' : ''}`;
       } else {
-        ammoStatusElement.textContent = 'Pistola: munición ilimitada';
+        ammoStatusElement.textContent = 'Cuchillo: sin munición · clic derecho = BACKSTAB';
       }
     }
 
@@ -3283,6 +3634,22 @@
       machineGunGroup.position.set(0, 0, 0);
       machineGunGroup.rotation.set(0, 0, 0);
       machineGunMagazine.position.set(0.34, -0.48, -0.78);
+
+      shotgunTubeAmmo = CONFIG.shotgunTubeSize;
+      shotgunReserveAmmo = CONFIG.shotgunTotalAmmo - CONFIG.shotgunTubeSize;
+      shotgunAction = 'idle';
+      shotgunActionRemaining = 0;
+      shotgunGroup.position.set(0,0,0);
+      shotgunGroup.rotation.set(0,0,0);
+      shotgunPump.position.z = shotgunPumpBaseZ;
+
+      rpgAmmo = CONFIG.rpgMagazineSize;
+      rpgReserveAmmo = CONFIG.rpgTotalAmmo - CONFIG.rpgMagazineSize;
+      rpgReloading = false;
+      rpgReloadRemaining = 0;
+      rpgGroup.position.set(0,0,0);
+      rpgGroup.rotation.set(0,0,0);
+      clearRpgProjectiles();
       primaryButtonHeld = false;
       updateAmmoHUD();
     }
@@ -3348,10 +3715,12 @@
       maxDistance,
       speed,
       material = playerProjectileMaterial,
-      scale = 1
+      scale = 1,
+      direction = null
     }) {
       muzzle.getWorldPosition(playerShotOrigin);
-      camera.getWorldDirection(playerShotDirection).normalize();
+      if (direction) playerShotDirection.copy(direction).normalize();
+      else camera.getWorldDirection(playerShotDirection).normalize();
 
       const bullet = new THREE.Mesh(playerProjectileGeometry, material);
       bullet.position.copy(playerShotOrigin);
@@ -3396,10 +3765,10 @@
       }
     }
 
-    function registerEnemyDefeat(enemy) {
+    function registerEnemyDefeat(enemy, damageOverride = null) {
       if (!enemy || gameOver) return;
 
-      const hitDamage = activeWeapon === 'sniper' ? 3 : activeWeapon === 'sword' ? 2 : activeWeapon === 'revolver' ? 2 : 1;
+      const hitDamage = damageOverride ?? (activeWeapon === 'sniper' ? 3 : activeWeapon === 'sword' ? 2 : activeWeapon === 'rpg' ? CONFIG.rpgDamage : 1);
       enemy.health = Math.max(0, (enemy.health ?? 1) - hitDamage);
       gameAudio.enemyHit();
       updateEntityHealthBar(enemy);
@@ -3419,11 +3788,11 @@
       gameAudio.enemyDeath();
       removeEnemy(enemy);
       setScore(score + CONFIG.pointsPerEnemy);
-      setDefeatedEnemies(defeatedEnemies + 1);
-
-      if (defeatedEnemies >= CONFIG.enemiesToWin) {
-        winRound();
+      if (!bossActive) {
+        setDefeatedEnemies(defeatedEnemies + 1);
+        if (defeatedEnemies >= getRoundTargetCount()) winRound();
       }
+
     }
 
     function getFirstWeaponIntersection(maxDistance) {
@@ -3436,6 +3805,14 @@
       const intersections = raycaster.intersectObjects(targets, false);
       return intersections.length > 0 ? intersections[0] : null;
     }
+
+    function getWeaponIntersectionForDirection(direction, maxDistance) {
+      raycaster.far = maxDistance;
+      raycaster.set(camera.position, direction);
+      const intersections = raycaster.intersectObjects([...enemyHitMeshes, ...shotBlockers], false);
+      return intersections.length > 0 ? intersections[0] : null;
+    }
+
 
     function shootPistol() {
       const now = performance.now();
@@ -3550,6 +3927,142 @@
       }
     }
 
+
+    function startShotgunReload() {
+      if (shotgunAction !== 'idle' || shotgunTubeAmmo >= CONFIG.shotgunTubeSize || shotgunReserveAmmo <= 0) return;
+      shotgunAction = 'reload';
+      shotgunActionRemaining = CONFIG.shotgunShellReloadSeconds;
+      gameAudio.shotgunShell();
+      updateAmmoHUD();
+    }
+
+    function shootShotgun() {
+      if (shotgunAction !== 'idle') return;
+      if (shotgunTubeAmmo <= 0) { startShotgunReload(); return; }
+      const now = performance.now();
+      if (now - lastShotTime < CONFIG.shotgunCooldownMs) return;
+      lastShotTime = now;
+      shotgunTubeAmmo -= 1;
+      gameAudio.gun('shotgun');
+      flashFirearm(shotgunBodyMaterial, 0x343a40);
+
+      const baseDirection = new THREE.Vector3();
+      const spreadRight = new THREE.Vector3();
+      const spreadUp = new THREE.Vector3();
+      camera.getWorldDirection(baseDirection).normalize();
+      spreadRight.crossVectors(baseDirection, camera.up).normalize();
+      spreadUp.crossVectors(spreadRight, baseDirection).normalize();
+      for (let pellet=0; pellet<CONFIG.shotgunPellets; pellet++) {
+        const angle=Math.random()*Math.PI*2;
+        const radius=Math.sqrt(Math.random())*CONFIG.shotgunSpread;
+        const dir=baseDirection.clone().addScaledVector(spreadRight,Math.cos(angle)*radius).addScaledVector(spreadUp,Math.sin(angle)*radius).normalize();
+        const hit=getWeaponIntersectionForDirection(dir,CONFIG.shotgunDistance);
+        createPlayerProjectile({muzzle:shotgunMuzzle,maxDistance:hit?hit.distance:CONFIG.shotgunDistance,speed:CONFIG.shotgunProjectileSpeed,material:shotgunProjectileMaterial,scale:0.72,direction:dir});
+        if(hit?.object?.userData?.enemyRef) registerEnemyDefeat(hit.object.userData.enemyRef,1);
+      }
+      shotgunAction='pumpBack';
+      shotgunActionRemaining=CONFIG.shotgunPumpBackSeconds;
+      gameAudio.shotgunPumpBack();
+      updateAmmoHUD();
+    }
+
+    function startRpgReload() {
+      if (rpgReloading || rpgAmmo >= CONFIG.rpgMagazineSize || rpgReserveAmmo <= 0) return;
+      rpgReloading = true;
+      rpgReloadRemaining = CONFIG.rpgReloadSeconds;
+      gameAudio.reload('sniper');
+      updateAmmoHUD();
+    }
+
+    function clearRpgProjectiles() {
+      for (let i=rpgProjectiles.length-1;i>=0;i--) {
+        if (rpgProjectiles[i].mesh?.parent) scene.remove(rpgProjectiles[i].mesh);
+        rpgProjectiles.splice(i,1);
+      }
+    }
+
+    function explodeRpg(position) {
+      gameAudio.rpgExplosion();
+      const flash = new THREE.Mesh(new THREE.SphereGeometry(0.55,12,10), rpgExplosionMaterial.clone());
+      flash.position.copy(position); flash.renderOrder=60; scene.add(flash);
+      const shockMat = new THREE.MeshBasicMaterial({ color:0xffc14b, transparent:true, opacity:0.72, side:THREE.DoubleSide, depthTest:false });
+      const shock = new THREE.Mesh(new THREE.RingGeometry(0.35,0.62,24), shockMat);
+      shock.rotation.x = -Math.PI/2; shock.position.copy(position); shock.position.y += 0.04; shock.renderOrder=61; scene.add(shock);
+      const smokePieces=[];
+      for(let s=0;s<10;s++){
+        const sm=new THREE.Mesh(new THREE.SphereGeometry(0.10+Math.random()*0.12,7,6), new THREE.MeshBasicMaterial({color:s%2?0x3b3b3b:0xff8a35,transparent:true,opacity:0.8,depthTest:false}));
+        sm.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.8,Math.random()*.45,(Math.random()-.5)*.8)); scene.add(sm); smokePieces.push(sm);
+      }
+      const light = new THREE.PointLight(0xff6c24, 4.2, 13); light.position.copy(position); scene.add(light);
+      const explosionStart=performance.now();
+      const animateExplosion=()=>{
+        const t=Math.min(1,(performance.now()-explosionStart)/360);
+        shock.scale.setScalar(1+t*5.5); shock.material.opacity=0.72*(1-t);
+        flash.scale.setScalar(1+t*2.4); flash.material.opacity=0.78*(1-t);
+        smokePieces.forEach((sm,i)=>{sm.position.y+=0.018+(i%3)*0.004;sm.scale.multiplyScalar(1.025);sm.material.opacity*=0.91;});
+        if(t<1) requestAnimationFrame(animateExplosion); else {scene.remove(flash,shock,light);smokePieces.forEach(sm=>scene.remove(sm));}
+      };
+      requestAnimationFrame(animateExplosion);
+
+      const selfDx = camera.position.x - position.x;
+      const selfDz = camera.position.z - position.z;
+      const selfDist = Math.hypot(selfDx, selfDz);
+      if (selfDist <= CONFIG.rocketJumpRadius) {
+        damagePlayer(CONFIG.rocketJumpSelfDamage, 'La explosión de tu RPG te alcanzó.');
+        const crouchedForJump = keys.KeyC || mobileCrouchHeld || xboxCrouchHeld;
+        if (!onGround && crouchedForJump && !gameOver) {
+          verticalVelocity = Math.max(verticalVelocity, CONFIG.rocketJumpVerticalImpulse);
+          const away = new THREE.Vector3(selfDx,0,selfDz);
+          if (away.lengthSq() > 0.0001) {
+            away.normalize();
+            for(let j=0;j<5;j++) movePlayerWithCollision(away.x*(CONFIG.rocketJumpHorizontalImpulse/5), away.z*(CONFIG.rocketJumpHorizontalImpulse/5));
+          }
+        }
+      }
+      for (const enemy of [...enemies]) {
+        if (!enemy?.group || enemy.health <= 0) continue;
+        const dx=enemy.group.position.x-position.x, dz=enemy.group.position.z-position.z;
+        const dist=Math.hypot(dx,dz);
+        if (dist <= CONFIG.rpgExplosionRadius) {
+          const dmg = Math.max(3, Math.round(CONFIG.rpgDamage * (1 - dist/(CONFIG.rpgExplosionRadius*1.45))));
+          registerEnemyDefeat(enemy,dmg);
+        }
+      }
+    }
+
+    function shootRpg() {
+      if (rpgReloading) return;
+      if (rpgAmmo <= 0) { startRpgReload(); return; }
+      const now=performance.now();
+      if (now-lastShotTime<CONFIG.rpgCooldownMs) return;
+      lastShotTime=now; rpgAmmo-=1; gameAudio.rpgFire();
+      const origin=new THREE.Vector3(); const dir=new THREE.Vector3();
+      rpgMuzzle.getWorldPosition(origin); camera.getWorldDirection(dir).normalize();
+      const mesh=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.12,0.42,10),rpgProjectileMaterial);
+      mesh.rotation.x=Math.PI/2; mesh.position.copy(origin); scene.add(mesh);
+      rpgProjectiles.push({mesh,velocity:dir.multiplyScalar(CONFIG.rpgProjectileSpeed),life:4.0,previous:origin.clone()});
+      updateAmmoHUD();
+      if (rpgAmmo<=0) setTimeout(()=>{ if(!gameOver && activeWeapon==='rpg') startRpgReload(); },220);
+    }
+
+    function updateRpgProjectiles(delta) {
+      for (let i=rpgProjectiles.length-1;i>=0;i--) {
+        const p=rpgProjectiles[i];
+        p.previous.copy(p.mesh.position);
+        p.mesh.position.addScaledVector(p.velocity,delta); p.life-=delta;
+        let explode = p.life<=0 || p.mesh.position.y <= 0.14 || circleIntersectsWorld(p.mesh.position.x,p.mesh.position.z,0.18);
+        if (!explode) {
+          for (const enemy of enemies) {
+            if (!enemy?.group) continue;
+            if (Math.hypot(enemy.group.position.x-p.mesh.position.x,enemy.group.position.z-p.mesh.position.z) < (enemy.radius||0.6)+0.3) { explode=true; break; }
+          }
+        }
+        if (explode) {
+          const pos=p.mesh.position.clone(); scene.remove(p.mesh); rpgProjectiles.splice(i,1); explodeRpg(pos);
+        }
+      }
+    }
+
     function reloadCurrentWeapon() {
       if (!isGameplayActive() || gameOver || inspectingWeapon) return;
       if (activeWeapon === 'sniper') {
@@ -3558,6 +4071,10 @@
         }
       } else if (activeWeapon === 'machinegun') {
         startMachineGunReload();
+      } else if (activeWeapon === 'shotgun') {
+        startShotgunReload();
+      } else if (activeWeapon === 'rpg') {
+        startRpgReload();
       }
     }
 
@@ -3620,6 +4137,36 @@
           updateAmmoHUD();
         }
       }
+
+      if (shotgunAction !== 'idle') {
+        shotgunActionRemaining=Math.max(0,shotgunActionRemaining-delta);
+        if (shotgunAction==='pumpBack') {
+          const progress=1-shotgunActionRemaining/CONFIG.shotgunPumpBackSeconds;
+          shotgunPump.position.z=shotgunPumpBaseZ+0.38*THREE.MathUtils.clamp(progress,0,1);
+          if (shotgunActionRemaining<=0) { shotgunAction='pumpForward'; shotgunActionRemaining=CONFIG.shotgunPumpForwardSeconds; gameAudio.shotgunPumpForward(); }
+        } else if (shotgunAction==='pumpForward') {
+          const progress=1-shotgunActionRemaining/CONFIG.shotgunPumpForwardSeconds;
+          shotgunPump.position.z=shotgunPumpBaseZ+0.38*(1-THREE.MathUtils.clamp(progress,0,1));
+          if (shotgunActionRemaining<=0) { shotgunPump.position.z=shotgunPumpBaseZ; shotgunAction='idle'; if(shotgunTubeAmmo<=0&&shotgunReserveAmmo>0)startShotgunReload(); updateAmmoHUD(); }
+        } else if (shotgunAction==='reload') {
+          const progress=1-shotgunActionRemaining/CONFIG.shotgunShellReloadSeconds;
+          const dip=Math.sin(progress*Math.PI); shotgunGroup.position.y=-0.16*dip; shotgunGroup.rotation.z=0.12*dip;
+          if (shotgunActionRemaining<=0) {
+            if(shotgunTubeAmmo<CONFIG.shotgunTubeSize&&shotgunReserveAmmo>0){shotgunTubeAmmo+=1;shotgunReserveAmmo-=1;}
+            shotgunGroup.position.set(0,0,0); shotgunGroup.rotation.set(0,0,0);
+            if(shotgunTubeAmmo<CONFIG.shotgunTubeSize&&shotgunReserveAmmo>0){shotgunActionRemaining=CONFIG.shotgunShellReloadSeconds;gameAudio.shotgunShell();}
+            else {shotgunAction='idle';shotgunActionRemaining=0;gameAudio.reloadFinish();}
+            updateAmmoHUD();
+          }
+        }
+      }
+
+      if (rpgReloading) {
+        rpgReloadRemaining=Math.max(0,rpgReloadRemaining-delta);
+        const progress=1-rpgReloadRemaining/CONFIG.rpgReloadSeconds;
+        const dip=Math.sin(progress*Math.PI); rpgGroup.position.y=-0.28*dip; rpgGroup.rotation.z=-0.15*dip;
+        if(rpgReloadRemaining<=0){const load=Math.min(CONFIG.rpgMagazineSize-rpgAmmo,rpgReserveAmmo);rpgAmmo+=load;rpgReserveAmmo-=load;rpgReloading=false;rpgGroup.position.set(0,0,0);rpgGroup.rotation.set(0,0,0);gameAudio.reloadFinish();updateAmmoHUD();}
+      }
     }
 
     function attackWithSword() {
@@ -3635,6 +4182,20 @@
       if (hit?.object?.userData?.enemyRef) {
         registerEnemyDefeat(hit.object.userData.enemyRef);
       }
+    }
+
+    function backstabWithKnife() {
+      if (!isGameplayActive() || gameOver || inspectingWeapon || activeWeapon !== 'sword') return;
+      const now = performance.now();
+      if (now - lastShotTime < 520) return;
+      const hit = getFirstWeaponIntersection(3.05);
+      const enemy = hit?.object?.userData?.enemyRef;
+      if (!enemy || enemy.isBoss) return;
+      lastShotTime = now;
+      swordSwingRemaining = swordSwingDuration * 1.35;
+      gameAudio.sword();
+      swordBladeMaterial.emissive.setHex(0xa9f0ff);
+      registerEnemyDefeat(enemy, 999);
     }
 
     function updateSwordAnimation(delta) {
@@ -3779,7 +4340,7 @@
             targetRX += 0.22 * lift;
             targetRY += 1.05 * turn;
             targetRZ += 0.38 * Math.sin(t * Math.PI * 2) * lift;
-          } else if (name === 'sniper' || name === 'machinegun') {
+          } else if (name === 'sniper' || name === 'machinegun' || name === 'shotgun' || name === 'rpg') {
             targetRX += 0.16 * lift;
             targetRY += 0.72 * turn;
             targetRZ += -0.16 * lift + 0.10 * Math.sin(t * Math.PI * 2) * lift;
@@ -3825,142 +4386,61 @@
       if (!isGameplayActive() || gameOver) return;
       if (weaponEquipProgress < 0.65 || holsteredWeapon || inspectingWeapon) return;
 
-      if (activeWeapon === 'sniper') {
-        shootSniper();
-      } else if (activeWeapon === 'sword') {
-        attackWithSword();
-      } else if (activeWeapon === 'machinegun') {
-        shootMachineGun();
-      } else {
-        shootPistol();
-      }
+      if (activeWeapon === 'sniper') shootSniper();
+      else if (activeWeapon === 'sword') attackWithSword();
+      else if (activeWeapon === 'machinegun') shootMachineGun();
+      else if (activeWeapon === 'shotgun') shootShotgun();
+      else if (activeWeapon === 'rpg') shootRpg();
     }
 
     function createFinalBoss() {
-      clearEnemies();
-      clearArmorPickups();
-      bossActive = true;
-      gameAudio.bossIntro();
-      if (isGameplayActive()) gameAudio.setMusic('boss');
-
-      const scale = CONFIG.bossScale;
-      const group = new THREE.Group();
-      group.position.set(0, 0, -28);
-
-      const body = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.72 * scale, 0.92 * scale, 1.9 * scale, 14),
-        bossBodyMaterial.clone()
-      );
-      body.position.y = 0.95 * scale;
-      body.castShadow = true;
-      group.add(body);
-
-      const shoulder = new THREE.Mesh(
-        new THREE.BoxGeometry(1.9 * scale, 0.36 * scale, 0.68 * scale),
-        bossBodyMaterial.clone()
-      );
-      shoulder.position.y = 1.78 * scale;
-      shoulder.castShadow = true;
-      group.add(shoulder);
-
-      // Cabeza-torreta móvil independiente del cuerpo.
-      const headPivot = new THREE.Group();
-      headPivot.position.y = 2.18 * scale;
-      group.add(headPivot);
-
-      const head = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.55 * scale, 0.70 * scale, 0.55 * scale, 14),
-        bossHeadMaterial.clone()
-      );
-      head.rotation.x = Math.PI / 2;
-      head.castShadow = true;
-      headPivot.add(head);
-
-      const barrel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10 * scale, 0.14 * scale, 1.45 * scale, 10),
-        turretBarrelMaterial
-      );
-      barrel.rotation.x = Math.PI / 2;
-      barrel.position.z = 0.82 * scale;
-      barrel.castShadow = true;
-      headPivot.add(barrel);
-
-      const muzzle = new THREE.Object3D();
-      muzzle.position.set(0, 0, 1.58 * scale);
-      headPivot.add(muzzle);
-
-      // Espada decorativa gigante fijada al costado derecho.
-      const sword = new THREE.Group();
-      sword.position.set(1.25 * scale, 1.15 * scale, 0);
-      sword.rotation.z = -0.34;
-      const grip = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.11 * scale, 0.11 * scale, 0.78 * scale, 10),
-        turretBarrelMaterial
-      );
-      grip.position.y = -0.25 * scale;
-      sword.add(grip);
-      const blade = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22 * scale, 2.05 * scale, 0.10 * scale),
-        bossSwordMaterial
-      );
-      blade.position.y = 1.12 * scale;
-      blade.castShadow = true;
-      sword.add(blade);
-      group.add(sword);
-
-      const boss = {
-        group, body, head, barrel, headPivot, muzzle, sword,
-        hitMeshes: [body, shoulder, head, barrel],
-        radius: CONFIG.enemyRadius * scale,
-        speed: CONFIG.enemySpeedMax * CONFIG.bossMovementMultiplier * (userDifficultyPercent / 100),
-        health: CONFIG.bossMaxHealth,
-        maxHealth: CONFIG.bossMaxHealth,
-        isBoss: true,
-        bossShotTimer: 1.2,
-        bobOffset: 0
-      };
-
-      for (const mesh of boss.hitMeshes) {
-        mesh.userData.enemyRef = boss;
-        enemyHitMeshes.push(mesh);
-      }
-      enemies.push(boss);
-      finalBoss = boss;
-      scene.add(group);
-      updateEnemyCount();
-      updateRoundHUD();
+      clearEnemies(); clearArmorPickups(); bossActive=true; gameAudio.bossIntro();
+      if(isGameplayActive()) gameAudio.setMusic('boss');
+      const scale=CONFIG.bossScale;
+      const group=new THREE.Group(); group.position.set(0,0,-30);
+      const tankSkin=new THREE.MeshLambertMaterial({color:0x65785e,emissive:0x10180e});
+      const tankDark=new THREE.MeshLambertMaterial({color:0x394638});
+      const body=new THREE.Mesh(new THREE.BoxGeometry(1.35*scale,1.55*scale,0.92*scale),tankSkin); body.position.y=0.92*scale; body.castShadow=true; group.add(body);
+      const chest=new THREE.Mesh(new THREE.SphereGeometry(0.72*scale,12,10),tankSkin); chest.scale.set(1.35,0.9,0.85); chest.position.y=1.48*scale; group.add(chest);
+      const head=new THREE.Mesh(new THREE.SphereGeometry(0.38*scale,12,10),tankDark); head.position.set(0,2.03*scale,0.02); group.add(head);
+      const leftArm=new THREE.Mesh(new THREE.CylinderGeometry(0.34*scale,0.48*scale,1.55*scale,10),tankSkin); leftArm.position.set(-0.94*scale,1.02*scale,0); leftArm.rotation.z=0.18; group.add(leftArm);
+      const rightArm=new THREE.Mesh(new THREE.CylinderGeometry(0.38*scale,0.55*scale,1.72*scale,10),tankSkin); rightArm.position.set(1.02*scale,1.00*scale,0); rightArm.rotation.z=-0.18; group.add(rightArm);
+      const leftFist=new THREE.Mesh(new THREE.SphereGeometry(0.48*scale,10,8),tankSkin); leftFist.position.set(-1.04*scale,0.24*scale,0.08); group.add(leftFist);
+      const rightFist=new THREE.Mesh(new THREE.SphereGeometry(0.56*scale,10,8),tankSkin); rightFist.position.set(1.12*scale,0.18*scale,0.08); group.add(rightFist);
+      const boss={group,body,head,leftArm,rightArm,leftFist,rightFist,hitMeshes:[body,chest,head,leftArm,rightArm,leftFist,rightFist],radius:1.25*scale,speed:Math.max(CONFIG.playerSpeed*1.34, CONFIG.enemySpeedMax*CONFIG.bossMovementMultiplier)*(userDifficultyPercent/100),health:CONFIG.bossMaxHealth,maxHealth:CONFIG.bossMaxHealth,isBoss:true,punchTimer:0.7,throwTimer:2.0,summonTimer:4.5,bobOffset:0};
+      for(const mesh of boss.hitMeshes){mesh.userData.enemyRef=boss;enemyHitMeshes.push(mesh);mesh.castShadow=true;}
+      enemies.push(boss); finalBoss=boss; scene.add(group); updateEnemyCount(); updateRoundHUD(); updateBossHUD();
     }
 
-    function fireBossTurret(boss) {
-      if (!boss?.muzzle) return;
-      turretTarget.copy(camera.position);
-      boss.muzzle.getWorldPosition(turretMuzzlePosition);
-      turretDirection.subVectors(turretTarget, turretMuzzlePosition).normalize();
+    function throwTankDebris(boss) {
+      const rockMat=new THREE.MeshLambertMaterial({color:0x4e5148});
+      for(let i=0;i<4;i++){const chip=new THREE.Mesh(new THREE.DodecahedronGeometry(0.12+Math.random()*0.10,0),rockMat);chip.position.set(boss.group.position.x+randomRange(-1,1),0.18,boss.group.position.z+randomRange(-1,1));scene.add(chip);setTimeout(()=>scene.remove(chip),420);}
+      const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(0.52,0),rockMat); rock.position.set(boss.group.position.x,boss.group.position.y+3.4,boss.group.position.z); rock.castShadow=true; scene.add(rock);
+      const target=camera.position.clone(); const dir=target.sub(rock.position).normalize();
+      turretProjectiles.push({mesh:rock,velocity:dir.multiplyScalar(20*getRoundMultiplier()),life:5.5,damage:CONFIG.bossRockDamage,hitRadius:0.58,reason:'El Tank te golpeó con un pedazo del suelo.'});
+      gameAudio.noise?.(0.25,0.08,900,gameAudio.sfx,0,0,80);
+    }
 
-      const projectile = new THREE.Mesh(turretProjectileGeometry, turretProjectileMaterial);
-      projectile.scale.setScalar(1.45);
-      projectile.position.copy(turretMuzzlePosition);
-      projectile.castShadow = true;
-      scene.add(projectile);
-
-      turretProjectiles.push({
-        mesh: projectile,
-        velocity: turretDirection.clone().multiplyScalar(
-          CONFIG.turretProjectileSpeed * getRoundMultiplier()
-        ),
-        life: CONFIG.turretProjectileMaxLife
-      });
+    function summonTankZombies() {
+      const alive=enemies.filter(e=>!e.isBoss).length;
+      const count=Math.min(3,Math.max(0,4-alive));
+      for(let i=0;i<count;i++) spawnEnemy('common',true);
     }
 
     function updateFinalBoss(delta) {
-      if (!bossActive || !finalBoss || gameOver) return;
-      finalBoss.headPivot.lookAt(camera.position);
-      finalBoss.sword.rotation.y += delta * 0.55;
-      finalBoss.bossShotTimer -= delta;
-      if (finalBoss.bossShotTimer <= 0) {
-        fireBossTurret(finalBoss);
-        finalBoss.bossShotTimer += CONFIG.bossShotSeconds;
+      if(!bossActive||!finalBoss||gameOver)return;
+      const boss=finalBoss; boss.punchTimer-=delta; boss.throwTimer-=delta; boss.summonTimer-=delta;
+      const dx=camera.position.x-boss.group.position.x,dz=camera.position.z-boss.group.position.z,distance=Math.hypot(dx,dz);
+      if(distance>2.7){const step=boss.speed*delta;moveEnemyWithCollision(boss,dx/distance*step,dz/distance*step);}
+      boss.group.rotation.y=Math.atan2(dx,dz);
+      const swing=Math.sin(performance.now()*0.009); boss.leftArm.rotation.x=swing*0.28; boss.rightArm.rotation.x=-swing*0.30;
+      if(distance<3.2&&boss.punchTimer<=0){
+        boss.punchTimer=CONFIG.bossPunchCooldown;
+        damagePlayer(CONFIG.bossContactDamage,'El Tank te golpeó con sus puños enormes.');
+        if(distance>0.01){const push=5.4;for(let step=0;step<6;step++)movePlayerWithCollision((dx/distance)*(push/6),(dz/distance)*(push/6));}
       }
+      if(boss.throwTimer<=0&&distance>5){throwTankDebris(boss);boss.throwTimer=CONFIG.bossThrowSeconds;}
+      if(boss.summonTimer<=0){summonTankZombies();boss.summonTimer=CONFIG.bossSummonSeconds;}
     }
 
     function clearFinalBoss() {
@@ -3984,10 +4464,12 @@
       gameAudio.roundWin();
       setScore(score + CONFIG.bossScore);
       clearFinalBoss();
+      clearEnemies();
       clearTurretProjectiles();
       clearPlayerProjectiles();
       clearArmorPickups();
       doubleJumpActive = false;
+      lowGravityActive = false;
       clearDoubleJumpPickup();
       setSniperZoom(false);
       gameOver = true;
@@ -3995,7 +4477,7 @@
 
       showOverlay(
         '¡MUNDO COMPLETADO!',
-        `Derrotaste al jefe final. Puntaje final: ${score}. El mundo se reiniciará desde ronda 1, puntaje 0 y sin mejoras.`
+        `Derribaste al Tank y sobreviviste Zombiland. Puntaje final: ${score}. El mundo se reiniciará desde ronda 1, puntaje 0 y sin mejoras.`
       );
       if (controls.isLocked) controls.unlock();
 
@@ -4011,12 +4493,13 @@
       clearEnemies();
       clearTurretProjectiles();
       clearPlayerProjectiles();
+      clearRpgProjectiles();
       clearArmorPickups();
       resetTurrets();
       setSniperZoom(false);
       setDefeatedEnemies(0);
       resetWeaponAmmo();
-      equipWeapon('pistol');
+      equipWeapon('shotgun');
       camera.position.set(0, CONFIG.playerHeight, 8);
       camera.rotation.set(0, 0, 0);
       verticalVelocity = 0;
@@ -4033,65 +4516,36 @@
     }
 
     function winRound() {
-      if (gameOver || roundTransition || bossActive) return;
-      gameAudio.roundWin();
-
-      roundTransition = true;
-      gameOver = true;
-      setSniperZoom(false);
-      clearTurretProjectiles();
-      clearPlayerProjectiles();
-
-      const completedRound = currentRound;
-      const finalNormalCompleted = completedRound >= CONFIG.finalNormalRound;
-      const nextRound = currentRound + 1;
-      const nextBonus = getRoundDifficultyBonus(nextRound);
-      const armorText = armorLevel > 0
-        ? ` Chaleco Nv.${armorLevel} con ${armorHitsRemaining}/${getArmorCapacity()} impactos.`
-        : '';
-
-      showOverlay(
-        `¡RONDA ${completedRound} SUPERADA!`,
-        finalNormalCompleted
-          ? `Llegaste al máximo de +125% de dificultad.${armorText} El JEFE FINAL está por aparecer.`
-          : `Derrotaste ${defeatedEnemies}/${CONFIG.enemiesToWin} enemigos. Puntaje total: ${score}. ` +
-            `La ronda ${nextRound} tendrá +${Math.round(nextBonus * 100)}% de dificultad.${armorText}`
-      );
-
-      if (controls.isLocked) controls.unlock();
-
-      clearTimeout(victoryTimer);
-      victoryTimer = setTimeout(() => {
-        if (finalNormalCompleted) {
-          startFinalBossRound();
-          showOverlay(
-            'JEFE FINAL',
-            `Movimiento al 205%, tamaño ×${CONFIG.bossScale.toFixed(0)}, cabeza-torreta más agresiva, espada gigante y ${CONFIG.bossMaxHealth} puntos de vida. Busca el boost de doble salto en la arena. Haz clic para luchar.`
-          );
-        } else {
-          startNextRound();
-          showOverlay(
-            `RONDA ${currentRound}`,
-            `Dificultad +${Math.round(getRoundDifficultyBonus() * 100)}% (×${getRoundMultiplier().toFixed(2)}). ` +
-            `${armorPickups.length ? 'Hay un objeto de chaleco en el mapa. ' : ''}` +
-            `Puntaje total: ${score}. Haz clic para continuar.`
-          );
-        }
-      }, CONFIG.roundTransitionMs);
+      if(gameOver||roundTransition)return;
+      gameAudio.roundWin(); roundTransition=true; gameOver=true; setSniperZoom(false);
+      clearTurretProjectiles(); clearPlayerProjectiles(); clearRpgProjectiles(); clearZombieSpecialEffects();
+      const completedRound=currentRound;
+      const armorText=armorLevel>0?` Chaleco Nv.${armorLevel} con ${armorHitsRemaining}/${getArmorCapacity()} impactos.`:'';
+      const heading=`¡RONDA ${completedRound} SUPERADA!`;
+      const nextName = completedRound===7 ? 'JEFE FINAL: Tank' : ZOMBILAND_ROUND_NAMES[completedRound+1];
+      showOverlay(heading,`Neutralizaste ${defeatedEnemies}/${getRoundTargetCount()} infectados. Siguiente: ${nextName}.${armorText}`);
+      if(controls.isLocked)controls.unlock(); clearTimeout(victoryTimer);
+      victoryTimer=setTimeout(()=>{
+        if(completedRound===7){startFinalBossRound();showOverlay('RONDA 8 · JEFE FINAL','El Tank entró en la ciudad. Es más rápido que tú caminando, lanza escombros, golpea por 17 HP y llama infectados. Busca el boost de gravedad para saltar más alto. Haz clic para enfrentarlo.');}
+        else {startNextRound();showOverlay(`RONDA ${currentRound}`,`${ZOMBILAND_ROUND_NAMES[currentRound]}. ${armorPickups.length?'Hay un objeto de chaleco en el mapa. ':''}Haz clic para continuar.`);}
+      },CONFIG.roundTransitionMs);
     }
 
     function startNextRound() {
       currentRound += 1;
+      roundSpawnedCount = 0;
       clearEnemies();
+      clearZombieSpecialEffects();
       clearTurretProjectiles();
       clearPlayerProjectiles();
+      clearRpgProjectiles();
       clearArmorPickups();
       resetDoubleJumpBoost();
       resetTurrets();
       setSniperZoom(false);
       setDefeatedEnemies(0);
       resetWeaponAmmo();
-      equipWeapon('pistol');
+      equipWeapon('shotgun');
 
       swordSwingRemaining = 0;
       swordGroup.rotation.set(-0.25, 0.18, -0.32);
@@ -4181,7 +4635,7 @@
       if (onGround) {
         currentPlayerHeight = CONFIG.playerHeight;
         camera.position.y = CONFIG.playerHeight;
-        verticalVelocity = CONFIG.jumpSpeed;
+        verticalVelocity = CONFIG.jumpSpeed * (lowGravityActive && bossActive ? 1.28 : 1);
         onGround = false;
         jumpCount = 1;
         gameAudio.jump(false);
@@ -4189,7 +4643,7 @@
       }
 
       if (jumpCount < maxJumps) {
-        verticalVelocity = CONFIG.jumpSpeed * 0.93;
+        verticalVelocity = CONFIG.jumpSpeed * (lowGravityActive && bossActive ? 1.18 : 0.93);
         jumpCount += 1;
         gameAudio.jump(true);
         return true;
@@ -4271,14 +4725,19 @@
         }
       }
 
+      const knockdownFactor = knockdownRemaining > 0 ? 0.25 : 1;
+      if (knockdownRemaining > 0 && slideActive) {
+        slideActive = false;
+        playerViewmodelSliding = false;
+      }
       if (slideActive) {
         const slidePhase = THREE.MathUtils.clamp(slideRemaining / SLIDE_DURATION, 0, 1);
         const slideSpeed = CONFIG.playerSpeed * SLIDE_SPEED_MULTIPLIER * (0.72 + 0.28 * slidePhase);
         movePlayerWithCollision(slideDirection.x * slideSpeed * delta, slideDirection.z * slideSpeed * delta);
       } else if (isMoving) {
-        const sprintFactor = sprintActive ? CONFIG.sprintMultiplier : 1;
+        const sprintFactor = sprintActive && knockdownRemaining <= 0 ? CONFIG.sprintMultiplier : 1;
         const crouchFactor = crouchActive ? CONFIG.crouchSpeedMultiplier : 1;
-        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * delta);
+        moveVector.normalize().multiplyScalar(CONFIG.playerSpeed * sprintFactor * crouchFactor * knockdownFactor * delta);
         movePlayerWithCollision(moveVector.x, moveVector.z);
       }
 
@@ -4289,7 +4748,7 @@
       updateSprintHUD();
 
       // Altura de cámara: C baja al jugador y al soltarla vuelve suavemente.
-      const targetPlayerHeight = slideActive ? CONFIG.crouchHeight * 0.88 : (crouchActive ? CONFIG.crouchHeight : CONFIG.playerHeight);
+      const targetPlayerHeight = knockdownRemaining > 0 ? 0.92 : (slideActive ? CONFIG.crouchHeight * 0.88 : (crouchActive ? CONFIG.crouchHeight : CONFIG.playerHeight));
 
       if (onGround) {
         currentPlayerHeight = THREE.MathUtils.damp(
@@ -4302,7 +4761,7 @@
         verticalVelocity = 0;
       } else {
         // Gravedad y salto cuando el jugador está en el aire.
-        verticalVelocity -= CONFIG.gravity * delta;
+        verticalVelocity -= CONFIG.gravity * (lowGravityActive && bossActive ? 0.46 : 1) * delta;
         camera.position.y += verticalVelocity * delta;
 
         if (camera.position.y <= targetPlayerHeight) {
@@ -4314,6 +4773,21 @@
         }
       }
       updateMovementAudio(delta, isMoving || slideActive, sprintActive, crouchActive);
+    }
+
+    let apocalypseAudioTimer = 3.5;
+    function updateApocalypseAmbience(delta) {
+      apocalypseAudioTimer -= delta;
+      if (apocalypseAudioTimer > 0 || !isGameplayActive() || gameOver) return;
+      apocalypseAudioTimer = 6.5 + Math.random() * 7.5;
+      const pan = (Math.random() - 0.5) * 1.5;
+      if (Math.random() < 0.55) {
+        gameAudio.tone(62 + Math.random()*24, 0.75, 0.022, 'sawtooth', gameAudio.ambient, 0, pan, 38);
+        gameAudio.noise(0.55, 0.012, 460, gameAudio.ambient, 0.04, pan, 35);
+      } else {
+        gameAudio.tone(390, 1.2, 0.010, 'sine', gameAudio.ambient, 0, pan, 520);
+        gameAudio.tone(260, 1.0, 0.008, 'sine', gameAudio.ambient, .35, pan, 340);
+      }
     }
 
     // =========================================================
@@ -4335,6 +4809,7 @@
       clearTimeout(victoryTimer);
       roundTransition = false;
       currentRound = 1;
+      roundSpawnedCount = 0;
       armorLevel = 0;
       armorHitsRemaining = 0;
       clearFinalBoss();
@@ -4342,13 +4817,15 @@
       resetDoubleJumpBoost();
       setSniperZoom(false);
       clearEnemies();
+      clearZombieSpecialEffects();
       clearTurretProjectiles();
       clearPlayerProjectiles();
+      clearRpgProjectiles();
       resetTurrets();
       setScore(0);
       setDefeatedEnemies(0);
       resetWeaponAmmo();
-      equipWeapon('pistol');
+      equipWeapon('shotgun');
       holsteredWeapon = null;
       weaponEquipProgress = 1;
       weaponHolsterProgress = 1;
@@ -4356,7 +4833,7 @@
         root.position.set(0, 0, 0);
         root.rotation.set(0, 0, 0);
       }
-      setVisibleWeaponGroups('pistol');
+      setVisibleWeaponGroups('shotgun');
       viewmodelBobTime = 0;
       inspectingWeapon = false;
       inspectProgress = 0;
@@ -4382,6 +4859,7 @@
       gameStarted = true;
       resetSprintState();
       resetPlayerHealth();
+      bleedRemaining = 0; knockdownRemaining = 0;
 
       for (const key of Object.keys(keys)) {
         keys[key] = false;
@@ -4599,6 +5077,7 @@
       } else if (!gameStarted) {
         gameStarted = true;
         currentRound = 1;
+        roundSpawnedCount = 0;
         armorLevel = 0;
         armorHitsRemaining = 0;
         bossActive = false;
@@ -4656,7 +5135,7 @@
         tryStartSlide();
       }
 
-      // La tecla 3 alterna Pistola -> Francotirador -> Espada -> Metralleta.
+      // La tecla 3 alterna Escopeta -> Metralleta -> Francotirador -> RPG -> Cuchillo.
       if (event.code === 'Digit3' && !event.repeat) {
         event.preventDefault();
         cycleWeapon();
@@ -4690,6 +5169,9 @@
       if (event.button === 2 && activeWeapon === 'sniper') {
         event.preventDefault();
         setSniperZoom(true);
+      } else if (event.button === 2 && activeWeapon === 'sword') {
+        event.preventDefault();
+        backstabWithKnife();
       }
     });
 
@@ -4727,6 +5209,8 @@
       previousTime = currentTime;
       elapsedTime += delta;
       playerDamageCooldown = Math.max(0, playerDamageCooldown - delta);
+      updateZombieStatusEffects(delta);
+      updateApocalypseAmbience(delta);
 
       updateXboxController(delta);
       updateUniversalGamepadInspection();
@@ -4739,7 +5223,9 @@
         updateDoubleJumpBoost(delta, elapsedTime);
         updateTurrets(delta);
         updateTurretProjectiles(delta);
+        updateZombieProjectiles(delta);
         updatePlayerProjectiles(delta);
+        updateRpgProjectiles(delta);
         updateSwordAnimation(delta);
         updateFirearmAnimations(delta);
         updateViewmodelAnimations(delta);
@@ -4766,7 +5252,7 @@
     updateBossHUD();
     updateSprintHUD();
     updateDoubleJumpHUD();
-    setVisibleWeaponGroups('pistol');
+    setVisibleWeaponGroups('shotgun');
     updateWeaponStatus();
     updateAmmoHUD();
     requestAnimationFrame(animate);
