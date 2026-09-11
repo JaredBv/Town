@@ -435,40 +435,100 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 18px;
-      background: rgba(0,0,0,.72);
+      padding: 14px;
+      background: rgba(0,0,0,.58);
+      backdrop-filter: blur(3px);
       pointer-events: auto;
     }
     #settingsModal.open { display: flex; }
     #settingsPanel {
-      width: min(520px, 94vw);
-      padding: 24px;
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 18px;
-      background: rgba(12,18,27,.96);
+      position: relative;
+      width: min(610px, 94vw);
+      max-height: min(78vh, 760px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      padding: 18px 20px 14px;
+      border: 1px solid rgba(142,220,255,.24);
+      border-radius: 16px;
+      background: rgba(12,18,27,.965);
       color: #fff;
-      box-shadow: 0 18px 70px rgba(0,0,0,.5);
+      box-shadow: 0 18px 60px rgba(0,0,0,.48);
+      scrollbar-width: thin;
+      scrollbar-color: #5bc8f2 rgba(255,255,255,.08);
     }
-    #settingsPanel h2 { margin: 0 0 8px; font-size: 25px; }
-    #settingsPanel .settings-note { margin: 0 0 20px; color: #aebccc; font-size: 13px; line-height: 1.45; }
-    .setting-row { margin: 18px 0; }
-    .setting-row label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 9px; font-weight: 800; font-size: 14px; }
+    #settingsPanel::-webkit-scrollbar { width: 9px; }
+    #settingsPanel::-webkit-scrollbar-track { background: rgba(255,255,255,.06); border-radius: 10px; }
+    #settingsPanel::-webkit-scrollbar-thumb { background: #58c8f2; border-radius: 10px; }
+    #settingsPanel h2 { margin: 0 50px 5px 0; font-size: 22px; }
+    #settingsPanel .settings-note { margin: 0 44px 12px 0; color: #aebccc; font-size: 11.5px; line-height: 1.38; }
+    #settingsQuickClose {
+      position: sticky;
+      top: 0;
+      z-index: 12;
+      float: right;
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      margin: 0 0 -40px 10px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 11px;
+      background: rgba(31,43,57,.94);
+      color: #fff;
+      font-size: 21px;
+      line-height: 1;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 5px 18px rgba(0,0,0,.28);
+    }
+    #settingsQuickClose:hover { background: #32465d; border-color: rgba(121,217,255,.66); }
+    .setting-row { margin: 11px 0; padding: 0 2px; }
+    .setting-row label { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; font-weight: 800; font-size: 13px; }
     .setting-row output { color: #8fe9ff; }
     .setting-row input[type="range"] { width: 100%; accent-color: #78d9ff; cursor: pointer; }
-    .setting-scale { display: flex; justify-content: space-between; margin-top: 5px; color: #718196; font-size: 10px; }
-    #settingsDifficultyInfo { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.055); color: #dce7f2; font-size: 12px; line-height: 1.4; }
-    .settings-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+    .setting-scale { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; color: #718196; font-size: 9.5px; line-height: 1.25; }
+    #settingsDifficultyInfo { margin-top: 11px; padding: 9px 11px; border-radius: 9px; background: rgba(255,255,255,.055); color: #dce7f2; font-size: 11px; line-height: 1.35; }
+    .settings-actions {
+      position: sticky;
+      bottom: -14px;
+      z-index: 11;
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin: 14px -20px -14px;
+      padding: 11px 20px 13px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(12,18,27,.78), rgba(12,18,27,.995) 32%);
+      backdrop-filter: blur(8px);
+    }
     .settings-actions button {
-      min-height: 44px;
-      padding: 0 18px;
+      min-height: 42px;
+      padding: 0 16px;
       border: 0;
       border-radius: 10px;
-      font-weight: 800;
+      font-weight: 850;
       cursor: pointer;
     }
     #settingsReset { background: #293441; color: #e5eef7; }
-    #settingsClose { background: #79d9ff; color: #07131c; }
+    #settingsClose { min-width: 176px; background: #79d9ff; color: #07131c; }
     .mobile-mode #settingsButton { top: 74px; right: 16px; width: 48px; height: 48px; border-radius: 50%; }
+    @media (max-height: 720px) {
+      #settingsModal { padding: 8px; align-items: center; }
+      #settingsPanel { max-height: 84vh; padding-top: 14px; padding-bottom: 10px; }
+      #settingsPanel h2 { font-size: 19px; }
+      #settingsPanel .settings-note { display: none; }
+      .setting-row { margin: 8px 0; }
+      .settings-actions { bottom: -10px; margin-bottom: -10px; }
+    }
+    @media (max-width: 560px) {
+      #settingsModal { padding: 8px; }
+      #settingsPanel { width: 96vw; max-height: 82vh; padding-left: 14px; padding-right: 14px; border-radius: 13px; }
+      .settings-actions { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+      .settings-actions button { flex: 1; min-width: 0; padding: 0 10px; }
+      #settingsClose { min-width: 0; }
+      .setting-scale { font-size: 9px; }
+    }
 
 
 
@@ -959,6 +1019,114 @@
     }
     .toggle-setting-label input { width: 20px; height: 20px; accent-color: #79d9ff; }
 
+  
+
+    /* ===== CONFIGURACIÓN COMPACTA / SALIDA SIEMPRE VISIBLE ===== */
+    #settingsModal {
+      box-sizing: border-box;
+      align-items: flex-start !important;
+      padding: 12px 14px calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+      overflow: hidden !important;
+    }
+    #settingsPanel {
+      box-sizing: border-box;
+      width: min(620px, calc(100vw - 28px)) !important;
+      max-height: calc(100vh - 104px) !important;
+      max-height: calc(100dvh - 104px) !important;
+      margin: 4px auto 0 !important;
+      padding: 16px 18px 18px !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    #settingsQuickClose {
+      position: sticky !important;
+      top: 0 !important;
+      float: right;
+      z-index: 30 !important;
+      width: auto !important;
+      min-width: 72px;
+      padding: 0 12px;
+      margin: 0 0 -40px 10px !important;
+    }
+    #settingsExitFixed {
+      position: fixed;
+      right: 18px;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 100;
+      min-height: 48px;
+      min-width: 210px;
+      padding: 0 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 12px;
+      background: #79d9ff;
+      color: #07131c;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(0,0,0,.42);
+      touch-action: manipulation;
+    }
+    #settingsExitFixed:active { transform: translateY(1px); }
+    #settingsClose, #settingsQuickClose, #settingsExitFixed, #settingsReset {
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #settingsPanel { pointer-events: auto !important; }
+    #settingsModal.open { pointer-events: auto !important; }
+    .settings-actions {
+      position: static !important;
+      margin: 14px -18px -18px !important;
+      padding: 11px 18px 14px !important;
+    }
+    @media (max-height: 720px) {
+      #settingsPanel { max-height: calc(100vh - 98px) !important; max-height: calc(100dvh - 98px) !important; }
+    }
+    @media (max-width: 560px) {
+      #settingsModal { padding: 8px 8px calc(76px + env(safe-area-inset-bottom, 0px)) !important; }
+      #settingsPanel {
+        width: calc(100vw - 16px) !important;
+        max-height: calc(100vh - 94px) !important;
+        max-height: calc(100dvh - 94px) !important;
+        margin-top: 0 !important;
+        border-radius: 12px !important;
+        padding: 13px 13px 16px !important;
+      }
+      #settingsPanel h2 { font-size: 18px !important; }
+      .setting-row { margin: 8px 0 !important; }
+      .setting-row label { font-size: 12px !important; }
+      #settingsExitFixed {
+        left: 10px;
+        right: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        width: auto;
+        min-width: 0;
+      }
+      .settings-actions { margin-left: -13px !important; margin-right: -13px !important; padding-left: 13px !important; padding-right: 13px !important; }
+    }
+
+  
+    #mobilePlayNow { display:none; }
+    body.mobile-mode #mobilePlayNow {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:min(86vw,420px);
+      min-height:58px;
+      margin:16px auto 8px;
+      border:0;
+      border-radius:14px;
+      background:#79d9ff;
+      color:#07131c;
+      font:900 18px/1.1 system-ui,sans-serif;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+      box-shadow:0 8px 24px rgba(0,0,0,.28);
+      cursor:pointer;
+    }
   </style>
 </head>
 <body>
@@ -994,7 +1162,9 @@
 
   <button id="settingsButton" type="button" aria-label="Abrir configuración" title="Configuración">⚙</button>
   <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <button id="settingsExitFixed" type="button" aria-label="Salir de configuración">✕ Salir de configuración</button>
     <div id="settingsPanel">
+      <button id="settingsQuickClose" type="button" aria-label="Cerrar configuración" title="Volver al juego">✕ Salir</button>
       <h2 id="settingsTitle">⚙ Configuración</h2>
       <p class="settings-note">La sensibilidad original del juego equivale a <strong>25%</strong>. Los cambios se guardan y se comparten entre los mundos.</p>
 
@@ -1060,7 +1230,7 @@
       <div id="settingsDifficultyInfo">100% mantiene la dificultad diseñada para cada ronda. Aumentarla acelera enemigos, aparición y proyectiles hostiles.</div>
       <div class="settings-actions">
         <button id="settingsReset" type="button">Restablecer</button>
-        <button id="settingsClose" type="button">Guardar y cerrar</button>
+        <button id="settingsClose" type="button">▶ Volver al juego</button>
       </div>
     </div>
   </div>
@@ -1096,7 +1266,8 @@
       <p id="overlayMessage">Haz clic o toca la pantalla para jugar</p>
 
       <div class="pauseActions">
-        <button id="resumeGameButton" type="button">▶ Continuar</button>
+        <button id="mobilePlayNow" type="button">▶ JUGAR AHORA</button>
+      <button id="resumeGameButton" type="button">▶ Continuar</button>
         <a id="backToMenu" href="main.index.html">↩ Cambiar mundo</a>
         <button id="pauseSettingsButton" type="button">⚙ Configuración</button>
         <button id="editControlsPauseButton" type="button">✥ Mover controles</button>
@@ -1171,11 +1342,11 @@
         this.settings = { ...AUDIO_DEFAULTS };
         this.sampleBase = theme === 'town' ? '../../assets/audio/' : 'assets/audio/';
         this.sampleFiles = {
-          pistol: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/1911/A_34P.wav',
-          sniper: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Savage%2010%20.300%20Blackout/T_17P.wav',
-          machinegun: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/PPSh/P_16P.wav',
-          revolver: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Smith%20%26%20Wesson%20642/V_22P.wav',
-          shotgun: 'https://raw.githubusercontent.com/petroulacl/fps-asset-kit/main/sfx/firearm_sfx/Prepared%20SFX%20Library/Mossberg/N_26P.wav',
+          pistol: 'pistol.wav',
+          sniper: 'sniper.wav',
+          machinegun: 'machinegun.wav',
+          revolver: 'revolver.wav',
+          shotgun: 'shotgun.wav',
           equip: 'equip.wav',
           reload: 'reload.wav',
           reloadFinish: 'reload_finish.wav',
@@ -1185,6 +1356,8 @@
           shellInsert: 'shell_insert.wav'
         };
         this.sampleCache = new Map();
+        this.samplePools = new Map();
+        this.samplePoolCursor = new Map();
         this.sampleFallbackFiles = {
           pistol: 'pistol.wav',
           sniper: 'sniper.wav',
@@ -1251,107 +1424,87 @@
 
 
       preloadWeaponSamples() {
-        for (const [name, file] of Object.entries(this.sampleFiles || {})) {
-          if (!['pistol','sniper','machinegun','revolver','shotgun'].includes(name)) continue;
+        const preload = {
+          pistol: 4,
+          sniper: 3,
+          machinegun: 8,
+          revolver: 4,
+          shotgun: 4,
+          equip: 2,
+          reload: 2,
+          reloadFinish: 2,
+          blood: 3,
+          pumpBack: 2,
+          pumpForward: 2,
+          shellInsert: 3
+        };
+        for (const [name, count] of Object.entries(preload)) {
+          const file = this.sampleFiles?.[name];
+          if (file) this.ensureSamplePool(name, file, count);
+        }
+      }
+
+      sampleUrl(file) {
+        return /^https?:\/\//i.test(file) ? file : this.sampleBase + file;
+      }
+
+      ensureSamplePool(cacheKey, file, desiredCount = 3) {
+        if (!file) return [];
+        const url = this.sampleUrl(file);
+        let pool = this.samplePools.get(cacheKey);
+        if (!pool) {
+          pool = [];
+          this.samplePools.set(cacheKey, pool);
+          this.samplePoolCursor.set(cacheKey, 0);
+        }
+        const count = Math.max(1, Math.min(10, desiredCount));
+        while (pool.length < count) {
           try {
-            const url = /^https?:\/\//i.test(file) ? file : this.sampleBase + file;
             const audio = new Audio(url);
             audio.preload = 'auto';
             audio.load();
-            this.sampleCache.set(name, audio);
-          } catch (_) {}
+            pool.push(audio);
+          } catch (_) { break; }
         }
+        if (pool[0]) this.sampleCache.set(cacheKey, pool[0]);
+        return pool;
       }
 
-      createNoiseBuffer() {
-        if (!this.ctx) return;
-        const length = Math.floor(this.ctx.sampleRate * 2);
-        const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        let last = 0;
-        for (let i = 0; i < length; i++) {
-          const white = Math.random() * 2 - 1;
-          last = last * 0.82 + white * 0.18;
-          data[i] = last * 0.8 + white * 0.2;
-        }
-        this.noiseBuffer = buffer;
-      }
-
-      applyVolumes() {
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        this.master.gain.setTargetAtTime(this.settings.master / 100, now, 0.02);
-        this.sfx.gain.setTargetAtTime(this.settings.sfx / 100, now, 0.02);
-        this.music.gain.setTargetAtTime(this.settings.music / 100, now, 0.02);
-        this.ambient.gain.setTargetAtTime(this.settings.ambient / 100, now, 0.02);
-      }
-
-      setSettings(next) {
-        Object.assign(this.settings, next);
-        for (const key of Object.keys(this.settings)) {
-          this.settings[key] = Math.max(0, Math.min(100, Number(this.settings[key]) || 0));
-        }
-        this.saveSettings();
-        this.ensure();
-        this.applyVolumes();
-      }
-
-      playFileSample(file, volume = 1, playbackRate = 1, cacheKey = file) {
+      playPooledSample(file, volume = 1, playbackRate = 1, cacheKey = file, desiredCount = 3) {
         if (!file) return false;
         try {
-          let base = this.sampleCache.get(cacheKey);
-          if (!base) {
-            base = new Audio(/^https?:\/\//i.test(file) ? file : this.sampleBase + file);
-            base.preload = 'auto';
-            this.sampleCache.set(cacheKey, base);
+          const pool = this.ensureSamplePool(cacheKey, file, desiredCount);
+          if (!pool.length) return false;
+          let audio = pool.find((item) => item.paused || item.ended);
+          if (!audio) {
+            const cursor = this.samplePoolCursor.get(cacheKey) || 0;
+            audio = pool[cursor % pool.length];
+            this.samplePoolCursor.set(cacheKey, (cursor + 1) % pool.length);
+            try { audio.pause(); } catch (_) {}
           }
-          const audio = base.cloneNode(true);
+          try { audio.currentTime = 0; } catch (_) {}
           const master = (this.settings.master ?? 80) / 100;
           const sfx = (this.settings.sfx ?? 100) / 100;
           audio.volume = Math.max(0, Math.min(1, master * sfx * volume));
           audio.playbackRate = Math.max(0.72, Math.min(1.35, playbackRate));
-          audio.play().catch(() => {});
+          const promise = audio.play();
+          if (promise?.catch) promise.catch(() => {});
           return true;
         } catch (_) {
           return false;
         }
       }
 
+      playFileSample(file, volume = 1, playbackRate = 1, cacheKey = file) {
+        const desiredCount = /machinegun/i.test(String(cacheKey)) ? 8 : /foot_/i.test(String(file)) ? 3 : 4;
+        return this.playPooledSample(file, volume, playbackRate, cacheKey, desiredCount);
+      }
+
       playSample(name, volume = 1, playbackRate = 1) {
-        const file = this.sampleFiles?.[name];
+        const file = this.sampleFiles?.[name] || this.sampleFallbackFiles?.[name];
         if (!file) return false;
-        try {
-          const url = /^https?:\/\//i.test(file) ? file : this.sampleBase + file;
-          let base = this.sampleCache.get(name);
-          if (!base || base.src !== url) {
-            base = new Audio(url);
-            base.preload = 'auto';
-            this.sampleCache.set(name, base);
-          }
-          const audio = base.cloneNode(true);
-          const master = (this.settings.master ?? 80) / 100;
-          const sfx = (this.settings.sfx ?? 100) / 100;
-          audio.volume = Math.max(0, Math.min(1, master * sfx * volume));
-          audio.playbackRate = Math.max(0.72, Math.min(1.35, playbackRate));
-          const fallback = this.sampleFallbackFiles?.[name];
-          let fallbackTriggered = false;
-          audio.addEventListener('error', () => {
-            if (fallbackTriggered || !fallback) return;
-            fallbackTriggered = true;
-            this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`);
-          }, { once: true });
-          const p = audio.play();
-          if (p?.catch) p.catch(() => {
-            if (!fallbackTriggered && fallback) {
-              fallbackTriggered = true;
-              this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`);
-            }
-          });
-          return true;
-        } catch (_) {
-          const fallback = this.sampleFallbackFiles?.[name];
-          return fallback ? this.playFileSample(fallback, volume, playbackRate, `${name}:fallback`) : false;
-        }
+        const desiredCount = name === 'machinegun' ? 8 : name === 'blood' ? 4 : 4;
+        return this.playPooledSample(file, volume, playbackRate, name, desiredCount);
       }
 
       makePan(destination, pan = 0) {
@@ -2219,6 +2372,8 @@
     const settingsButton = document.getElementById('settingsButton');
     const settingsModal = document.getElementById('settingsModal');
     const settingsClose = document.getElementById('settingsClose');
+    const settingsQuickClose = document.getElementById('settingsQuickClose');
+    const settingsExitFixed = document.getElementById('settingsExitFixed');
     const settingsReset = document.getElementById('settingsReset');
     const sensitivityRange = document.getElementById('sensitivityRange');
     const sensitivityValue = document.getElementById('sensitivityValue');
@@ -2239,6 +2394,7 @@
     const motionBlurValue = document.getElementById('motionBlurValue');
     const sniperToggleZoomInput = document.getElementById('sniperToggleZoom');
     let resumeAfterSettings = false;
+    let settingsActionTimestamp = 0;
 
     function refreshSettingsUI() {
       sensitivityRange.value = String(userSensitivityPercent);
@@ -2288,7 +2444,9 @@
     function openSettings(event) {
       event?.preventDefault();
       event?.stopPropagation();
-      resumeAfterSettings = isGameplayActive();
+      // Si la partida ya comenzó, "Volver al juego" debe reanudarla aunque
+      // Configuración se haya abierto desde el menú de pausa.
+      resumeAfterSettings = Boolean(gameStarted && !gameOver && !roundTransition);
       primaryButtonHeld = false;
       mobileSprintHeld = false;
       mobileCrouchHeld = false;
@@ -2299,49 +2457,66 @@
       else if (xboxMode) xboxPaused = true;
       else if (controls.isLocked) controls.unlock();
       refreshSettingsUI();
+      settingsModal.style.display = '';
       settingsModal.classList.add('open');
+      settingsModal.setAttribute('aria-hidden', 'false');
     }
 
-    function closeSettings(event) {
-      event?.preventDefault();
-      event?.stopPropagation();
-      applySettingsFromControls();
-      settingsModal.classList.remove('open');
-      if (resumeAfterSettings && !gameOver && !roundTransition) {
-        if (mobileMode) {
-          mobilePaused = false;
-          overlay.classList.add('hidden');
-        } else if (xboxMode) {
-          xboxPaused = false;
-          overlay.classList.add('hidden');
-        } else {
+    function applySettingsSafely() {
+      try {
+        applySettingsFromControls();
+        return true;
+      } catch (error) {
+        console.error('Defusual: no se pudieron aplicar todos los ajustes', error);
+        return false;
+      }
+    }
+
+    function resumeGameplayAfterSettings() {
+      if (!gameStarted || gameOver || roundTransition) return;
+      overlay.classList.add('hidden');
+      if (mobileMode) {
+        mobilePaused = false;
+      } else if (xboxMode) {
+        xboxPaused = false;
+      } else {
+        // Se llama todavía dentro del gesto del usuario para que Pointer Lock
+        // tenga permiso en navegadores de escritorio.
+        try {
           controls.lock();
+        } catch (error) {
+          console.warn('Defusual: Pointer Lock no pudo reactivarse automáticamente', error);
         }
       }
-      resumeAfterSettings = false;
+      if (gameAudio?.ctx) gameAudio.setMusic('game');
     }
 
-    settingsButton.addEventListener('click', openSettings);
-    pauseSettingsButton?.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openSettings(event);
-    });
-    settingsClose.addEventListener('click', closeSettings);
-    settingsModal.addEventListener('click', (event) => {
-      if (event.target === settingsModal) closeSettings(event);
-    });
-    sensitivityRange.addEventListener('input', applySettingsFromControls);
-    difficultyRange.addEventListener('input', applySettingsFromControls);
-    masterVolumeRange.addEventListener('input', applySettingsFromControls);
-    sfxVolumeRange.addEventListener('input', applySettingsFromControls);
-    musicVolumeRange.addEventListener('input', applySettingsFromControls);
-    ambientVolumeRange.addEventListener('input', applySettingsFromControls);
-    bloomRange.addEventListener('input', applySettingsFromControls);
-    motionBlurRange.addEventListener('input', applySettingsFromControls);
-    sniperToggleZoomInput?.addEventListener('change', applySettingsFromControls);
-    settingsReset.addEventListener('click', (event) => {
-      event.preventDefault(); event.stopPropagation();
+    function closeSettings(event, resumeGame = true) {
+      event?.preventDefault();
+      event?.stopPropagation();
+
+      // Ocultar PRIMERO. Así un error posterior nunca puede dejar al usuario
+      // atrapado dentro del panel.
+      settingsModal.classList.remove('open');
+      settingsModal.setAttribute('aria-hidden', 'true');
+      settingsModal.style.display = 'none';
+
+      applySettingsSafely();
+
+      const shouldResume = resumeGame && resumeAfterSettings && !gameOver && !roundTransition;
+      resumeAfterSettings = false;
+      if (shouldResume) resumeGameplayAfterSettings();
+
+      // Limpiamos el display inline después del frame; sin la clase open
+      // seguirá oculto por CSS, pero podrá abrirse de nuevo normalmente.
+      requestAnimationFrame(() => {
+        if (!settingsModal.classList.contains('open')) settingsModal.style.display = '';
+      });
+    }
+
+    function resetSettingsToDefaults(event) {
+      event?.preventDefault();
+      event?.stopPropagation();
       userSensitivityPercent = 25;
       userDifficultyPercent = 100;
       sniperToggleZoomMode = false;
@@ -2352,7 +2527,59 @@
       saveGameSettings();
       refreshSettingsUI();
       if (typeof updateRoundHUD === 'function') updateRoundHUD();
+    }
+
+    settingsButton.addEventListener('click', openSettings);
+    pauseSettingsButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openSettings(event);
     });
+    settingsClose.addEventListener('click', closeSettings);
+    settingsQuickClose?.addEventListener('click', closeSettings);
+    settingsExitFixed?.addEventListener('click', closeSettings);
+    settingsModal.addEventListener('click', (event) => {
+      if (event.target === settingsModal) closeSettings(event);
+    });
+    window.addEventListener('keydown', (event) => {
+      if (settingsModal.classList.contains('open') && event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeSettings(event);
+      }
+    }, true);
+    sensitivityRange.addEventListener('input', applySettingsFromControls);
+    difficultyRange.addEventListener('input', applySettingsFromControls);
+    masterVolumeRange.addEventListener('input', applySettingsFromControls);
+    sfxVolumeRange.addEventListener('input', applySettingsFromControls);
+    musicVolumeRange.addEventListener('input', applySettingsFromControls);
+    ambientVolumeRange.addEventListener('input', applySettingsFromControls);
+    bloomRange.addEventListener('input', applySettingsFromControls);
+    motionBlurRange.addEventListener('input', applySettingsFromControls);
+    sniperToggleZoomInput?.addEventListener('change', applySettingsFromControls);
+    settingsReset.addEventListener('click', resetSettingsToDefaults);
+
+    // Fallback robusto para mouse, touch y HTML local. Los botones se procesan
+    // en pointerdown (fase de captura), antes de cualquier overlay del juego.
+    document.addEventListener('pointerdown', (event) => {
+      if (!settingsModal.classList.contains('open')) return;
+      const target = event.target.closest?.('#settingsClose, #settingsQuickClose, #settingsExitFixed, #settingsReset');
+      if (!target) return;
+
+      const now = performance.now();
+      if (now - settingsActionTimestamp < 120) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+      settingsActionTimestamp = now;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (target.id === 'settingsReset') resetSettingsToDefaults(event);
+      else closeSettings(event, true);
+    }, true);
+
     refreshSettingsUI();
 
 
@@ -4429,29 +4656,38 @@ function addWesternBoundary() {
     const bloodPoolGeometry = new THREE.CircleGeometry(0.78, 22);
     const bloodPoolMaterial = new THREE.MeshLambertMaterial({ color: 0x52050a, emissive: 0x120000, transparent: true, opacity: 0.72, depthWrite: false });
     const bloodSpawnPosition = new THREE.Vector3();
+    const bloodUpAxis = new THREE.Vector3(0, 1, 0);
+    const bloodDirectionTemp = new THREE.Vector3();
 
-    function createEnemyBloodSpray(enemy, intensity = 1) {
+    function createEnemyBloodSpray(enemy, intensity = 1, hitPoint = null) {
       if (!enemy?.group) return;
-      if (enemy.head?.getWorldPosition) enemy.head.getWorldPosition(bloodSpawnPosition);
-      else bloodSpawnPosition.set(enemy.group.position.x, enemy.group.position.y + 1.15, enemy.group.position.z);
+      if (hitPoint?.isVector3) bloodSpawnPosition.copy(hitPoint);
+      else if (enemy.body?.getWorldPosition) enemy.body.getWorldPosition(bloodSpawnPosition);
+      else if (enemy.head?.getWorldPosition) enemy.head.getWorldPosition(bloodSpawnPosition);
+      else bloodSpawnPosition.set(enemy.group.position.x, enemy.group.position.y + 1.05, enemy.group.position.z);
 
-      const count = Math.min(14, 5 + Math.round(intensity * 3));
+      const count = Math.min(24, 7 + Math.round(intensity * 4.5));
       for (let i = 0; i < count; i++) {
-        const mesh = new THREE.Mesh(bloodParticleGeometry, bloodParticleMaterial.clone());
-        mesh.scale.setScalar(0.65 + Math.random() * 0.85);
+        const material = bloodParticleMaterial.clone();
+        material.color.setHSL(0.985 + Math.random() * 0.012, 0.88, 0.17 + Math.random() * 0.08);
+        const mesh = new THREE.Mesh(bloodParticleGeometry, material);
+        const baseScale = 0.52 + Math.random() * 0.95;
+        mesh.scale.set(baseScale * 0.62, baseScale * (1.35 + Math.random() * 1.65), baseScale * 0.62);
         mesh.position.copy(bloodSpawnPosition);
-        mesh.position.x += (Math.random() - 0.5) * 0.30;
-        mesh.position.y += (Math.random() - 0.5) * 0.20;
-        mesh.position.z += (Math.random() - 0.5) * 0.30;
+        mesh.position.x += (Math.random() - 0.5) * 0.20;
+        mesh.position.y += (Math.random() - 0.5) * 0.16;
+        mesh.position.z += (Math.random() - 0.5) * 0.20;
         scene.add(mesh);
         bloodParticles.push({
           mesh,
-          velocity: new THREE.Vector3((Math.random() - 0.5) * 2.8, 1.2 + Math.random() * 2.2, (Math.random() - 0.5) * 2.8),
-          life: 0.55 + Math.random() * 0.35,
-          maxLife: 0.90
+          baseScale,
+          velocity: new THREE.Vector3((Math.random() - 0.5) * 3.4, 1.0 + Math.random() * 3.0, (Math.random() - 0.5) * 3.4),
+          life: 0.72 + Math.random() * 0.55,
+          maxLife: 1.27,
+          splashed: false
         });
       }
-      while (bloodParticles.length > 140) {
+      while (bloodParticles.length > 260) {
         const old = bloodParticles.shift();
         if (old?.mesh?.parent) old.mesh.parent.remove(old.mesh);
       }
@@ -4477,11 +4713,30 @@ function addWesternBoundary() {
       for (let i = bloodParticles.length - 1; i >= 0; i--) {
         const p = bloodParticles[i];
         p.life -= delta;
-        p.velocity.y -= 8.8 * delta;
+        p.velocity.y -= 9.7 * delta;
         p.mesh.position.addScaledVector(p.velocity, delta);
+        const speed = p.velocity.length();
+        if (speed > 0.08) {
+          bloodDirectionTemp.copy(p.velocity).normalize();
+          p.mesh.quaternion.setFromUnitVectors(bloodUpAxis, bloodDirectionTemp);
+          const b = p.baseScale || 0.7;
+          p.mesh.scale.set(b * 0.58, b * THREE.MathUtils.clamp(1.15 + speed * 0.20, 1.25, 3.6), b * 0.58);
+        }
         if (p.mesh.position.y < 0.035) {
           p.mesh.position.y = 0.035;
-          p.velocity.multiplyScalar(0.18);
+          if (!p.splashed && Math.random() < 0.24 && bloodPools.length < 42) {
+            p.splashed = true;
+            const splat = new THREE.Mesh(bloodPoolGeometry, bloodPoolMaterial.clone());
+            splat.rotation.x = -Math.PI / 2;
+            splat.rotation.z = Math.random() * Math.PI;
+            splat.position.set(p.mesh.position.x, 0.026, p.mesh.position.z);
+            const s = 0.10 + Math.random() * 0.24;
+            splat.scale.set(s * (0.8 + Math.random() * 0.5), s * (0.6 + Math.random() * 0.7), 1);
+            splat.material.opacity = 0.48 + Math.random() * 0.20;
+            scene.add(splat);
+            bloodPools.push({ mesh: splat, life: 9.0, fadeStart: 6.0 });
+          }
+          p.velocity.multiplyScalar(0.12);
           p.velocity.y = 0;
         }
         const alpha = THREE.MathUtils.clamp(p.life / p.maxLife, 0, 1);
@@ -4496,7 +4751,7 @@ function addWesternBoundary() {
         const pool = bloodPools[i];
         pool.life -= delta;
         if (pool.life < pool.fadeStart) {
-          pool.mesh.material.opacity = 0.72 * THREE.MathUtils.clamp(pool.life / pool.fadeStart, 0, 1);
+          pool.mesh.material.opacity = Math.min(pool.mesh.material.opacity, 0.78 * THREE.MathUtils.clamp(pool.life / pool.fadeStart, 0, 1));
         }
         if (pool.life <= 0) {
           if (pool.mesh.parent) pool.mesh.parent.remove(pool.mesh);
@@ -4735,27 +4990,30 @@ function addWesternBoundary() {
 
 
     function spawnHeadshotBloodParticle(position, direction, power = 1) {
-      const mesh = new THREE.Mesh(bloodParticleGeometry, bloodParticleMaterial.clone());
-      mesh.scale.setScalar(0.85 + Math.random() * 1.35);
+      const material = bloodParticleMaterial.clone();
+      material.color.setHSL(0.988 + Math.random() * 0.010, 0.92, 0.16 + Math.random() * 0.08);
+      const mesh = new THREE.Mesh(bloodParticleGeometry, material);
+      const baseScale = 0.72 + Math.random() * 1.35;
+      mesh.scale.set(baseScale * 0.54, baseScale * (1.8 + Math.random() * 1.9), baseScale * 0.54);
       mesh.position.copy(position);
-      mesh.position.x += (Math.random() - 0.5) * 0.18;
-      mesh.position.y += (Math.random() - 0.5) * 0.12;
-      mesh.position.z += (Math.random() - 0.5) * 0.18;
+      mesh.position.x += (Math.random() - 0.5) * 0.16;
+      mesh.position.y += (Math.random() - 0.5) * 0.10;
+      mesh.position.z += (Math.random() - 0.5) * 0.16;
       scene.add(mesh);
       const sprayDir = direction?.clone?.() || new THREE.Vector3(0, 0.25, 1);
       sprayDir.normalize();
-      const velocity = sprayDir.multiplyScalar(2.2 + Math.random() * 3.5);
-      velocity.x += (Math.random() - 0.5) * 3.7;
-      velocity.y += 2.5 + Math.random() * 4.2;
-      velocity.z += (Math.random() - 0.5) * 3.7;
-      bloodParticles.push({ mesh, velocity, life: 0.78 + Math.random() * 0.50, maxLife: 1.28 });
-      while (bloodParticles.length > 190) {
+      const velocity = sprayDir.multiplyScalar(2.8 + Math.random() * 4.4);
+      velocity.x += (Math.random() - 0.5) * 4.4;
+      velocity.y += 3.2 + Math.random() * 5.4;
+      velocity.z += (Math.random() - 0.5) * 4.4;
+      bloodParticles.push({ mesh, baseScale, velocity, life: 0.95 + Math.random() * 0.62, maxLife: 1.57, splashed: false });
+      while (bloodParticles.length > 260) {
         const old = bloodParticles.shift();
         if (old?.mesh?.parent) old.mesh.parent.remove(old.mesh);
       }
     }
 
-    function burstHeadshotBlood(position, direction, count = 22) {
+    function burstHeadshotBlood(position, direction, count = 30) {
       for (let i = 0; i < count; i++) spawnHeadshotBloodParticle(position, direction, 1);
     }
 
@@ -4782,13 +5040,33 @@ function addWesternBoundary() {
       return false;
     }
 
+    function poseConnectedRagdoll(enemy) {
+      setupEnemyAnimation(enemy);
+      const side = Math.random() < 0.5 ? -1 : 1;
+      for (let i = 0; i < (enemy.animArms || []).length; i++) {
+        const arm = enemy.animArms[i];
+        if (!arm) continue;
+        arm.rotation.x += 0.55 + Math.random() * 0.85;
+        arm.rotation.z += side * (i % 2 === 0 ? 0.72 : -0.58) + (Math.random() - 0.5) * 0.45;
+      }
+      for (let i = 0; i < (enemy.animLegs || []).length; i++) {
+        const leg = enemy.animLegs[i];
+        if (!leg) continue;
+        leg.rotation.x += (i % 2 === 0 ? 0.52 : -0.38) + (Math.random() - 0.5) * 0.34;
+        leg.rotation.z += (Math.random() - 0.5) * 0.25;
+      }
+      enemy.corpseFallSide = side;
+      enemy.corpseTargetRotZ = side * (1.28 + Math.random() * 0.22);
+      enemy.corpseTargetRotX = (Math.random() - 0.5) * 0.48;
+    }
+
     function startEnemyDeath(enemy, deathInfo = {}) {
       if (!enemy || enemy.dying) return;
       enemy.dying = true;
       enemy.deathHeadshot = Boolean(deathInfo.headshot && enemy.type !== 'parasite');
       enemy.deathHitDirection = deathInfo.direction?.clone?.() || new THREE.Vector3((Math.random() - 0.5), 0.15, (Math.random() - 0.5)).normalize();
       createEnemyBloodPool(enemy);
-      createEnemyBloodSpray(enemy, enemy.isBoss ? 3.0 : enemy.deathHeadshot ? 3.2 : 1.6);
+      createEnemyBloodSpray(enemy, enemy.isBoss ? 3.0 : enemy.deathHeadshot ? 3.8 : 1.8, deathInfo.point || null);
 
       const enemyIndex = enemies.indexOf(enemy);
       if (enemyIndex !== -1) enemies.splice(enemyIndex, 1);
@@ -4804,76 +5082,63 @@ function addWesternBoundary() {
       if (enemy.healthBar) enemy.healthBar.visible = false;
 
       if (enemy.group?.parent && enemy.group.parent !== scene) scene.attach(enemy.group);
+      if (!enemy.group) return;
+      cloneEntityMaterialsForFade(enemy.group);
+      enemy.group.visible = true;
 
       const neckPosition = new THREE.Vector3();
       if (enemy.head?.getWorldPosition) enemy.head.getWorldPosition(neckPosition);
       else neckPosition.set(enemy.group.position.x, enemy.group.position.y + 1.45, enemy.group.position.z);
       neckPosition.y -= enemy.isBoss ? 0.38 : 0.24;
-      enemy.neckSpurtPosition = neckPosition.clone();
+      enemy.neckLocalPosition = enemy.group.worldToLocal(neckPosition.clone());
       enemy.neckSpurtTimer = 0;
 
-      const candidates = [];
-      const seen = new Set();
-      for (const mesh of enemy.hitMeshes || []) {
-        if (mesh?.isMesh && !seen.has(mesh)) { candidates.push(mesh); seen.add(mesh); }
-      }
-      for (const child of enemy.group?.children || []) {
-        if (child?.isMesh && !seen.has(child)) { candidates.push(child); seen.add(child); }
+      const baseImpulse = enemy.deathHitDirection.clone().normalize();
+      enemy.corpseVelocity = baseImpulse.clone().multiplyScalar(0.9 + Math.random() * 0.85);
+      enemy.corpseVelocity.x += (Math.random() - 0.5) * 0.65;
+      enemy.corpseVelocity.z += (Math.random() - 0.5) * 0.65;
+      enemy.corpseVelocity.y = 1.15 + Math.random() * 1.25;
+      enemy.corpseAngularVelocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 1.9,
+        (Math.random() - 0.5) * 1.0,
+        (Math.random() - 0.5) * 2.2
+      );
+      enemy.corpseFloorY = enemy.isBoss ? 0.74 : enemy.type === 'parasite' ? 0.10 : 0.42;
+      enemy.corpseSleeping = false;
+      poseConnectedRagdoll(enemy);
+
+      enemy.detachedHead = null;
+      if (enemy.deathHeadshot && enemy.head?.parent) {
+        if (enemy.head.material) {
+          if (Array.isArray(enemy.head.material)) enemy.head.material = enemy.head.material.map((m) => m.clone());
+          else enemy.head.material = enemy.head.material.clone();
+        }
+        scene.attach(enemy.head);
+        enemy.head.geometry?.computeBoundingSphere?.();
+        const headRadius = THREE.MathUtils.clamp((enemy.head.geometry?.boundingSphere?.radius || 0.28) * 0.75, 0.18, 0.58);
+        const headVelocity = baseImpulse.clone().multiplyScalar(1.5 + Math.random());
+        headVelocity.x += (Math.random() - 0.5) * 4.3;
+        headVelocity.z += (Math.random() - 0.5) * 4.3;
+        headVelocity.y = 7.2 + Math.random() * 3.8;
+        enemy.detachedHead = {
+          mesh: enemy.head,
+          velocity: headVelocity,
+          angularVelocity: new THREE.Vector3((Math.random() - 0.5) * 8.5, (Math.random() - 0.5) * 8.5, (Math.random() - 0.5) * 8.5),
+          radius: headRadius,
+          sleeping: false
+        };
+        burstHeadshotBlood(neckPosition, baseImpulse, 46);
       }
 
       enemy.ragdollParts = [];
-      const baseImpulse = enemy.deathHitDirection.clone().normalize();
-      for (const mesh of candidates) {
-        if (!mesh?.parent) continue;
-        const isHead = mesh === enemy.head || mesh.userData?.hitZone === 'head';
-        if (mesh.material) {
-          if (Array.isArray(mesh.material)) mesh.material = mesh.material.map((m) => m.clone());
-          else mesh.material = mesh.material.clone();
-        }
-        scene.attach(mesh);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        const velocity = baseImpulse.clone().multiplyScalar(0.75 + Math.random() * 0.75);
-        velocity.x += (Math.random() - 0.5) * 0.90;
-        velocity.z += (Math.random() - 0.5) * 0.90;
-        velocity.y += 0.65 + Math.random() * 1.30;
-        if (enemy.deathHeadshot && isHead) {
-          velocity.multiplyScalar(1.5);
-          velocity.y = 6.5 + Math.random() * 3.2;
-          velocity.x += (Math.random() - 0.5) * 4.6;
-          velocity.z += (Math.random() - 0.5) * 4.6;
-        }
-        mesh.geometry?.computeBoundingSphere?.();
-        const worldScale = new THREE.Vector3();
-        mesh.getWorldScale(worldScale);
-        const geomRadius = mesh.geometry?.boundingSphere?.radius || 0.28;
-        const approxRadius = THREE.MathUtils.clamp(geomRadius * Math.max(worldScale.x, worldScale.y, worldScale.z) * 0.55, 0.13, 0.62);
-        enemy.ragdollParts.push({
-          mesh,
-          velocity,
-          angularVelocity: new THREE.Vector3(
-            (Math.random() - 0.5) * 7.0,
-            (Math.random() - 0.5) * 7.0,
-            (Math.random() - 0.5) * 7.0
-          ),
-          radius: isHead ? Math.max(0.20, approxRadius) : approxRadius,
-          isHead,
-          grounded: false,
-          sleeping: false
-        });
-      }
-
-      if (enemy.group) enemy.group.visible = false;
-      if (enemy.deathHeadshot) burstHeadshotBlood(neckPosition, baseImpulse, 28);
-
       enemy.deathElapsed = 0;
       enemy.deathHoldDuration = 8.0;
-      enemy.deathFadeDuration = 0.90;
+      enemy.deathFadeDuration = 1.05;
       enemy.corpseCollider = {
         type: 'circle',
-        x: enemy.group?.position?.x ?? neckPosition.x,
-        z: enemy.group?.position?.z ?? neckPosition.z,
-        radius: THREE.MathUtils.clamp((enemy.radius || 0.55) * (enemy.isBoss ? 1.05 : 0.82), 0.38, 1.35),
+        x: enemy.group.position.x,
+        z: enemy.group.position.z,
+        radius: THREE.MathUtils.clamp((enemy.radius || 0.55) * (enemy.isBoss ? 1.08 : 0.90), 0.42, 1.45),
         _corpse: true
       };
       staticColliders.push(enemy.corpseCollider);
@@ -4884,83 +5149,98 @@ function addWesternBoundary() {
     function updateDyingEnemies(delta) {
       for (let i = dyingEnemies.length - 1; i >= 0; i--) {
         const enemy = dyingEnemies[i];
-        if (!enemy) { dyingEnemies.splice(i, 1); continue; }
+        if (!enemy?.group) { dyingEnemies.splice(i, 1); continue; }
         enemy.deathElapsed += delta;
 
-        let avgX = 0;
-        let avgZ = 0;
-        let avgCount = 0;
-        let sleepingParts = 0;
-        for (const part of enemy.ragdollParts || []) {
-          const mesh = part.mesh;
-          if (!mesh?.parent) continue;
-          if (part.sleeping) {
-            sleepingParts++;
-            avgX += mesh.position.x;
-            avgZ += mesh.position.z;
-            avgCount++;
-            continue;
-          }
-          part.velocity.y -= 10.8 * delta;
-          const nextX = mesh.position.x + part.velocity.x * delta;
-          const nextZ = mesh.position.z + part.velocity.z * delta;
-          if (!ragdollHitsStaticWorld(nextX, nextZ, part.radius)) {
-            mesh.position.x = nextX;
-            mesh.position.z = nextZ;
+        if (!enemy.corpseSleeping) {
+          enemy.corpseVelocity.y -= 11.4 * delta;
+          const nextX = enemy.group.position.x + enemy.corpseVelocity.x * delta;
+          const nextZ = enemy.group.position.z + enemy.corpseVelocity.z * delta;
+          const radius = enemy.corpseCollider?.radius || 0.52;
+          if (!ragdollHitsStaticWorld(nextX, nextZ, radius)) {
+            enemy.group.position.x = nextX;
+            enemy.group.position.z = nextZ;
           } else {
-            part.velocity.x *= -0.32;
-            part.velocity.z *= -0.32;
+            enemy.corpseVelocity.x *= -0.24;
+            enemy.corpseVelocity.z *= -0.24;
           }
-          mesh.position.y += part.velocity.y * delta;
-          mesh.rotation.x += part.angularVelocity.x * delta;
-          mesh.rotation.y += part.angularVelocity.y * delta;
-          mesh.rotation.z += part.angularVelocity.z * delta;
 
-          const floorY = Math.max(part.isHead ? 0.20 : 0.12, part.radius * 0.92);
-          if (mesh.position.y < floorY) {
-            mesh.position.y = floorY;
-            if (Math.abs(part.velocity.y) > 0.7) part.velocity.y *= -0.22;
-            else part.velocity.y = 0;
-            part.velocity.x *= Math.exp(-delta * 5.2);
-            part.velocity.z *= Math.exp(-delta * 5.2);
-            part.angularVelocity.multiplyScalar(Math.exp(-delta * 3.8));
-            part.grounded = true;
-            if (enemy.deathElapsed > 1.15 && part.velocity.lengthSq() < 0.035 && part.angularVelocity.lengthSq() < 0.05) {
-              part.sleeping = true;
-              part.velocity.set(0, 0, 0);
-              part.angularVelocity.set(0, 0, 0);
-              mesh.castShadow = enemy.deathElapsed < 2.2;
+          enemy.group.position.y += enemy.corpseVelocity.y * delta;
+          enemy.group.rotation.x += enemy.corpseAngularVelocity.x * delta;
+          enemy.group.rotation.y += enemy.corpseAngularVelocity.y * delta;
+          enemy.group.rotation.z += enemy.corpseAngularVelocity.z * delta;
+
+          if (enemy.group.position.y <= enemy.corpseFloorY) {
+            enemy.group.position.y = enemy.corpseFloorY;
+            if (Math.abs(enemy.corpseVelocity.y) > 0.75) enemy.corpseVelocity.y *= -0.16;
+            else enemy.corpseVelocity.y = 0;
+            enemy.corpseVelocity.x *= Math.exp(-delta * 5.0);
+            enemy.corpseVelocity.z *= Math.exp(-delta * 5.0);
+            enemy.corpseAngularVelocity.multiplyScalar(Math.exp(-delta * 4.4));
+            const settle = 1 - Math.exp(-delta * 4.6);
+            enemy.group.rotation.z = THREE.MathUtils.lerp(enemy.group.rotation.z, enemy.corpseTargetRotZ, settle);
+            enemy.group.rotation.x = THREE.MathUtils.lerp(enemy.group.rotation.x, enemy.corpseTargetRotX, settle);
+            if (enemy.deathElapsed > 1.25 && enemy.corpseVelocity.lengthSq() < 0.025 && enemy.corpseAngularVelocity.lengthSq() < 0.035) {
+              enemy.corpseSleeping = true;
+              enemy.corpseVelocity.set(0, 0, 0);
+              enemy.corpseAngularVelocity.set(0, 0, 0);
             }
           }
-          avgX += mesh.position.x;
-          avgZ += mesh.position.z;
-          avgCount++;
         }
 
-        if (enemy.corpseCollider && avgCount > 0) {
-          enemy.corpseCollider.x = avgX / avgCount;
-          enemy.corpseCollider.z = avgZ / avgCount;
+        if (enemy.corpseCollider) {
+          enemy.corpseCollider.x = enemy.group.position.x;
+          enemy.corpseCollider.z = enemy.group.position.z;
         }
 
-        if (enemy.deathHeadshot && enemy.deathElapsed < 0.78) {
+        const head = enemy.detachedHead;
+        if (head?.mesh?.parent && !head.sleeping) {
+          head.velocity.y -= 10.8 * delta;
+          const nextX = head.mesh.position.x + head.velocity.x * delta;
+          const nextZ = head.mesh.position.z + head.velocity.z * delta;
+          if (!ragdollHitsStaticWorld(nextX, nextZ, head.radius)) {
+            head.mesh.position.x = nextX;
+            head.mesh.position.z = nextZ;
+          } else {
+            head.velocity.x *= -0.30;
+            head.velocity.z *= -0.30;
+          }
+          head.mesh.position.y += head.velocity.y * delta;
+          head.mesh.rotation.x += head.angularVelocity.x * delta;
+          head.mesh.rotation.y += head.angularVelocity.y * delta;
+          head.mesh.rotation.z += head.angularVelocity.z * delta;
+          const floorY = Math.max(0.18, head.radius * 0.90);
+          if (head.mesh.position.y < floorY) {
+            head.mesh.position.y = floorY;
+            if (Math.abs(head.velocity.y) > 0.7) head.velocity.y *= -0.20;
+            else head.velocity.y = 0;
+            head.velocity.x *= Math.exp(-delta * 5.2);
+            head.velocity.z *= Math.exp(-delta * 5.2);
+            head.angularVelocity.multiplyScalar(Math.exp(-delta * 4.0));
+            if (enemy.deathElapsed > 1.4 && head.velocity.lengthSq() < 0.03 && head.angularVelocity.lengthSq() < 0.05) {
+              head.sleeping = true;
+              head.velocity.set(0, 0, 0);
+              head.angularVelocity.set(0, 0, 0);
+            }
+          }
+        }
+
+        if (enemy.deathHeadshot && enemy.deathElapsed < 1.18) {
           enemy.neckSpurtTimer -= delta;
           if (enemy.neckSpurtTimer <= 0) {
-            enemy.neckSpurtTimer = 0.11 + Math.random() * 0.05;
-            const spurtPos = enemy.neckSpurtPosition.clone();
-            spurtPos.y = Math.max(0.65, spurtPos.y - enemy.deathElapsed * 0.18);
-            burstHeadshotBlood(spurtPos, enemy.deathHitDirection, 9);
+            enemy.neckSpurtTimer = 0.068 + Math.random() * 0.038;
+            const spurtPos = enemy.neckLocalPosition.clone();
+            enemy.group.localToWorld(spurtPos);
+            burstHeadshotBlood(spurtPos, enemy.deathHitDirection, 12 + Math.floor(Math.random() * 7));
           }
         }
 
         if (enemy.deathElapsed > enemy.deathHoldDuration) {
           const fadeT = THREE.MathUtils.clamp((enemy.deathElapsed - enemy.deathHoldDuration) / enemy.deathFadeDuration, 0, 1);
-          for (const part of enemy.ragdollParts || []) {
-            if (part.mesh?.parent) setEntityFadeOpacity(part.mesh, 1 - fadeT);
-          }
+          setEntityFadeOpacity(enemy.group, 1 - fadeT);
+          if (enemy.detachedHead?.mesh?.parent) setEntityFadeOpacity(enemy.detachedHead.mesh, 1 - fadeT);
           if (fadeT >= 1) {
-            for (const part of enemy.ragdollParts || []) {
-              if (part.mesh?.parent) part.mesh.parent.remove(part.mesh);
-            }
+            if (enemy.detachedHead?.mesh?.parent) enemy.detachedHead.mesh.parent.remove(enemy.detachedHead.mesh);
             if (enemy.group?.parent) enemy.group.parent.remove(enemy.group);
             if (enemy.corpseCollider) {
               const ci = staticColliders.indexOf(enemy.corpseCollider);
@@ -4974,9 +5254,7 @@ function addWesternBoundary() {
 
     function clearDyingEnemies() {
       for (const enemy of dyingEnemies) {
-        for (const part of enemy?.ragdollParts || []) {
-          if (part.mesh?.parent) part.mesh.parent.remove(part.mesh);
-        }
+        if (enemy?.detachedHead?.mesh?.parent) enemy.detachedHead.mesh.parent.remove(enemy.detachedHead.mesh);
         if (enemy?.group?.parent) enemy.group.parent.remove(enemy.group);
         if (enemy?.corpseCollider) {
           const ci = staticColliders.indexOf(enemy.corpseCollider);
@@ -5751,7 +6029,7 @@ function addWesternBoundary() {
       if (!enemy || gameOver) return;
 
       const hitDamage = activeWeapon === 'sniper' ? 3 : activeWeapon === 'sword' ? 2 : activeWeapon === 'revolver' ? 2 : 1;
-      createEnemyBloodSpray(enemy, Math.max(0.8, hitDamage));
+      createEnemyBloodSpray(enemy, Math.max(0.8, hitDamage), hitInfo?.point || null);
       enemy.health = Math.max(0, (enemy.health ?? 1) - hitDamage);
       gameAudio.enemyHit();
       updateEntityHealthBar(enemy);
@@ -7248,10 +7526,20 @@ function addWesternBoundary() {
 
     setupMobileControls();
     document.addEventListener('click', (event) => {
-      if (event.target.closest('#settingsButton, #pauseSettingsButton, #resumeGameButton, #backToMenu, #settingsReset, #settingsClose, .controlsDetails summary')) {
+      if (event.target.closest('#settingsButton, #pauseSettingsButton, #resumeGameButton, #backToMenu, #settingsReset, #settingsClose, #settingsQuickClose, #settingsExitFixed, .controlsDetails summary')) {
         gameAudio.ui();
       }
     }, true);
+
+    // TOUCH_START_FALLBACK: algunos navegadores móviles al abrir HTML local no generan
+    // un click fiable sobre el overlay. Convertimos un pointerup táctil válido en click.
+    overlay.addEventListener('pointerup', (event) => {
+      if (!mobileMode || event.pointerType !== 'touch') return;
+      if (event.target.closest('.controlsDetails, #backToMenu, #pauseSettingsButton, #settingsButton, #settingsExitFixed, #settingsQuickClose')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      overlay.click();
+    });
 
     overlay.addEventListener('click', (event) => {
       gameAudio.ensure();
@@ -7292,6 +7580,30 @@ function addWesternBoundary() {
         controls.lock();
       }
     });
+
+
+
+    // MOBILE_AUTO_START_GAME: al entrar desde el menú Android el mundo comienza
+    // automáticamente. El botón grande queda como respaldo para navegadores que
+    // pausen scripts o restauren la pestaña en estado suspendido.
+    const mobilePlayNowButton = document.getElementById('mobilePlayNow');
+    function mobileStartNow(event) {
+      if (event) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+      }
+      if (!mobileMode) return;
+      overlay.click();
+    }
+    if (mobilePlayNowButton) {
+      mobilePlayNowButton.addEventListener('pointerdown', mobileStartNow, { passive: false });
+      mobilePlayNowButton.addEventListener('click', mobileStartNow);
+    }
+    if (mobileMode) {
+      window.setTimeout(() => {
+        if (!gameStarted && !gameOver && !roundTransition) mobileStartNow();
+      }, 220);
+    }
 
     controls.addEventListener('lock', () => { if (!mobileMode && !xboxMode) overlay.classList.add('hidden'); gameAudio.ensure(); gameAudio.setMusic(bossActive ? 'boss' : 'none'); });
 
